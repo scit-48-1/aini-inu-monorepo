@@ -77,16 +77,26 @@ export function useDogForm(initialDog?: Partial<DogType>) {
       toast.warning('소유자 성명과 등록번호를 모두 입력해주세요.');
       return false;
     }
-    
+
     try {
-      const { mockApi } = await import("@/lib/mockApi");
-      const data = await mockApi.verifyDog(dogForm.registrationNumber, ownerName);
+      const response = await fetch('/api/v1/pets/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          registrationNumber: dogForm.registrationNumber,
+          ownerName: ownerName
+        })
+      });
+
+      if (!response.ok) throw new Error('Verification failed');
+
+      const data = await response.json();
       if (data.success) {
         setIsVerified(true);
-        setDogForm(prev => ({ 
-          ...prev, 
-          name: data.dogInfo?.dogNm || prev.name, 
-          breed: data.dogInfo?.kindNm || prev.breed 
+        setDogForm(prev => ({
+          ...prev,
+          name: data.dogInfo?.dogNm || prev.name,
+          breed: data.dogInfo?.kindNm || prev.breed
         }));
         toast.success('반려견 인증에 성공했습니다!');
         return true;
@@ -96,6 +106,7 @@ export function useDogForm(initialDog?: Partial<DogType>) {
       }
     } catch (e) {
       console.error(e);
+      toast.error('인증 요청 중 오류가 발생했습니다.');
       return false;
     }
   }, [dogForm.registrationNumber]);
