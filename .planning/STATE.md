@@ -11,7 +11,7 @@ progress:
   completed_phases: 2
   total_plans: 5
   completed_plans: 5
-  percent: 80
+  percent: 100
 ---
 
 # Project State
@@ -75,6 +75,8 @@ Recent decisions affecting current work:
 - [02-01]: Refresh call uses raw fetch to avoid 401 interceptor infinite loop
 - [Phase 02]: Inline types per module (not shared types file) to keep domain boundaries clean
 - [Phase 02]: buildQuery helper duplicated per file rather than creating shared util dependency
+- [Phase 02]: Binary upload uses raw fetch (not apiClient) since apiClient assumes JSON content-type
+- [Phase 02]: INFRA-07 state types added to types.ts as type contract only (UI deferred to domain phases)
 
 ### Pending Todos
 
@@ -86,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-05T22:26:47.839Z
-Stopped at: Completed 02-02-PLAN.md
-Resume file: None
+Last session: 2026-03-05T22:26:11Z
+Stopped at: Completed 02-03-PLAN.md
+Resume file: .planning/phases/02-common-infrastructure/02-03-SUMMARY.md
