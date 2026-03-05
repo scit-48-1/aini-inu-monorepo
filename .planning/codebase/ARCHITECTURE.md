@@ -1,83 +1,74 @@
-# Aini-Inu Architecture
+# Aini-Inu Architecture (Current State)
 
-## Scope
-- This document summarizes the current architecture across `aini-inu-backend`, `aini-inu-frontend`, and `common-docs`.
-- The map is based on runtime/config/code anchors such as `aini-inu-backend/build.gradle`, `aini-inu-backend/src/main/resources/application.properties`, and `aini-inu-frontend/package.json`.
+## Scope and Priority
+- This monorepo currently prioritizes backend correctness and contract stability in `aini-inu-backend`.
+- Documentation synchronization is second priority in `common-docs`.
+- Frontend work in `aini-inu-frontend` is treated as pre-refactor and should avoid structural expansion.
 
-## Workspace Topology
-- The root workspace is an umbrella directory with three active project roots: `aini-inu-backend`, `aini-inu-frontend`, and `common-docs`.
-- Backend and frontend are maintained as independent app roots (`aini-inu-backend/.git`, `aini-inu-frontend/.git`), while shared contracts/assets live in `common-docs`.
-- API contract snapshots are exported to `common-docs/openapi/openapi.v1.json` via `aini-inu-backend/scripts/export-openapi.sh`.
-- Static design assets are source-of-truth in `common-docs/images` and consumed via symlinks under `aini-inu-frontend/public`.
+## Decision and Contract Hierarchy
+1. Product policy and vocabulary are anchored in `common-docs/PROJECT_PRD.md`.
+2. API contract snapshot is tracked in `common-docs/openapi/openapi.v1.json`.
+3. Runtime API behavior is implemented in `aini-inu-backend/src/main/java/scit/ainiinu/**`.
+4. Frontend adaptation follows backend and docs, not the other way around.
 
-## Backend Architecture (Spring Boot 3.5, Java 21)
-- Runtime entrypoint: `aini-inu-backend/src/main/java/scit/ainiinu/AiniInuApplication.java`.
-- Core stack is defined in `aini-inu-backend/build.gradle` (Web, JPA, Validation, WebSocket, Security, Spring AI, OpenAPI, Resilience4j).
-- Domain-oriented package split under `aini-inu-backend/src/main/java/scit/ainiinu`: `member`, `pet`, `walk`, `chat`, `community`, `lostpet`, plus `common`.
-- Typical request flow is Controller -> Service -> Repository -> Entity, e.g.:
-- `aini-inu-backend/src/main/java/scit/ainiinu/community/controller/PostController.java`
-- `aini-inu-backend/src/main/java/scit/ainiinu/community/service/PostService.java`
-- `aini-inu-backend/src/main/java/scit/ainiinu/community/repository/PostRepository.java`
-- `aini-inu-backend/src/main/java/scit/ainiinu/community/entity/Post.java`
-- Cross-domain references are mostly ID-based (example: `authorId`, `memberId`) to reduce direct aggregate coupling across contexts.
+## Backend Runtime Architecture
+- Main entry point is `aini-inu-backend/src/main/java/scit/ainiinu/AiniInuApplication.java`.
+- The backend is a domain-first Spring Boot monolith organized by bounded contexts under `scit.ainiinu`.
+- Shared cross-cutting concerns live under `aini-inu-backend/src/main/java/scit/ainiinu/common`.
+- Response envelope standard is centralized in `aini-inu-backend/src/main/java/scit/ainiinu/common/response/ApiResponse.java`.
+- OpenAPI runtime generation and security mapping are configured in `aini-inu-backend/src/main/java/scit/ainiinu/common/config/OpenApiConfig.java`.
 
-## Backend Security and API Contract Layer
-- Security filter defaults are disabled in `aini-inu-backend/src/main/java/scit/ainiinu/common/config/SecurityConfig.java`.
-- JWT auth is enforced at MVC interceptor level:
-- `aini-inu-backend/src/main/java/scit/ainiinu/common/config/WebConfig.java`
-- `aini-inu-backend/src/main/java/scit/ainiinu/common/security/interceptor/JwtAuthInterceptor.java`
-- `aini-inu-backend/src/main/java/scit/ainiinu/common/security/resolver/CurrentMemberArgumentResolver.java`
-- Public endpoint bypass is annotation-driven via `@Public` handling in both interceptor and OpenAPI customizer (`aini-inu-backend/src/main/java/scit/ainiinu/common/config/OpenApiConfig.java`).
-- API response envelope is standardized by `aini-inu-backend/src/main/java/scit/ainiinu/common/response/ApiResponse.java`.
-- Exception mapping is centralized in `aini-inu-backend/src/main/java/scit/ainiinu/common/exception/GlobalExceptionHandler.java`.
+## Request Processing Flow (HTTP)
+1. Requests enter controllers such as `aini-inu-backend/src/main/java/scit/ainiinu/walk/controller/WalkThreadController.java`.
+2. JWT authentication is enforced by `aini-inu-backend/src/main/java/scit/ainiinu/common/security/interceptor/JwtAuthInterceptor.java`.
+3. Authenticated member context is injected through `aini-inu-backend/src/main/java/scit/ainiinu/common/security/resolver/CurrentMemberArgumentResolver.java`.
+4. Business logic executes in services such as `aini-inu-backend/src/main/java/scit/ainiinu/walk/service/WalkThreadService.java`.
+5. Persistence is handled by repositories like `aini-inu-backend/src/main/java/scit/ainiinu/walk/repository/WalkThreadRepository.java`.
+6. Exceptions are normalized by `aini-inu-backend/src/main/java/scit/ainiinu/common/exception/GlobalExceptionHandler.java`.
+7. API responses are returned as `ApiResponse<T>` to keep contract consistency.
 
-## Backend Communication Patterns
-- Synchronous REST is the primary external interface (`/api/v1/**` controllers in domain packages).
-- Realtime chat events use STOMP over WebSocket:
-- endpoint config in `aini-inu-backend/src/main/java/scit/ainiinu/chat/config/WebSocketConfig.java`
-- publish abstraction in `aini-inu-backend/src/main/java/scit/ainiinu/chat/realtime/ChatRealtimePublisher.java`
-- STOMP implementation in `aini-inu-backend/src/main/java/scit/ainiinu/chat/realtime/StompChatRealtimePublisher.java`
-- event emission from `aini-inu-backend/src/main/java/scit/ainiinu/chat/service/MessageService.java`.
-- Lost-pet analysis integrates vector similarity and remote chat-room linking:
-- vector client in `aini-inu-backend/src/main/java/scit/ainiinu/lostpet/integration/ai/LostPetAiClientImpl.java`
-- chat integration in `aini-inu-backend/src/main/java/scit/ainiinu/lostpet/integration/chat/ChatRoomDirectClientImpl.java`
-- orchestration service in `aini-inu-backend/src/main/java/scit/ainiinu/lostpet/service/LostPetAnalyzeService.java` and `aini-inu-backend/src/main/java/scit/ainiinu/lostpet/service/LostPetMatchApprovalService.java`.
+## Domain Modules (Backend)
+- `walk`: threads and diaries (`.../walk/controller/WalkDiaryController.java`, `.../walk/entity/WalkDiary.java`).
+- `chat`: room lifecycle, messages, reviews, and walk confirm (`.../chat/controller/ChatController.java`).
+- `community`: posts, comments, image upload, story projection (`.../community/controller/PostController.java`, `.../community/controller/StoryController.java`).
+- `lostpet`: reporting, AI analysis, candidate scoring, and match workflow (`.../lostpet/controller/LostPetController.java`, `.../lostpet/service/LostPetAnalyzeService.java`).
+- `member`: auth/profile/follow and token lifecycle (`.../member/controller/AuthController.java`, `.../member/service/AuthService.java`).
+- `pet`: pet metadata and profile ownership (`.../pet/controller/PetController.java`).
 
-## Data and Runtime Infrastructure
-- Primary datastore is PostgreSQL + pgvector, wired in `aini-inu-backend/docker-compose.yml`.
-- Schema/bootstrap SQL is loaded from `aini-inu-backend/src/main/resources/db/ddl/*.sql` and `aini-inu-backend/src/main/resources/db/seed/*.sql`.
-- Local/docker env profiles are documented in `aini-inu-backend/README_FRONTEND_ONBOARDING.md` and `.env` templates.
-- Common entity audit fields are provided by `aini-inu-backend/src/main/java/scit/ainiinu/common/entity/BaseTimeEntity.java` with auditing enabled in `aini-inu-backend/src/main/java/scit/ainiinu/common/config/JpaConfig.java`.
+## Realtime and Integration
+- STOMP websocket broker setup is in `aini-inu-backend/src/main/java/scit/ainiinu/chat/config/WebSocketConfig.java`.
+- STOMP auth interception is in `aini-inu-backend/src/main/java/scit/ainiinu/chat/config/ChatStompAuthChannelInterceptor.java`.
+- Realtime event publishing path is implemented by `aini-inu-backend/src/main/java/scit/ainiinu/chat/realtime/StompChatRealtimePublisher.java`.
+- Lost-pet AI integration abstractions are in `aini-inu-backend/src/main/java/scit/ainiinu/lostpet/integration/ai/LostPetAiClient.java`.
+- Lost-pet chat direct-connection integration is in `aini-inu-backend/src/main/java/scit/ainiinu/lostpet/integration/chat/ChatRoomDirectClientImpl.java`.
 
-## Frontend Architecture (Next.js App Router)
-- Runtime framework: Next.js + React + TypeScript (`aini-inu-frontend/package.json`, `aini-inu-frontend/tsconfig.json`).
-- App shell and global providers are composed in `aini-inu-frontend/src/app/layout.tsx` (`ThemeProvider`, `MSWProvider`, sidebar shell, route-based auth gate).
-- Route entrypoints are under `aini-inu-frontend/src/app`, e.g.:
-- `aini-inu-frontend/src/app/dashboard/page.tsx`
-- `aini-inu-frontend/src/app/feed/page.tsx`
-- `aini-inu-frontend/src/app/chat/[id]/page.tsx`
-- UI is componentized by feature folders in `aini-inu-frontend/src/components/*` and shared primitives in `aini-inu-frontend/src/components/ui/*`.
-- Client state uses Zustand stores in `aini-inu-frontend/src/store/useUserStore.ts` and `aini-inu-frontend/src/store/useConfigStore.ts`.
+## Data and Initialization Architecture
+- Core runtime datasource and integration properties are in `aini-inu-backend/src/main/resources/application.properties`.
+- DDL alignment scripts are maintained under `aini-inu-backend/src/main/resources/db/ddl/*.sql`.
+- Seed baselines are maintained under `aini-inu-backend/src/main/resources/db/seed/*.sql`.
+- Dockerized local runtime lives in `aini-inu-backend/docker-compose.yml` and helper scripts under `aini-inu-backend/scripts/`.
 
-## Frontend Data Access and Mocking Strategy
-- Service layer wrappers live under `aini-inu-frontend/src/services/api/*` and route through `aini-inu-frontend/src/services/api/apiClient.ts` (`/api/v1` base).
-- Development mock interception is done by MSW:
-- bootstrap `aini-inu-frontend/src/mocks/MSWProvider.tsx`
-- worker `aini-inu-frontend/src/mocks/browser.ts`
-- handlers `aini-inu-frontend/src/mocks/handlers.ts`.
-- This creates a mock-first local UX path, while backend integration contracts are tracked separately via `common-docs/openapi/openapi.v1.json`.
-- Additional external fetch usage exists for geocoding in `aini-inu-frontend/src/services/api/locationService.ts` and Gemini diagnostic route in `aini-inu-frontend/src/app/api/check-key/route.ts`.
+## Contract and Docs Synchronization
+- OpenAPI snapshot governance is documented in `common-docs/openapi/README.md`.
+- Snapshot export is automated by `aini-inu-backend/scripts/export-openapi.sh`.
+- The script writes the canonical snapshot to `common-docs/openapi/openapi.v1.json`.
+- Policy and terminology lock (Story vs WalkDiary) is maintained in `common-docs/PROJECT_PRD.md`.
 
-## Testing and Verification Architecture
-- Backend tests are layered by purpose in `aini-inu-backend/src/test/java/scit/ainiinu`:
-- unit/service (example `.../member/service/AuthServiceTest.java`)
-- slice/contract (example `.../community/contract/StoryListContractTest.java`)
-- integration (example `.../chat/integration/ChatWebSocketIntegrationTest.java`).
-- Frontend has lint/build checks and asset integrity validation via `aini-inu-frontend/scripts/check-image-links.sh`.
+## Testing Architecture
+- Test suite root is `aini-inu-backend/src/test/java/scit/ainiinu`.
+- Contract tests validate runtime OpenAPI in `aini-inu-backend/src/test/java/scit/ainiinu/common/contract/OpenApiAuthContractTest.java`.
+- Request schema contract checks are in `aini-inu-backend/src/test/java/scit/ainiinu/common/contract/OpenApiRequestSchemaContractTest.java`.
+- Domain contract/integration/unit coverage is distributed by package, for example `.../walk`, `.../community`, and `.../lostpet`.
+- Test profile and DB isolation are configured by `aini-inu-backend/src/test/resources/application-test.properties`.
 
-## Architectural Summary
-- The system is a multi-repo workspace with clear role separation:
-- backend: domain/business and API runtime (`aini-inu-backend`)
-- frontend: App Router UI and client orchestration (`aini-inu-frontend`)
-- shared contracts/assets: PRD, OpenAPI snapshots, and static media (`common-docs`).
-- Cross-repo coupling is intentionally explicit through generated API snapshots and symlinked asset contracts, not through shared runtime code.
+## Frontend Position (Pre-Refactor)
+- Frontend is Next.js App Router based in `aini-inu-frontend/src/app`.
+- Current layout/session behavior is centralized in `aini-inu-frontend/src/app/layout.tsx`.
+- API consumption abstraction is in `aini-inu-frontend/src/services/api/apiClient.ts`.
+- Mock-first development path remains active through `aini-inu-frontend/src/mocks/MSWProvider.tsx` and `aini-inu-frontend/src/mocks/handlers.ts`.
+- Image source-of-truth is shared from docs via symlinks in `aini-inu-frontend/public` to `common-docs/images`.
+
+## Architectural Implication for Ongoing Work
+- Backend and `common-docs` must move together whenever API behavior changes.
+- OpenAPI and PRD updates are not optional add-ons; they are part of contract completion.
+- Frontend changes should mainly reduce coupling and align with the existing backend contract.

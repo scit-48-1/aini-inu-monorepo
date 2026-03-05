@@ -1,70 +1,62 @@
-# Code Conventions Map
+# CONVENTIONS
 
-## Scope
-- This repository is a monorepo-style workspace with backend at `aini-inu-backend` and frontend at `aini-inu-frontend`.
-- Conventions below are inferred from live code, not from a standalone style guide.
+## Scope and Priority
+- This repository is a monorepo with `aini-inu-backend`, `aini-inu-frontend`, and `common-docs`.
+- Current delivery priority is backend contract correctness and docs synchronization, then frontend refactor readiness.
+- Conventions below are anchored on runtime behavior in `aini-inu-backend` and contract artifacts in `common-docs`.
 
-## Backend Architecture and Organization
-- Backend package root is `aini-inu-backend/src/main/java/scit/ainiinu`.
-- Primary organization is domain-first by context: `chat`, `community`, `lostpet`, `member`, `pet`, `walk`, plus shared `common`.
-- Most domains keep consistent layer folders: `controller`, `service`, `repository`, `dto`, `entity` or `domain`, `exception/error`.
-- Shared cross-cutting code lives in `aini-inu-backend/src/main/java/scit/ainiinu/common/*`.
+## Source-of-Truth Order
+- Product/feature policy lives in `common-docs/PROJECT_PRD.md`.
+- API contract snapshot lives in `common-docs/openapi/openapi.v1.json`.
+- Runtime implementation lives under `aini-inu-backend/src/main/java/**`.
+- Data model baseline and SQL alignment live in `aini-inu-backend/src/main/resources/db/ddl/**`.
 
-## API and Controller Patterns
-- REST endpoints are versioned under `/api/v1` via controllers like `aini-inu-backend/src/main/java/scit/ainiinu/pet/controller/PetController.java`.
-- Controllers generally return `ResponseEntity<ApiResponse<T>>` instead of raw DTOs.
-- API wrapper convention is centralized in `aini-inu-backend/src/main/java/scit/ainiinu/common/response/ApiResponse.java`.
-- Slice and cursor pagination wrappers are standardized via `aini-inu-backend/src/main/java/scit/ainiinu/common/response/SliceResponse.java` and `aini-inu-backend/src/main/java/scit/ainiinu/common/response/CursorResponse.java`.
-- OpenAPI annotations are used heavily (`@Operation`, `@Tag`, `@SecurityRequirement`) in controllers such as `aini-inu-backend/src/main/java/scit/ainiinu/community/controller/PostController.java`.
+## Backend Architecture Conventions
+- Domain-first package segmentation is used: examples include `scit.ainiinu.walk`, `scit.ainiinu.member`, `scit.ainiinu.lostpet`, `scit.ainiinu.community`, `scit.ainiinu.chat` under `aini-inu-backend/src/main/java/scit/ainiinu/**`.
+- Layering is explicit by package: `controller`, `service`, `repository`, `dto`, `entity`, `exception` (example: `aini-inu-backend/src/main/java/scit/ainiinu/walk/**`).
+- Controllers are thin HTTP adapters using `ResponseEntity<ApiResponse<...>>` (example: `aini-inu-backend/src/main/java/scit/ainiinu/walk/controller/WalkDiaryController.java`).
+- Services hold business rules and transactional boundaries, typically class-level `@Transactional(readOnly = true)` with write methods overridden by `@Transactional` (example: `aini-inu-backend/src/main/java/scit/ainiinu/walk/service/WalkDiaryService.java`).
+- Repositories favor Spring Data derived queries + selective JPQL for domain-specific reads (example: `aini-inu-backend/src/main/java/scit/ainiinu/walk/repository/WalkDiaryRepository.java`).
+- Custom query repositories use `EntityManager` implementations when cursor/slice shape is contract-driven (examples: `aini-inu-backend/src/main/java/scit/ainiinu/chat/repository/MessageRepositoryImpl.java`, `aini-inu-backend/src/main/java/scit/ainiinu/community/repository/StoryReadRepositoryImpl.java`).
 
-## Security and Auth Conventions
-- Authentication is interceptor-based rather than standard Spring Security auth chain.
-- Security baseline is in `aini-inu-backend/src/main/java/scit/ainiinu/common/config/SecurityConfig.java` (permit-all with defaults disabled).
-- JWT enforcement is done by `aini-inu-backend/src/main/java/scit/ainiinu/common/security/interceptor/JwtAuthInterceptor.java`.
-- Authenticated member ID injection uses `@CurrentMember` from `aini-inu-backend/src/main/java/scit/ainiinu/common/security/annotation/CurrentMember.java` and resolver `aini-inu-backend/src/main/java/scit/ainiinu/common/security/resolver/CurrentMemberArgumentResolver.java`.
-- Public endpoints are explicitly marked with `@Public` in `aini-inu-backend/src/main/java/scit/ainiinu/common/security/annotation/Public.java`.
+## API and Error Envelope Conventions
+- REST responses are standardized via `ApiResponse<T>` in `aini-inu-backend/src/main/java/scit/ainiinu/common/response/ApiResponse.java`.
+- Pagination/slice payloads use shared wrappers (`SliceResponse`, `PageResponse`, `CursorResponse`) under `aini-inu-backend/src/main/java/scit/ainiinu/common/response/**`.
+- Domain errors implement `ErrorCode` and are surfaced via `BusinessException` (see `aini-inu-backend/src/main/java/scit/ainiinu/common/exception/ErrorCode.java` and `BusinessException.java`).
+- Domain-specific error enums carry HTTP status + code + message (examples: `aini-inu-backend/src/main/java/scit/ainiinu/walk/exception/WalkDiaryErrorCode.java`, `aini-inu-backend/src/main/java/scit/ainiinu/common/exception/CommonErrorCode.java`).
+- Global error mapping is centralized in `aini-inu-backend/src/main/java/scit/ainiinu/common/exception/GlobalExceptionHandler.java`.
 
-## Service and Transaction Patterns
-- Services commonly use constructor injection via Lombok `@RequiredArgsConstructor`.
-- Services default to class-level `@Transactional(readOnly = true)` and opt into write methods with method-level `@Transactional`, e.g. `aini-inu-backend/src/main/java/scit/ainiinu/pet/service/PetService.java`.
-- Business rules and ownership checks are enforced in service methods before repository writes.
+## DTO, Validation, and OpenAPI Conventions
+- Request DTOs are class-based and use Bean Validation annotations (`@NotBlank`, `@NotNull`, `@Size`) with Swagger schema hints (example: `aini-inu-backend/src/main/java/scit/ainiinu/walk/dto/request/WalkDiaryCreateRequest.java`).
+- Response DTOs frequently use static factory methods (`from`, `of`) and Lombok `@Builder` (example: `aini-inu-backend/src/main/java/scit/ainiinu/walk/dto/response/WalkDiaryResponse.java`).
+- API docs are generated by Springdoc configuration in `aini-inu-backend/src/main/java/scit/ainiinu/common/config/OpenApiConfig.java`.
+- `@CurrentMember` arguments are hidden from OpenAPI through customizers, enforcing cleaner contract surface.
 
-## Error Handling and Domain Error Codes
-- Error abstraction is `ErrorCode` interface in `aini-inu-backend/src/main/java/scit/ainiinu/common/exception/ErrorCode.java`.
-- Shared error enum is `aini-inu-backend/src/main/java/scit/ainiinu/common/exception/CommonErrorCode.java`.
-- Domain-specific enums like `aini-inu-backend/src/main/java/scit/ainiinu/member/exception/MemberErrorCode.java` follow the same contract.
-- Runtime domain failures use `BusinessException` from `aini-inu-backend/src/main/java/scit/ainiinu/common/exception/BusinessException.java`.
-- Global mapping to API payloads is centralized in `aini-inu-backend/src/main/java/scit/ainiinu/common/exception/GlobalExceptionHandler.java`.
+## Security and Request Context Conventions
+- Auth context is injected with `@CurrentMember` (`aini-inu-backend/src/main/java/scit/ainiinu/common/security/annotation/CurrentMember.java`).
+- Resolver + interceptor chain is wired in `aini-inu-backend/src/main/java/scit/ainiinu/common/config/WebConfig.java` and `common/security/**`.
+- Public endpoint opt-out from security uses `@Public` in OpenAPI customization flow (`OpenApiConfig`).
 
-## DTO, Validation, and Serialization Style
-- Request DTOs often use mutable Lombok classes (`@Getter/@Setter/@NoArgsConstructor`) with Bean Validation annotations, e.g. `aini-inu-backend/src/main/java/scit/ainiinu/pet/dto/request/PetCreateRequest.java`.
-- Some newer lostpet responses use Java `record` DTOs with builders, e.g. `aini-inu-backend/src/main/java/scit/ainiinu/lostpet/dto/LostPetResponse.java`.
-- Validation includes both field constraints and computed constraints (`@AssertTrue`) as seen in `aini-inu-backend/src/main/java/scit/ainiinu/community/dto/PostCreateRequest.java`.
-- DTO style is intentionally mixed (mutable classes + records) across domains rather than fully unified.
+## Persistence and Data Model Conventions
+- Audit timestamps come from `BaseTimeEntity` with JPA auditing (`aini-inu-backend/src/main/java/scit/ainiinu/common/entity/BaseTimeEntity.java`, `common/config/JpaConfig.java`).
+- Soft-delete appears as nullable `deletedAt` fields and repository filters (example: `aini-inu-backend/src/main/java/scit/ainiinu/walk/entity/WalkDiary.java`).
+- SQL DDL/index alignment scripts are tracked in `aini-inu-backend/src/main/resources/db/ddl/*.sql`.
+- Seed data is explicit in `aini-inu-backend/src/main/resources/db/seed/*.sql`.
 
-## Persistence and Entity Conventions
-- JPA auditing is enabled via `aini-inu-backend/src/main/java/scit/ainiinu/common/config/JpaConfig.java` and base timestamps in `aini-inu-backend/src/main/java/scit/ainiinu/common/entity/BaseTimeEntity.java`.
-- Entities generally use `@NoArgsConstructor(access = AccessLevel.PROTECTED)` and expose behavior methods instead of public setters.
-- Cross-context boundaries are often ID-based instead of direct entity associations, e.g. `authorId`/`memberId` fields in `aini-inu-backend/src/main/java/scit/ainiinu/community/entity/Post.java`.
-- Complex reads use custom repository implementations with JPQL and `EntityManager`, e.g. `aini-inu-backend/src/main/java/scit/ainiinu/community/repository/StoryReadRepositoryImpl.java` and `aini-inu-backend/src/main/java/scit/ainiinu/chat/repository/MessageRepositoryImpl.java`.
+## Docs Synchronization Conventions
+- OpenAPI snapshot is generated, not hand-edited: `common-docs/openapi/openapi.v1.json` is updated through `aini-inu-backend/scripts/export-openapi.sh`.
+- Snapshot governance is documented in `common-docs/openapi/README.md`.
+- Contract/policy wording is maintained in `common-docs/PROJECT_PRD.md` and should remain term-locked (Story vs WalkDiary).
 
-## Frontend Conventions
-- Frontend uses Next.js App Router structure under `aini-inu-frontend/src/app`.
-- TypeScript strict mode and path alias `@/*` are configured in `aini-inu-frontend/tsconfig.json`.
-- Styling is Tailwind-first with CSS variable theming in `aini-inu-frontend/src/app/globals.css`.
-- Common UI atoms are in `aini-inu-frontend/src/components/ui`, e.g. `aini-inu-frontend/src/components/ui/Button.tsx`.
-- Utility class composition uses `cn()` in `aini-inu-frontend/src/lib/utils.ts`.
-- API access follows service wrappers over shared fetch client: `aini-inu-frontend/src/services/api/apiClient.ts` plus domain services like `aini-inu-frontend/src/services/api/memberService.ts`.
-- Local mocked backend behavior in development is standardized through MSW provider and handlers at `aini-inu-frontend/src/mocks/MSWProvider.tsx` and `aini-inu-frontend/src/mocks/handlers.ts`.
-- Global client state follows Zustand stores like `aini-inu-frontend/src/store/useUserStore.ts`.
+## Frontend Pre-Refactor Conventions (Current State)
+- Next.js App Router structure lives in `aini-inu-frontend/src/app/**` with many client pages (example: `aini-inu-frontend/src/app/feed/page.tsx`).
+- API access is centralized through `aini-inu-frontend/src/services/api/apiClient.ts` expecting backend `ApiResponse<T>` shape.
+- Domain calls are grouped in service modules (`aini-inu-frontend/src/services/api/threadService.ts`, `memberService.ts`, `postService.ts`).
+- Shared state uses Zustand stores (`aini-inu-frontend/src/store/useConfigStore.ts`, `useUserStore.ts`).
+- Hooks/components are mixed in page-level orchestration; prioritize safe extraction and API-alignment cleanup over large UI expansion before refactor.
 
-## Tooling and Operational Conventions
-- Backend build and dependency management are in `aini-inu-backend/build.gradle` (Java 21, Spring Boot 3.5.x, JUnit platform).
-- Environment-driven runtime config is centralized in `aini-inu-backend/src/main/resources/application.properties`.
-- OpenAPI export workflow is scripted in `aini-inu-backend/scripts/export-openapi.sh`.
-- Docker lifecycle scripts follow a simple `scripts/` convention: `aini-inu-backend/scripts/docker-up.sh`, `aini-inu-backend/scripts/docker-down.sh`, `aini-inu-backend/scripts/docker-logs.sh`.
-
-## Notable Consistency Gaps
-- Formatting style is not fully uniform in all Java classes (example spacing/import layout in `aini-inu-backend/src/main/java/scit/ainiinu/pet/entity/Pet.java`).
-- DTO modeling style differs by domain (`class` + setters vs `record`), which is workable but increases cognitive switching.
-- Frontend still contains generated/base README language and some legacy notes in `aini-inu-frontend/README.md`.
+## Practical Change Checklist
+- If backend API behavior changes, update controller/service/DTO/tests plus OpenAPI snapshot in the same workstream.
+- If schema/index constraints change, verify both entity modeling and `db/ddl` scripts remain aligned.
+- If terminology or policy changes, update `common-docs/PROJECT_PRD.md` before frontend adaptation.
+- For frontend changes now, prefer reducing coupling via hooks/services and preserving compatibility with current backend contract.

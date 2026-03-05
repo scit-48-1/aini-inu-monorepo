@@ -1,92 +1,73 @@
-# Aini-Inu Repository Structure
+# Repository Structure Map (Practical)
 
-## Root Layout
-- `.` (workspace umbrella; contains app roots and planning/docs folders)
-- `.planning/codebase` (generated codebase map outputs, including this file)
-- `aini-inu-backend` (Spring Boot backend project root)
-- `aini-inu-frontend` (Next.js frontend project root)
-- `common-docs` (shared PRD/OpenAPI/assets repository)
-- `.codex/skills` and `.agents/skills` (agent skill metadata and workflows)
+## Monorepo Root
+- `AGENTS.md`: repository-level operating rules and priorities.
+- `aini-inu-backend`: primary runtime implementation and API contract execution.
+- `common-docs`: primary product policy and contract snapshot storage.
+- `aini-inu-frontend`: pre-refactor client application (adaptation layer).
+- `.planning/codebase`: analysis outputs for architecture and structure.
 
-## High-Level Tree (Operational Directories)
-- `aini-inu-backend/build.gradle`, `aini-inu-backend/settings.gradle`, `aini-inu-backend/gradlew`
-- `aini-inu-backend/src/main/java/scit/ainiinu/*` (domain and common backend code)
-- `aini-inu-backend/src/main/resources/application.properties`
-- `aini-inu-backend/src/main/resources/db/ddl/*`
-- `aini-inu-backend/src/main/resources/db/seed/*`
-- `aini-inu-backend/src/test/java/scit/ainiinu/*`
-- `aini-inu-backend/scripts/*` (docker helpers and OpenAPI export)
-- `aini-inu-frontend/package.json`, `aini-inu-frontend/next.config.ts`, `aini-inu-frontend/tsconfig.json`
-- `aini-inu-frontend/src/app/*` (Next App Router routes/layout)
-- `aini-inu-frontend/src/components/*` (feature UI + design primitives)
-- `aini-inu-frontend/src/services/*` (API, auth, and external integration clients)
-- `aini-inu-frontend/src/store/*` (Zustand state stores)
-- `aini-inu-frontend/src/mocks/*` (MSW setup and handlers)
-- `aini-inu-frontend/public/*` (runtime assets, mostly symlinked to `common-docs/images`)
-- `common-docs/PROJECT_PRD.md`
-- `common-docs/openapi/openapi.v1.json`
-- `common-docs/images/*` (logos, portraits, favicon, and web assets)
+## Backend Module (`aini-inu-backend`)
+- `aini-inu-backend/build.gradle`: Spring Boot 3.5 + Java 21 + Spring AI + OpenAPI dependencies.
+- `aini-inu-backend/settings.gradle`: Gradle project identity.
+- `aini-inu-backend/src/main/java/scit/ainiinu/AiniInuApplication.java`: backend bootstrap entrypoint.
+- `aini-inu-backend/src/main/java/scit/ainiinu/common/config/OpenApiConfig.java`: OpenAPI grouping and bearer security config.
+- `aini-inu-backend/src/main/java/scit/ainiinu/common/config/WebConfig.java`: interceptor, resolver, and CORS wiring.
+- `aini-inu-backend/src/main/java/scit/ainiinu/common/security/interceptor/JwtAuthInterceptor.java`: JWT gate for `/api/**`.
+- `aini-inu-backend/src/main/java/scit/ainiinu/common/response/ApiResponse.java`: response envelope contract.
+- `aini-inu-backend/src/main/java/scit/ainiinu/common/exception/GlobalExceptionHandler.java`: global error translation.
 
-## Backend Directory Breakdown
-- `aini-inu-backend/src/main/java/scit/ainiinu/common`
-- config (`.../common/config/SecurityConfig.java`, `.../common/config/WebConfig.java`, `.../common/config/OpenApiConfig.java`, `.../common/config/JpaConfig.java`)
-- security (`.../common/security/jwt/JwtTokenProvider.java`, `.../common/security/interceptor/JwtAuthInterceptor.java`)
-- response/exception (`.../common/response/ApiResponse.java`, `.../common/exception/GlobalExceptionHandler.java`)
-- `aini-inu-backend/src/main/java/scit/ainiinu/member` (auth/profile/follow/member personality)
-- `aini-inu-backend/src/main/java/scit/ainiinu/pet` (pet CRUD, catalogs, certification integration)
-- `aini-inu-backend/src/main/java/scit/ainiinu/walk` (thread recruitment and diary features)
-- `aini-inu-backend/src/main/java/scit/ainiinu/chat` (chat rooms/messages/reviews + websocket realtime)
-- `aini-inu-backend/src/main/java/scit/ainiinu/community` (posts/comments/stories/image upload)
-- `aini-inu-backend/src/main/java/scit/ainiinu/lostpet` (reporting, candidate scoring, AI match workflow)
+## Backend Domain Packages
+- `aini-inu-backend/src/main/java/scit/ainiinu/member`: auth/profile/follow domain.
+- `aini-inu-backend/src/main/java/scit/ainiinu/pet`: pet catalog and pet profile domain.
+- `aini-inu-backend/src/main/java/scit/ainiinu/walk`: walk thread + walk diary domain.
+- `aini-inu-backend/src/main/java/scit/ainiinu/chat`: chat rooms/messages/reviews + websocket realtime.
+- `aini-inu-backend/src/main/java/scit/ainiinu/community`: posts/comments/story projection + image upload.
+- `aini-inu-backend/src/main/java/scit/ainiinu/lostpet`: report/analyze/match workflow with AI and external chat link.
+- Representative controllers: `.../member/controller/AuthController.java`, `.../walk/controller/WalkThreadController.java`, `.../community/controller/PostController.java`, `.../lostpet/controller/LostPetController.java`.
+- Representative services: `.../walk/service/WalkThreadService.java`, `.../community/service/StoryService.java`, `.../lostpet/service/LostPetAnalyzeService.java`.
+- Representative DTO split: `.../walk/dto/request/ThreadCreateRequest.java`, `.../chat/dto/response/ChatRoomDetailResponse.java`.
 
-## Backend Resource and Script Layout
-- Runtime config: `aini-inu-backend/src/main/resources/application.properties`
-- DDL scripts: `aini-inu-backend/src/main/resources/db/ddl/01_walk_indexes_constraints.sql` ... `06_legacy_story_cleanup.sql`
-- Seed scripts: `aini-inu-backend/src/main/resources/db/seed/00_lookup_seed.sql`, `10_core_sample_seed.sql`, `20_status_edge_seed.sql`, `99_reset_sequences.sql`
-- Infra scripts:
-- `aini-inu-backend/scripts/docker-up.sh`
-- `aini-inu-backend/scripts/docker-down.sh`
-- `aini-inu-backend/scripts/docker-logs.sh`
-- `aini-inu-backend/scripts/export-openapi.sh`
+## Backend Data and Ops
+- `aini-inu-backend/src/main/resources/application.properties`: datasource, JWT, lostpet, community storage, Spring AI settings.
+- `aini-inu-backend/src/main/resources/db/ddl/01_walk_indexes_constraints.sql`: schema/index constraints baseline.
+- `aini-inu-backend/src/main/resources/db/ddl/06_legacy_story_cleanup.sql`: legacy cleanup alignment script.
+- `aini-inu-backend/src/main/resources/db/seed/00_lookup_seed.sql`: lookup seed.
+- `aini-inu-backend/src/main/resources/db/seed/10_core_sample_seed.sql`: core sample data.
+- `aini-inu-backend/scripts/export-openapi.sh`: runtime OpenAPI export to docs.
+- `aini-inu-backend/scripts/docker-up.sh`: local backend + DB startup helper.
+- `aini-inu-backend/docker-compose.yml`: dockerized runtime composition.
 
-## Backend Test Structure
-- Tests are grouped by domain and test type under `aini-inu-backend/src/test/java/scit/ainiinu`.
-- Representative folders:
-- `.../community/contract`, `.../community/integration`, `.../community/service`
-- `.../walk/controller`, `.../walk/integration`, `.../walk/repository`, `.../walk/service`
-- `.../lostpet/contract`, `.../lostpet/integration`, `.../lostpet/unit`
-- `.../chat/controller`, `.../chat/integration`, `.../chat/service`
-- Common API contract tests are under `.../common/contract`.
+## Backend Testing Layout
+- `aini-inu-backend/src/test/java/scit/ainiinu/common/contract/OpenApiAuthContractTest.java`: auth/security contract verification.
+- `aini-inu-backend/src/test/java/scit/ainiinu/common/contract/OpenApiRequestSchemaContractTest.java`: request schema contract verification.
+- `aini-inu-backend/src/test/java/scit/ainiinu/community/contract/StoryOpenApiContractTest.java`: story schema exposure check.
+- `aini-inu-backend/src/test/java/scit/ainiinu/walk/integration/WalkDiaryCrudIntegrationTest.java`: walk diary integration path.
+- `aini-inu-backend/src/test/resources/application-test.properties`: isolated test profile and H2 config.
 
-## Frontend Directory Breakdown
-- `aini-inu-frontend/src/app` (route-level pages and shared app shell)
-- examples: `.../app/layout.tsx`, `.../app/page.tsx`, `.../app/dashboard/page.tsx`, `.../app/chat/[id]/page.tsx`
-- `aini-inu-frontend/src/components`
-- feature slices: `around-me`, `chat`, `dashboard`, `feed`, `profile`, `signup`
-- shared/UI: `common`, `shared/forms`, `shared/modals`, `ui`
-- `aini-inu-frontend/src/hooks` and `.../hooks/forms` (feature hooks and form orchestration)
-- `aini-inu-frontend/src/services/api` (`apiClient.ts`, `memberService.ts`, `postService.ts`, `threadService.ts`, `chatService.ts`, `locationService.ts`)
-- `aini-inu-frontend/src/services/authService.ts` and `.../services/geminiService.ts`
-- `aini-inu-frontend/src/store` (`useUserStore.ts`, `useConfigStore.ts`)
-- `aini-inu-frontend/src/constants`, `.../lib`, `.../types`
-- `aini-inu-frontend/src/mocks` (`MSWProvider.tsx`, `browser.ts`, `handlers.ts`)
+## Docs Module (`common-docs`)
+- `common-docs/PROJECT_PRD.md`: product policy, feature requirements, terminology lock.
+- `common-docs/openapi/openapi.v1.json`: tracked runtime API snapshot.
+- `common-docs/openapi/README.md`: snapshot governance and update flow.
+- `common-docs/images/README.md`: image source-of-truth and sync rules.
+- `common-docs/images/*`: shared asset source consumed by frontend symlinks.
 
-## Frontend Runtime Asset Structure
-- Public asset links in `aini-inu-frontend/public` are mostly symlinks:
-- `public/images -> ../../common-docs/images`
-- `public/AINIINU_ROGO_B.png -> ../../common-docs/images/AINIINU_ROGO_B.png`
-- `public/AINIINU_ROGO_W.png -> ../../common-docs/images/AINIINU_ROGO_W.png`
-- `public/favicon.ico -> ../../common-docs/images/favicon.ico`
-- Link integrity is validated by `aini-inu-frontend/scripts/check-image-links.sh`.
+## Frontend Module (`aini-inu-frontend`, Pre-Refactor)
+- `aini-inu-frontend/package.json`: Next.js runtime scripts (`dev`, `build`, `lint`).
+- `aini-inu-frontend/next.config.ts`: frontend runtime image policy.
+- `aini-inu-frontend/src/app/layout.tsx`: global shell, route guard, providers.
+- `aini-inu-frontend/src/app/around-me/page.tsx`: neighborhood radar route.
+- `aini-inu-frontend/src/app/chat/page.tsx`: chat route entry.
+- `aini-inu-frontend/src/services/api/apiClient.ts`: API envelope-aware fetch wrapper.
+- `aini-inu-frontend/src/services/api/threadService.ts`: thread API adaptation.
+- `aini-inu-frontend/src/hooks/useRadarLogic.ts`: route-level domain logic extraction target.
+- `aini-inu-frontend/src/mocks/MSWProvider.tsx`: mock activation boundary.
+- `aini-inu-frontend/src/mocks/handlers.ts`: mock contract simulation (still substantial).
+- `aini-inu-frontend/public/images -> ../../common-docs/images`: symlinked shared asset path.
 
-## Shared Documentation Structure
-- Product/requirements source: `common-docs/PROJECT_PRD.md`
-- API snapshot source: `common-docs/openapi/openapi.v1.json`
-- OpenAPI maintenance guide: `common-docs/openapi/README.md`
-- Image source-of-truth guide: `common-docs/images/README.md`
-
-## Structure Summary
-- The repository is physically split into backend/frontend/docs roots, but logically connected through:
-- API contract snapshots (`common-docs/openapi`)
-- shared static assets (`common-docs/images` linked into `aini-inu-frontend/public`)
-- onboarding/runtime scripts (`aini-inu-backend/scripts/*`, `aini-inu-frontend/scripts/*`).
+## Practical Navigation Order for Current Priorities
+1. Start policy checks at `common-docs/PROJECT_PRD.md`.
+2. Verify contract surface in `common-docs/openapi/openapi.v1.json`.
+3. Trace runtime behavior in `aini-inu-backend/src/main/java/scit/ainiinu/**`.
+4. Verify tests in `aini-inu-backend/src/test/java/scit/ainiinu/**`.
+5. Touch `aini-inu-frontend` only when backend/doc contract impact requires adaptation.
