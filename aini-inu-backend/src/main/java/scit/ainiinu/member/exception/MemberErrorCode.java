@@ -12,7 +12,8 @@ public enum MemberErrorCode implements ErrorCode {
     INVALID_NICKNAME(HttpStatus.BAD_REQUEST, "M002", "닉네임이 유효하지 않습니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "M003", "이미 사용 중인 닉네임입니다."),
     BANNED_MEMBER(HttpStatus.FORBIDDEN, "M005", "정지된 회원입니다."),
-    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "M007", "이미 사용 중인 이메일입니다.");
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "M007", "이미 사용 중인 이메일입니다."),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "M008", "이메일 또는 비밀번호가 올바르지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

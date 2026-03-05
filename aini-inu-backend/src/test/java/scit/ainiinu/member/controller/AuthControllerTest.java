@@ -15,11 +15,13 @@ import scit.ainiinu.common.security.interceptor.JwtAuthInterceptor;
 import scit.ainiinu.common.security.resolver.CurrentMemberArgumentResolver;
 import scit.ainiinu.member.dto.request.AuthLoginRequest;
 import scit.ainiinu.member.dto.request.TokenRefreshRequest;
+import scit.ainiinu.member.dto.request.TokenRevokeRequest;
 import scit.ainiinu.member.dto.response.LoginResponse;
 import scit.ainiinu.member.service.AuthService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -138,6 +140,33 @@ class AuthControllerTest {
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.accessToken").value("new-access-token"))
                     .andExpect(jsonPath("$.data.refreshToken").value("new-refresh-token"));
+        }
+    }
+
+    @Nested
+    @DisplayName("로그아웃")
+    class Logout {
+
+        @Test
+        @WithMockUser
+        @DisplayName("유효한 리프레시 토큰으로 로그아웃하면 성공한다")
+        void logout_withValidRefreshToken_success() throws Exception {
+            // given
+            TokenRevokeRequest request = new TokenRevokeRequest();
+            request.setRefreshToken("valid-refresh-token");
+            willDoNothing().given(authService).logout(any(TokenRevokeRequest.class));
+
+            // when
+            var result = mockMvc.perform(post("/api/v1/auth/logout")
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)));
+
+            // then
+            result.andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data").value(org.hamcrest.Matchers.nullValue()));
         }
     }
 }

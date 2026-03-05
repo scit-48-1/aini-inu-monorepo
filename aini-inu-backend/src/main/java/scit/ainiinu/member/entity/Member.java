@@ -34,6 +34,9 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(length = 255)
+    private String password;
+
     @Column(nullable = false, length = 10, unique = true)
     private String nickname;
 
@@ -78,9 +81,10 @@ public class Member extends BaseTimeEntity {
     private int mannerScoreCount;
 
     @Builder
-    public Member(String email, String nickname, String profileImageUrl, MemberType memberType,
+    public Member(String email, String password, String nickname, String profileImageUrl, MemberType memberType,
                   String phone, Integer age, Gender gender, String mbti, String personality, String selfIntroduction) {
         this.email = email;
+        this.password = password;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.memberType = memberType != null ? memberType : MemberType.NON_PET_OWNER;

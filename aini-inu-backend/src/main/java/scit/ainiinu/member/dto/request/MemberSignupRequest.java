@@ -22,7 +22,11 @@ public class MemberSignupRequest {
 
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "비밀번호는 필수입니다.")
-    @Size(min = 8, message = "비밀번호는 최소 8자 이상이어야 합니다.")
+    @Size(min = 8, max = 64, message = "비밀번호는 8자 이상 64자 이하여야 합니다.")
+    @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+$",
+            message = "비밀번호는 대/소문자, 숫자, 특수문자를 각각 1개 이상 포함해야 합니다."
+    )
     private String password;
 
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED)

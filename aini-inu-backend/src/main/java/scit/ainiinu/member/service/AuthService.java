@@ -66,12 +66,16 @@ public class AuthService {
 
     /**
      * 이메일/비밀번호 로그인 처리
-     * 현재 Member 도메인에 비밀번호 해시 컬럼이 없으므로, 이메일 기반 회원 식별 후 토큰 발급만 수행합니다.
+     * 임시 정책으로 평문 비밀번호를 비교해 인증을 처리합니다.
      */
     @Transactional
     public LoginResponse loginWithEmail(AuthLoginRequest request) {
         Member member = memberRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_CREDENTIALS));
+
+        if (member.getPassword() == null || !member.getPassword().equals(request.getPassword())) {
+            throw new MemberException(MemberErrorCode.INVALID_CREDENTIALS);
+        }
 
         if (member.getStatus() == MemberStatus.BANNED) {
             throw new MemberException(MemberErrorCode.BANNED_MEMBER);
@@ -95,6 +99,7 @@ public class AuthService {
 
         Member newMember = Member.builder()
                 .email(request.getEmail())
+                .password(request.getPassword())
                 .nickname(request.getNickname())
                 .memberType(request.getMemberType())
                 .build();

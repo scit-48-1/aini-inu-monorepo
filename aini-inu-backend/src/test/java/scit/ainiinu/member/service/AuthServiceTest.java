@@ -10,10 +10,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import scit.ainiinu.common.security.jwt.JwtTokenProvider;
 import scit.ainiinu.member.dto.request.AuthLoginRequest;
+import scit.ainiinu.member.dto.request.MemberSignupRequest;
 import scit.ainiinu.member.dto.request.TokenRefreshRequest;
+import scit.ainiinu.member.dto.request.TokenRevokeRequest;
 import scit.ainiinu.member.dto.response.LoginResponse;
 import scit.ainiinu.member.entity.Member;
 import scit.ainiinu.member.entity.RefreshToken;
+import scit.ainiinu.member.entity.enums.MemberType;
+import scit.ainiinu.member.exception.MemberException;
 import scit.ainiinu.member.repository.MemberRepository;
 import scit.ainiinu.member.repository.RefreshTokenRepository;
 
@@ -21,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -54,6 +59,7 @@ class AuthServiceTest {
 
             Member existingMember = Member.builder()
                     .email("user@example.com")
+                    .password("Abcd1234!")
                     .nickname("기존유저")
                     .build();
             ReflectionTestUtils.setField(existingMember, "id", 1L);
@@ -72,6 +78,25 @@ class AuthServiceTest {
 
             then(refreshTokenRepository).should().deleteByMember(any());
             then(refreshTokenRepository).should().save(any());
+        }
+
+        @Test
+        @DisplayName("비밀번호가 일치하지 않으면 예외를 던진다")
+        void login_withInvalidPassword_throwsException() {
+            AuthLoginRequest request = new AuthLoginRequest();
+            request.setEmail("user@example.com");
+            request.setPassword("Wrong123!");
+
+            Member existingMember = Member.builder()
+                    .email("user@example.com")
+                    .password("Abcd1234!")
+                    .nickname("기존유저")
+                    .build();
+            ReflectionTestUtils.setField(existingMember, "id", 1L);
+            given(memberRepository.findByEmail(request.getEmail())).willReturn(Optional.of(existingMember));
+
+            assertThatThrownBy(() -> authService.loginWithEmail(request))
+                    .isInstanceOf(MemberException.class);
         }
     }
 
@@ -111,6 +136,58 @@ class AuthServiceTest {
 
             then(refreshTokenRepository).should().deleteByMember(member);
             then(refreshTokenRepository).should().save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("회원가입")
+    class Signup {
+
+        @Test
+        @DisplayName("회원가입 시 비밀번호를 포함해 회원을 저장한다")
+        void signup_storesPassword() {
+            MemberSignupRequest request = new MemberSignupRequest();
+            request.setEmail("new@test.com");
+            request.setPassword("Abcd1234!");
+            request.setNickname("신규유저");
+            request.setMemberType(MemberType.NON_PET_OWNER);
+
+            given(memberRepository.findByEmail(request.getEmail())).willReturn(Optional.empty());
+            given(memberRepository.existsByNickname(request.getNickname())).willReturn(false);
+            given(jwtTokenProvider.generateAccessToken(any())).willReturn("access-token");
+            given(jwtTokenProvider.generateRefreshToken(any())).willReturn("refresh-token");
+
+            LoginResponse response = authService.signup(request);
+
+            assertThat(response.isNewMember()).isTrue();
+            then(memberRepository).should().save(any(Member.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("로그아웃")
+    class Logout {
+
+        @Test
+        @DisplayName("리프레시 토큰이 존재하면 삭제한다")
+        void logout_withToken_deletesToken() {
+            Member member = Member.builder()
+                    .email("user@test.com")
+                    .nickname("유저")
+                    .build();
+            ReflectionTestUtils.setField(member, "id", 1L);
+            RefreshToken refreshToken = RefreshToken.builder()
+                    .member(member)
+                    .tokenHash("refresh-token")
+                    .expiresAt(LocalDateTime.now().plusDays(7))
+                    .build();
+            given(refreshTokenRepository.findByTokenHash("refresh-token")).willReturn(Optional.of(refreshToken));
+
+            TokenRevokeRequest request = new TokenRevokeRequest();
+            request.setRefreshToken("refresh-token");
+            authService.logout(request);
+
+            then(refreshTokenRepository).should().delete(refreshToken);
         }
     }
 }
