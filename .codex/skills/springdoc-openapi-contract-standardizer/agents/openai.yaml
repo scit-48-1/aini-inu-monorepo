@@ -1,3 +1,0 @@
-interface:
-  display_name: "Springdoc OpenAPI Standardizer"
-  short_description: "Standardize Springdoc OpenAPI contracts for frontend"
