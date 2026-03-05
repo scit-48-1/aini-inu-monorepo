@@ -121,8 +121,8 @@ export default function AroundMePage() {
     });
   };
 
-  if (!mounted || isLoading) return null;
-  if (!userProfile) return null;
+  if (!mounted || isLoading) return <div className="flex items-center justify-center h-full"><p className="text-zinc-400">Loading...</p></div>;
+  if (!userProfile) return <div className="flex items-center justify-center h-full"><p className="text-zinc-400">Loading...</p></div>;
 
   return (
     <div className="h-full flex flex-col animate-in slide-in-from-right duration-500 bg-background text-black relative">

@@ -34,7 +34,7 @@ export default function RootLayout({
       const raw = localStorage.getItem(DB_KEY);
       if (!raw) { router.replace('/login'); return; }
       const db = JSON.parse(raw);
-      if (!db.currentUserId) router.replace('/login');
+      if (typeof db !== 'object' || db === null || !db.currentUserId) router.replace('/login');
     } catch {
       router.replace('/login');
     }

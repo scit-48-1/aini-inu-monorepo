@@ -68,12 +68,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
   }, [memberId, myProfile]);
 
   const hasRecentDiary = useMemo(() => {
+    if (!allDiaries || typeof allDiaries !== 'object') return false;
     const now = Date.now();
     const oneDayMs = 24 * 60 * 60 * 1000;
     return Object.values(allDiaries).some((d: any) => {
-      const ts = d.createdAt
+      const ts = d?.createdAt
         ? new Date(d.createdAt).getTime()
-        : d.walkDate
+        : d?.walkDate
           ? new Date(d.walkDate.replace(/\./g, '-')).getTime()
           : 0;
       return ts > 0 && now - ts <= oneDayMs;

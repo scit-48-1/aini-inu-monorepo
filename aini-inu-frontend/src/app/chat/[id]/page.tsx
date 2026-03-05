@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { MessageList } from '@/components/chat/MessageList';
@@ -28,6 +28,10 @@ export default function ChatRoomPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [partnerHasRecentDiary, setPartnerHasRecentDiary] = useState(false);
 
+  // Consecutive failure counter for message polling auto-stop
+  const pollFailCountRef = useRef(0);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const fetchData = async () => {
     try {
       const [rooms, msgs, user] = await Promise.all([
@@ -36,7 +40,7 @@ export default function ChatRoomPage() {
         memberService.getMe(),
       ]);
 
-      const currentRoom = rooms.find(r => r.id === roomId);
+      const currentRoom = rooms?.find(r => r.id === roomId);
       if (!currentRoom) {
         toast.error('채팅방을 찾을 수 없습니다.');
         router.push('/chat');
@@ -49,7 +53,7 @@ export default function ChatRoomPage() {
 
       // ChatHeader amber ring 표시를 위한 파트너 다이어리 조회
       try {
-        const partnerDiaries = await threadService.getWalkDiaries(currentRoom.partner.id);
+        const partnerDiaries = await threadService.getWalkDiaries(currentRoom?.partner?.id);
         const now = Date.now();
         const oneDayMs = 24 * 60 * 60 * 1000;
         const hasRecent = Object.values(partnerDiaries || {}).some((d: any) => {
@@ -73,16 +77,34 @@ export default function ChatRoomPage() {
   useEffect(() => {
     if (roomId) fetchData();
 
+    pollFailCountRef.current = 0;
+
     // [Prototype] Polling for new messages simulation
-    const interval = setInterval(async () => {
+    pollIntervalRef.current = setInterval(async () => {
       if (!roomId) return;
       try {
         const msgs = await chatService.getMessages(roomId);
+        pollFailCountRef.current = 0; // reset on success
         setMessages(msgs);
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        console.error(e);
+        pollFailCountRef.current += 1;
+        if (pollFailCountRef.current >= 3) {
+          if (pollIntervalRef.current !== null) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+          }
+          console.warn('[ChatRoom] Message polling stopped after 3 consecutive failures');
+        }
+      }
     }, 3000);
 
-    return () => clearInterval(interval);
+    return () => {
+      if (pollIntervalRef.current !== null) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
   }, [roomId]);
 
   const handleSendMessage = async () => {
@@ -114,12 +136,12 @@ export default function ChatRoomPage() {
           showInfo={isProfileOpen}
           onShowInfoToggle={() => setIsProfileOpen(!isProfileOpen)}
           onBack={() => router.push('/chat')}
-          roomTitle={room.partner.nickname}
+          roomTitle={room?.partner?.nickname ?? ''}
         />
 
         <MessageList
           messages={messages}
-          currentUserId={currentUser.id}
+          currentUserId={currentUser?.id}
           partner={room.partner}
         />
 
@@ -132,7 +154,7 @@ export default function ChatRoomPage() {
 
       {/* 4th Pane: Profile Explorer */}
       <ProfileExplorer
-        partnerId={room.partner.id}
+        partnerId={room?.partner?.id ?? ''}
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
       />

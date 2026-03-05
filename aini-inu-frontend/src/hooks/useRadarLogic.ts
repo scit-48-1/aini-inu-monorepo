@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { threadService } from '@/services/api/threadService';
 import { memberService } from '@/services/api/memberService';
@@ -27,31 +27,44 @@ export function useRadarLogic() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Zustand Global State
-  const { 
-    currentLocation, 
-    setLocation, 
-    lastCoordinates: mapCenter, 
-    setCoordinates: setMapCenter 
+  const {
+    currentLocation,
+    setLocation,
+    lastCoordinates: mapCenter,
+    setCoordinates: setMapCenter
   } = useConfigStore();
+
+  // Consecutive failure counter for polling auto-stop
+  const failCountRef = useRef(0);
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // 2. 데이터 페칭 (Data Fetching)
   const fetchData = useCallback(async () => {
     try {
       const [threads, profile, dogs] = await Promise.all([
-        threadService.getThreads(mapCenter[0], mapCenter[1]), 
+        threadService.getThreads(mapCenter[0], mapCenter[1]),
         memberService.getMe(),
         memberService.getMyDogs()
       ]);
+      failCountRef.current = 0; // reset on success
       setAllThreads(threads || []);
       setUserProfile(profile);
       setMyDogs(dogs || []);
-      
+
       // 초기 1회 프로필 위치 연동
       if (profile?.location && !currentLocation) {
         setLocation(profile.location);
       }
     } catch (e) {
       console.error('Failed to fetch radar data:', e);
+      failCountRef.current += 1;
+      if (failCountRef.current >= 3) {
+        if (pollingIntervalRef.current !== null) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        console.warn('[useRadarLogic] Polling stopped after 3 consecutive failures');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -67,12 +80,17 @@ export function useRadarLogic() {
 
   // 4. 주기적 갱신 (Polling)
   useEffect(() => {
+    failCountRef.current = 0;
     fetchData();
-    const timers = [
-      setInterval(fetchData, 10000),
-      setInterval(() => setCurrentTime(new Date()), 10000)
-    ];
-    return () => timers.forEach(clearInterval);
+    pollingIntervalRef.current = setInterval(fetchData, 10000);
+    const clockInterval = setInterval(() => setCurrentTime(new Date()), 10000);
+    return () => {
+      if (pollingIntervalRef.current !== null) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+      clearInterval(clockInterval);
+    };
   }, [fetchData]);
 
   // 5. 필터링 로직 (Memoized)

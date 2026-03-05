@@ -50,7 +50,7 @@ export default function FeedPage() {
       ]);
       
       if (storiesData) setStories(storiesData);
-      if (diaryRes) setFollowingDiaries(diaryRes);
+      if (diaryRes && typeof diaryRes === 'object') setFollowingDiaries(diaryRes);
     } catch (e) { console.error(e); }
   };
 

@@ -51,7 +51,7 @@ export default function DashboardPage() {
         setThreads(threadData.value.slice(0, 3));
       }
 
-      if (diaryRes.status === 'fulfilled' && diaryRes.value) {
+      if (diaryRes.status === 'fulfilled' && diaryRes.value && typeof diaryRes.value === 'object') {
         const count = Object.values(diaryRes.value).filter((d: any) => d?.isDraft).length;
         setDraftCount(count);
       }
@@ -101,7 +101,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (!userProfile) return null;
+  if (!userProfile) return <div className="flex items-center justify-center h-full"><p className="text-zinc-400">Loading...</p></div>;
 
   return (
     <div className="p-6 md:p-10 space-y-10 animate-in fade-in duration-700 h-full overflow-y-auto no-scrollbar">
