@@ -52,12 +52,12 @@ Plans:
   3. API errors display user-friendly messages via toast, mapped from backend errorCode values
   4. JWT Bearer token is automatically attached to authenticated requests, 401 triggers silent refresh, expired refresh triggers logout redirect
   5. Reusable components exist for all 5 UI states (default/loading/empty/error/success) and at least one page demonstrates their usage
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md — API client foundation: types, auth store, HTTP client with envelope unwrap, JWT interceptor, refresh queue, error toast
+- [ ] 02-02-PLAN.md — Domain API modules (auth, members, pets, threads, diaries) — 40 typed endpoint functions
+- [ ] 02-03-PLAN.md — Domain API modules (chat, lost pets, community, upload) — 33 typed endpoint functions + image upload utility
 
 ### Phase 3: Authentication
 **Goal**: Users can sign up through the 3-step flow, log in, stay logged in via token refresh, and log out
