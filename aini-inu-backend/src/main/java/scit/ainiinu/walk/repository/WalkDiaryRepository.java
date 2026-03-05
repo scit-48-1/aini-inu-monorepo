@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import scit.ainiinu.walk.entity.WalkDiary;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface WalkDiaryRepository extends JpaRepository<WalkDiary, Long> {
@@ -27,4 +29,18 @@ public interface WalkDiaryRepository extends JpaRepository<WalkDiary, Long> {
             order by d.createdAt desc, d.id desc
             """)
     Slice<WalkDiary> findFollowingPublicSlice(@Param("memberId") Long memberId, Pageable pageable);
+
+    @Query("""
+            select d.walkDate as walkDate, count(d) as walkCount
+            from WalkDiary d
+            where d.memberId = :memberId
+              and d.deletedAt is null
+              and d.walkDate between :startDate and :endDate
+            group by d.walkDate
+            """)
+    List<WalkDiaryDailyCountProjection> countDailyWalks(
+            @Param("memberId") Long memberId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 }

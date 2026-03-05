@@ -36,6 +36,7 @@ import scit.ainiinu.member.dto.response.FollowStatusResponse;
 import scit.ainiinu.member.dto.response.LoginResponse;
 import scit.ainiinu.member.dto.response.MemberFollowResponse;
 import scit.ainiinu.member.dto.response.MemberResponse;
+import scit.ainiinu.member.dto.response.WalkStatsResponse;
 import scit.ainiinu.member.service.AuthService;
 import scit.ainiinu.member.service.MemberService;
 import scit.ainiinu.pet.dto.response.PetResponse;
@@ -235,7 +236,7 @@ public class MemberController {
 
     @GetMapping("/me/stats/walk")
     @Operation(summary = "산책 통계 조회", description = "현재 로그인한 회원의 산책 통계를 조회합니다.")
-    public ResponseEntity<ApiResponse<int[]>> getWalkStats(
+    public ResponseEntity<ApiResponse<WalkStatsResponse>> getWalkStats(
             @CurrentMember Long memberId
     ) {
         return ResponseEntity.ok(ApiResponse.success(memberService.getWalkStats(memberId)));

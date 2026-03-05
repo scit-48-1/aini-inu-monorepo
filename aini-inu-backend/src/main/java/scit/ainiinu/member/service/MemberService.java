@@ -14,6 +14,8 @@ import scit.ainiinu.member.dto.response.FollowStatusResponse;
 import scit.ainiinu.member.dto.response.MemberFollowResponse;
 import scit.ainiinu.member.dto.response.MemberPersonalityTypeResponse;
 import scit.ainiinu.member.dto.response.MemberResponse;
+import scit.ainiinu.member.dto.response.WalkStatsPointResponse;
+import scit.ainiinu.member.dto.response.WalkStatsResponse;
 import scit.ainiinu.member.entity.Member;
 import scit.ainiinu.member.entity.MemberFollow;
 import scit.ainiinu.member.entity.MemberPersonality;
@@ -24,7 +26,11 @@ import scit.ainiinu.member.repository.MemberFollowRepository;
 import scit.ainiinu.member.repository.MemberPersonalityRepository;
 import scit.ainiinu.member.repository.MemberPersonalityTypeRepository;
 import scit.ainiinu.member.repository.MemberRepository;
+import scit.ainiinu.walk.repository.WalkDiaryDailyCountProjection;
+import scit.ainiinu.walk.repository.WalkDiaryRepository;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,10 +42,14 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class MemberService {
 
+    private static final int WALK_STATS_WINDOW_DAYS = 126;
+    private static final ZoneId WALK_STATS_ZONE = ZoneId.of("Asia/Seoul");
+
     private final MemberRepository memberRepository;
     private final MemberPersonalityTypeRepository memberPersonalityTypeRepository;
     private final MemberPersonalityRepository memberPersonalityRepository;
     private final MemberFollowRepository memberFollowRepository;
+    private final WalkDiaryRepository walkDiaryRepository;
 
     /**
      * 회원가입 완료 (프로필 생성)
@@ -165,9 +175,39 @@ public class MemberService {
         return new FollowStatusResponse(false);
     }
 
-    public int[] getWalkStats(Long memberId) {
+    public WalkStatsResponse getWalkStats(Long memberId) {
         findMember(memberId);
-        return new int[126];
+
+        LocalDate endDate = LocalDate.now(WALK_STATS_ZONE);
+        LocalDate startDate = endDate.minusDays(WALK_STATS_WINDOW_DAYS - 1L);
+
+        Map<LocalDate, Integer> dailyCountMap = walkDiaryRepository.countDailyWalks(memberId, startDate, endDate)
+                .stream()
+                .collect(Collectors.toMap(
+                        WalkDiaryDailyCountProjection::getWalkDate,
+                        projection -> Math.toIntExact(projection.getWalkCount())
+                ));
+
+        List<WalkStatsPointResponse> points = new ArrayList<>(WALK_STATS_WINDOW_DAYS);
+        int totalWalks = 0;
+        for (int i = 0; i < WALK_STATS_WINDOW_DAYS; i++) {
+            LocalDate date = startDate.plusDays(i);
+            int count = dailyCountMap.getOrDefault(date, 0);
+            totalWalks += count;
+            points.add(WalkStatsPointResponse.builder()
+                    .date(date)
+                    .count(count)
+                    .build());
+        }
+
+        return WalkStatsResponse.builder()
+                .windowDays(WALK_STATS_WINDOW_DAYS)
+                .startDate(startDate)
+                .endDate(endDate)
+                .timezone(WALK_STATS_ZONE.getId())
+                .totalWalks(totalWalks)
+                .points(points)
+                .build();
     }
 
     private List<MemberPersonalityTypeResponse> updateMemberPersonalities(Member member, List<Long> typeIds) {
