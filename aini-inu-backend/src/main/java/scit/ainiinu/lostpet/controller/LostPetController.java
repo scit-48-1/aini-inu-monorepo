@@ -2,6 +2,11 @@ package scit.ainiinu.lostpet.controller;
 
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -59,9 +64,32 @@ public class LostPetController {
 
     @GetMapping
     @Operation(summary = "실종 신고 목록 조회", description = "내 실종 신고 목록을 상태 필터와 함께 조회합니다.")
+    @Parameters({
+            @Parameter(
+                    name = "page",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 번호(0부터 시작)",
+                    schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")
+            ),
+            @Parameter(
+                    name = "size",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 크기",
+                    schema = @Schema(type = "integer", defaultValue = "20", minimum = "1")
+            ),
+            @Parameter(
+                    name = "sort",
+                    in = ParameterIn.QUERY,
+                    description = "정렬 조건입니다. sort=필드,방향 형식으로 반복 지정합니다. "
+                            + "지원 예시: id,desc / createdAt,desc / lastSeenAt,desc. "
+                            + "반복 예시: sort=createdAt,desc&sort=id,desc (JSON 배열 형식 미지원)",
+                    array = @ArraySchema(schema = @Schema(type = "string", example = "id,desc"))
+            )
+    })
     public ResponseEntity<ApiResponse<SliceResponse<LostPetSummaryResponse>>> list(
             @CurrentMember Long memberId,
             @RequestParam(name = "status", required = false) LostPetReportStatus status,
+            @Parameter(hidden = true)
             @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(lostPetService.list(memberId, status, pageable))));
@@ -93,10 +121,32 @@ public class LostPetController {
 
     @GetMapping("/{lostPetId}/match")
     @Operation(summary = "매칭 후보 조회", description = "세션 기반 매칭 후보를 조회합니다. sessionId 미지정 시 최신 유효 세션 기준입니다.")
+    @Parameters({
+            @Parameter(
+                    name = "page",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 번호(0부터 시작)",
+                    schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")
+            ),
+            @Parameter(
+                    name = "size",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 크기",
+                    schema = @Schema(type = "integer", defaultValue = "20", minimum = "1")
+            ),
+            @Parameter(
+                    name = "sort",
+                    in = ParameterIn.QUERY,
+                    description = "서버 고정 정렬(rankOrder asc)로 처리되며 sort 파라미터는 무시됩니다. "
+                            + "요청 형식 예: sort=rankOrder,asc (JSON 배열 형식 미지원)",
+                    array = @ArraySchema(schema = @Schema(type = "string", example = "rankOrder,asc"))
+            )
+    })
     public ResponseEntity<ApiResponse<SliceResponse<LostPetMatchCandidateResponse>>> matchCandidates(
             @CurrentMember Long memberId,
             @PathVariable("lostPetId") Long lostPetId,
             @RequestParam(name = "sessionId", required = false) Long sessionId,
+            @Parameter(hidden = true)
             @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return ResponseEntity.ok(ApiResponse.success(SliceResponse.of(

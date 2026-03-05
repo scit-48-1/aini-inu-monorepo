@@ -2,6 +2,11 @@ package scit.ainiinu.chat.controller;
 
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -52,9 +57,31 @@ public class ChatController {
 
     @GetMapping
     @Operation(summary = "채팅방 목록 조회", description = "상태 필터와 페이지 조건으로 채팅방 목록을 조회합니다.")
+    @Parameters({
+            @Parameter(
+                    name = "page",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 번호(0부터 시작)",
+                    schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")
+            ),
+            @Parameter(
+                    name = "size",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 크기",
+                    schema = @Schema(type = "integer", defaultValue = "20", minimum = "1")
+            ),
+            @Parameter(
+                    name = "sort",
+                    in = ParameterIn.QUERY,
+                    description = "서버 고정 정렬(updatedAt desc, id desc)로 처리되며 sort 파라미터는 무시됩니다. "
+                            + "요청 형식 예: sort=updatedAt,desc&sort=id,desc (JSON 배열 형식 미지원)",
+                    array = @ArraySchema(schema = @Schema(type = "string", example = "updatedAt,desc"))
+            )
+    })
     public ResponseEntity<ApiResponse<SliceResponse<ChatRoomSummaryResponse>>> getChatRooms(
             @CurrentMember Long memberId,
             @RequestParam(required = false) String status,
+            @Parameter(hidden = true)
             @PageableDefault(size = 20) Pageable pageable
     ) {
         SliceResponse<ChatRoomSummaryResponse> response = chatRoomService.getRooms(memberId, status, pageable);
@@ -185,9 +212,31 @@ public class ChatController {
 
     @GetMapping("/{chatRoomId}/reviews")
     @Operation(summary = "채팅 리뷰 목록 조회", description = "채팅방 리뷰 목록을 Slice로 조회합니다.")
+    @Parameters({
+            @Parameter(
+                    name = "page",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 번호(0부터 시작)",
+                    schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")
+            ),
+            @Parameter(
+                    name = "size",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 크기",
+                    schema = @Schema(type = "integer", defaultValue = "20", minimum = "1")
+            ),
+            @Parameter(
+                    name = "sort",
+                    in = ParameterIn.QUERY,
+                    description = "서버 고정 정렬(createdAt desc, id desc)로 처리되며 sort 파라미터는 무시됩니다. "
+                            + "요청 형식 예: sort=createdAt,desc&sort=id,desc (JSON 배열 형식 미지원)",
+                    array = @ArraySchema(schema = @Schema(type = "string", example = "createdAt,desc"))
+            )
+    })
     public ResponseEntity<ApiResponse<SliceResponse<ChatReviewResponse>>> getReviews(
             @CurrentMember Long memberId,
             @PathVariable Long chatRoomId,
+            @Parameter(hidden = true)
             @PageableDefault(size = 20) Pageable pageable
     ) {
         SliceResponse<ChatReviewResponse> response = chatReviewService.getReviews(memberId, chatRoomId, pageable);

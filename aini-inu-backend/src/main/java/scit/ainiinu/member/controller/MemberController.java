@@ -2,6 +2,11 @@ package scit.ainiinu.member.controller;
 
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
@@ -101,9 +106,32 @@ public class MemberController {
 
     @GetMapping("/search")
     @Operation(summary = "회원 검색", description = "닉네임/키워드 기반으로 회원을 검색합니다.")
+    @Parameters({
+            @Parameter(
+                    name = "page",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 번호(0부터 시작)",
+                    schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")
+            ),
+            @Parameter(
+                    name = "size",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 크기",
+                    schema = @Schema(type = "integer", defaultValue = "20", minimum = "1")
+            ),
+            @Parameter(
+                    name = "sort",
+                    in = ParameterIn.QUERY,
+                    description = "정렬 조건입니다. sort=필드,방향 형식으로 반복 지정합니다. "
+                            + "지원 예시: id,desc / createdAt,desc / nickname,asc. "
+                            + "반복 예시: sort=createdAt,desc&sort=id,desc (JSON 배열 형식 미지원)",
+                    array = @ArraySchema(schema = @Schema(type = "string", example = "id,desc"))
+            )
+    })
     public ResponseEntity<ApiResponse<SliceResponse<MemberResponse>>> searchMembers(
             @CurrentMember Long memberId,
             @RequestParam("q") String query,
+            @Parameter(hidden = true)
             @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return ResponseEntity.ok(ApiResponse.success(memberService.searchMembers(memberId, query, pageable)));
@@ -127,8 +155,30 @@ public class MemberController {
 
     @GetMapping("/me/followers")
     @Operation(summary = "내 팔로워 목록 조회", description = "현재 로그인한 회원의 팔로워 목록을 조회합니다.")
+    @Parameters({
+            @Parameter(
+                    name = "page",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 번호(0부터 시작)",
+                    schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")
+            ),
+            @Parameter(
+                    name = "size",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 크기",
+                    schema = @Schema(type = "integer", defaultValue = "20", minimum = "1")
+            ),
+            @Parameter(
+                    name = "sort",
+                    in = ParameterIn.QUERY,
+                    description = "서버 고정 정렬(createdAt desc)로 처리되며 sort 파라미터는 무시됩니다. "
+                            + "요청 형식 예: sort=createdAt,desc (JSON 배열 형식 미지원)",
+                    array = @ArraySchema(schema = @Schema(type = "string", example = "createdAt,desc"))
+            )
+    })
     public ResponseEntity<ApiResponse<SliceResponse<MemberFollowResponse>>> getFollowers(
             @CurrentMember Long memberId,
+            @Parameter(hidden = true)
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return ResponseEntity.ok(ApiResponse.success(memberService.getFollowers(memberId, pageable)));
@@ -136,8 +186,30 @@ public class MemberController {
 
     @GetMapping("/me/following")
     @Operation(summary = "내 팔로잉 목록 조회", description = "현재 로그인한 회원이 팔로우 중인 목록을 조회합니다.")
+    @Parameters({
+            @Parameter(
+                    name = "page",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 번호(0부터 시작)",
+                    schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")
+            ),
+            @Parameter(
+                    name = "size",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 크기",
+                    schema = @Schema(type = "integer", defaultValue = "20", minimum = "1")
+            ),
+            @Parameter(
+                    name = "sort",
+                    in = ParameterIn.QUERY,
+                    description = "서버 고정 정렬(createdAt desc)로 처리되며 sort 파라미터는 무시됩니다. "
+                            + "요청 형식 예: sort=createdAt,desc (JSON 배열 형식 미지원)",
+                    array = @ArraySchema(schema = @Schema(type = "string", example = "createdAt,desc"))
+            )
+    })
     public ResponseEntity<ApiResponse<SliceResponse<MemberFollowResponse>>> getFollowing(
             @CurrentMember Long memberId,
+            @Parameter(hidden = true)
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return ResponseEntity.ok(ApiResponse.success(memberService.getFollowing(memberId, pageable)));
