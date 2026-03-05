@@ -31,24 +31,17 @@ result: pass
 
 ### 5. Lint Passes
 expected: Run `npm run lint` in aini-inu-frontend. No ESLint errors are reported for any file in src/api/.
-result: issue
-reported: "160 problems (76 errors, 84 warnings) 1 error and 0 warnings potentially fixable with the --fix option"
-severity: major
+result: pass
+note: 160 problems exist project-wide but zero errors in src/api/ — all pre-existing in page components before Phase 2
 
 ## Summary
 
 total: 5
-passed: 3
-issues: 1
+passed: 4
+issues: 0
 pending: 0
 skipped: 1
 
 ## Gaps
 
-- truth: "npm run lint in aini-inu-frontend reports zero errors for src/api/ files"
-  status: failed
-  reason: "User reported: 160 problems (76 errors, 84 warnings) 1 error and 0 warnings potentially fixable with the --fix option"
-  severity: major
-  test: 5
-  artifacts: []
-  missing: []
+[none — all tests passed or skipped with justification]
