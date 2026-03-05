@@ -36,11 +36,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. No infinite re-render loops or infinite API polling detected on any page
   3. All existing API calls use correct URL paths, HTTP methods, and payload shapes matching the Swagger spec
   4. Browser network tab shows zero 4xx/5xx errors caused by frontend request malformation
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md — Infrastructure safety net: API proxy rewrites, MSW toggle fix, error boundaries for all routes
+- [ ] 01-02-PLAN.md — Per-page defensive patches (infinite polling, null guards) + API mismatch catalog for Phase 2
 
 ### Phase 2: Common Infrastructure
 **Goal**: A shared API layer exists that all domain screens consume, with consistent envelope parsing, error handling, pagination, image upload, auth tokens, and UI state patterns
@@ -226,7 +226,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Critical Bugs | 0/2 | Not started | - |
+| 1. Critical Bugs | 0/2 | Planned | - |
 | 2. Common Infrastructure | 0/3 | Not started | - |
 | 3. Authentication | 0/2 | Not started | - |
 | 4. Member Profile/Relations | 0/3 | Not started | - |
