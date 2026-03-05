@@ -23,11 +23,8 @@ export function useProfile() {
   }, [updateStoreProfile]);
 
   useEffect(() => {
-    // 프로필이 없는 경우에만 최초 1회 페칭
-    if (!profile && !isLoading) {
-      fetchProfile();
-    }
-  }, [profile, isLoading, fetchProfile]);
+    fetchProfile();
+  }, [fetchProfile]);
 
   return { 
     profile, 

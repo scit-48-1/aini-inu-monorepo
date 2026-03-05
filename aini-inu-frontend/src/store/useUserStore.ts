@@ -6,7 +6,8 @@ interface UserState {
   profile: UserType | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  
+  hasFetched: boolean;
+
   // Actions
   setProfile: (profile: UserType | null) => void;
   fetchProfile: () => Promise<void>;
@@ -18,17 +19,19 @@ export const useUserStore = create<UserState>((set, get) => ({
   profile: null,
   isAuthenticated: false,
   isLoading: false,
+  hasFetched: false,
 
   setProfile: (profile) => set({ profile, isAuthenticated: !!profile }),
 
   fetchProfile: async () => {
+    if (get().hasFetched || get().isLoading) return;
     set({ isLoading: true });
     try {
       const data = await memberService.getMe();
-      set({ profile: data, isAuthenticated: true });
+      set({ profile: data, isAuthenticated: true, hasFetched: true });
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
-      set({ profile: null, isAuthenticated: false });
+      set({ profile: null, isAuthenticated: false, hasFetched: true });
     } finally {
       set({ isLoading: false });
     }
