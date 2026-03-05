@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import type { LoginResponse } from './auth';
 import type { PaginationParams, SliceResponse } from './types';
 import type { PetResponse, BreedResponse, PersonalityResponse, WalkingStyleResponse } from './pets';
 
@@ -107,8 +108,8 @@ function buildQuery(params: Record<string, unknown>): string {
 
 // --- Functions ---
 
-export async function signup(data: MemberSignupRequest): Promise<MemberResponse> {
-  return apiClient.post<MemberResponse>('/members/signup', data);
+export async function signup(data: MemberSignupRequest): Promise<LoginResponse> {
+  return apiClient.post<LoginResponse>('/members/signup', data);
 }
 
 export async function createProfile(data: MemberCreateRequest): Promise<MemberResponse> {

@@ -1,6 +1,32 @@
 import { create } from 'zustand';
 import { UserType } from '@/types';
-import { memberService } from '@/services/api/memberService';
+import { getMe, updateMe } from '@/api/members';
+import type { MemberResponse, MemberProfilePatchRequest } from '@/api/members';
+
+// Map MemberResponse to UserType for store compatibility
+function mapMemberToUser(member: MemberResponse): UserType {
+  return {
+    id: String(member.id),
+    email: member.email,
+    nickname: member.nickname,
+    handle: member.nickname,
+    avatar: member.profileImageUrl || '',
+    mannerScore: member.mannerTemperature || 0,
+    isOwner: member.memberType === 'OWNER',
+    birthDate: '',
+    age: member.age || 0,
+    gender: (member.gender as 'M' | 'F') || 'M',
+    mbti: member.mbti,
+    phone: member.phone,
+    nicknameChangedAt: member.nicknameChangedAt,
+    about: member.selfIntroduction || '',
+    location: '',
+    dogs: [],
+    followerCount: 0,
+    followingCount: 0,
+    tendencies: member.personalityTypes?.map((pt) => pt.name) || [],
+  };
+}
 
 interface UserState {
   profile: UserType | null;
@@ -9,9 +35,10 @@ interface UserState {
   hasFetched: boolean;
 
   // Actions
-  setProfile: (profile: UserType | null) => void;
-  fetchProfile: () => Promise<void>;
-  updateProfile: (data: Partial<UserType>) => Promise<boolean>;
+  setProfile: (profile: UserType | MemberResponse | null) => void;
+  fetchProfile: (force?: boolean) => Promise<void>;
+  updateProfile: (data: Partial<UserType> | MemberProfilePatchRequest) => Promise<boolean>;
+  clearProfile: () => void;
   logout: () => void;
 }
 
@@ -21,14 +48,26 @@ export const useUserStore = create<UserState>((set, get) => ({
   isLoading: false,
   hasFetched: false,
 
-  setProfile: (profile) => set({ profile, isAuthenticated: !!profile }),
+  setProfile: (profile) => {
+    if (!profile) {
+      set({ profile: null, isAuthenticated: false });
+      return;
+    }
+    // Handle MemberResponse (from API) or UserType (legacy)
+    if ('email' in profile && 'mannerTemperature' in profile) {
+      // It's a MemberResponse — map it
+      set({ profile: mapMemberToUser(profile as MemberResponse), isAuthenticated: true });
+    } else {
+      set({ profile: profile as UserType, isAuthenticated: !!profile });
+    }
+  },
 
-  fetchProfile: async () => {
-    if (get().hasFetched || get().isLoading) return;
+  fetchProfile: async (force?: boolean) => {
+    if (!force && (get().hasFetched || get().isLoading)) return;
     set({ isLoading: true });
     try {
-      const data = await memberService.getMe();
-      set({ profile: data, isAuthenticated: true, hasFetched: true });
+      const data = await getMe();
+      set({ profile: mapMemberToUser(data), isAuthenticated: true, hasFetched: true });
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
       set({ profile: null, isAuthenticated: false, hasFetched: true });
@@ -39,8 +78,8 @@ export const useUserStore = create<UserState>((set, get) => ({
 
   updateProfile: async (data) => {
     try {
-      const updated = await memberService.updateMe(data);
-      set({ profile: updated });
+      const updated = await updateMe(data as MemberProfilePatchRequest);
+      set({ profile: mapMemberToUser(updated) });
       return true;
     } catch (error) {
       console.error('Failed to update profile:', error);
@@ -48,16 +87,11 @@ export const useUserStore = create<UserState>((set, get) => ({
     }
   },
 
+  clearProfile: () => {
+    set({ profile: null, isAuthenticated: false, hasFetched: false });
+  },
+
   logout: () => {
-    try {
-      const DB_KEY = 'aini_inu_v6_db';
-      const raw = localStorage.getItem(DB_KEY);
-      if (raw) {
-        const db = JSON.parse(raw);
-        db.currentUserId = null;
-        localStorage.setItem(DB_KEY, JSON.stringify(db));
-      }
-    } catch { /* localStorage 접근 실패 시 무시 */ }
-    set({ profile: null, isAuthenticated: false });
+    set({ profile: null, isAuthenticated: false, hasFetched: false });
   },
 }));
