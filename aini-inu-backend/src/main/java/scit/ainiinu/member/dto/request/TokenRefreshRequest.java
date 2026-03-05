@@ -13,7 +13,11 @@ import lombok.Setter;
 @AllArgsConstructor
 public class TokenRefreshRequest {
 
-    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(
+            description = "재발급에 사용할 리프레시 토큰입니다.",
+            example = "<REFRESH_TOKEN>",
+            requiredMode = Schema.RequiredMode.REQUIRED
+    )
     @NotBlank(message = "리프레시 토큰은 필수입니다.")
     private String refreshToken;
 }

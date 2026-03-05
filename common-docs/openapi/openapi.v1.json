@@ -9071,28 +9071,26 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\uc0b0\ucc45 \ubaa8\uc9d1\uae00 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "title": {
                         "type": "string",
-                        "description": "\uc81c\ubaa9\uc785\ub2c8\ub2e4.",
-                        "example": "\uc544\uce68 \uc0b0\ucc45 \uba54\uc774\ud2b8 \uad6c\ud574\uc694",
+                        "description": "\uc0b0\ucc45\uc77c\uae30 \uc81c\ubaa9\uc785\ub2c8\ub2e4.",
+                        "example": "\ud55c\uac15\uacf5\uc6d0 \uc800\ub141 \uc0b0\ucc45 \uae30\ub85d",
                         "maxLength": 120,
                         "minLength": 1
                     },
                     "content": {
                         "type": "string",
-                        "description": "\ubcf8\ubb38 \ub0b4\uc6a9\uc785\ub2c8\ub2e4.",
-                        "example": "\uac15\uc544\uc9c0\uc640 \uc990\uac70\uc6b4 \uc0b0\ucc45\uc744 \ud588\uc5b4\uc694.",
+                        "description": "\uc0b0\ucc45\uc77c\uae30 \ubcf8\ubb38\uc785\ub2c8\ub2e4.",
+                        "example": "\uc624\ub298\uc740 \ud55c\uac15\uacf5\uc6d0\uc5d0\uc11c 30\ubd84 \uc0b0\ucc45\ud588\uace0 \ub2e4\ub978 \uac15\uc544\uc9c0\ub4e4\uacfc \uc778\uc0ac\ub3c4 \ud588\uc5b4\uc694.",
                         "maxLength": 300,
                         "minLength": 1
                     },
                     "photoUrls": {
                         "type": "array",
                         "description": "\uc0ac\uc9c4 URL \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            "https://cdn.example.com/sample.jpg"
-                        ],
+                        "example": [],
                         "items": {
                             "type": "string"
                         },
@@ -9159,19 +9157,19 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "memberId": {
                         "type": "integer",
                         "format": "int64",
                         "description": "\ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "threadId": {
                         "type": "integer",
                         "format": "int64",
                         "description": "\uc0b0\ucc45 \ubaa8\uc9d1\uae00 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "title": {
                         "type": "string",
@@ -9180,16 +9178,14 @@
                     },
                     "content": {
                         "type": "string",
-                        "description": "\ubcf8\ubb38 \ub0b4\uc6a9\uc785\ub2c8\ub2e4.",
-                        "example": "\uac15\uc544\uc9c0\uc640 \uc990\uac70\uc6b4 \uc0b0\ucc45\uc744 \ud588\uc5b4\uc694.",
+                        "description": "\uc0b0\ucc45\uc77c\uae30 \ubcf8\ubb38\uc785\ub2c8\ub2e4.",
+                        "example": "\ud55c\uac15\uacf5\uc6d0\uc5d0\uc11c 30\ubd84 \uc0b0\ucc45\ud588\uc5b4\uc694.",
                         "maxLength": 300
                     },
                     "photoUrls": {
                         "type": "array",
                         "description": "\uc0ac\uc9c4 URL \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            "https://cdn.example.com/sample.jpg"
-                        ],
+                        "example": [],
                         "items": {
                             "type": "string"
                         }
@@ -9202,8 +9198,13 @@
                     },
                     "linkedThreadStatus": {
                         "type": "string",
-                        "description": "\uc5f0\uacb0 \uc2a4\ub808\ub4dc \uc0c1\ud0dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
-                        "example": "ACTIVE"
+                        "description": "\uc5f0\uacb0\ub41c \uc0b0\ucc45 \ubaa8\uc9d1\uae00 \uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: RECRUITING(\ubaa8\uc9d1\uc911), EXPIRED(\ub9c8\uac10), DELETED(\uc0ad\uc81c).",
+                        "enum": [
+                            "RECRUITING",
+                            "EXPIRED",
+                            "DELETED"
+                        ],
+                        "example": "RECRUITING"
                     },
                     "createdAt": {
                         "type": "string",
@@ -9236,20 +9237,20 @@
                     "placeName": {
                         "type": "string",
                         "description": "\uc7a5\uc18c\uba85\uc785\ub2c8\ub2e4.",
-                        "example": "\ubabd\uc774",
+                        "example": "\uc11c\uc6b8\uc232",
                         "minLength": 1
                     },
                     "latitude": {
                         "type": "number",
                         "format": "double",
                         "description": "\uc704\ub3c4\uc785\ub2c8\ub2e4.",
-                        "example": 37.566295
+                        "example": 1.0
                     },
                     "longitude": {
                         "type": "number",
                         "format": "double",
                         "description": "\uacbd\ub3c4\uc785\ub2c8\ub2e4.",
-                        "example": 126.977945
+                        "example": 1.0
                     },
                     "address": {
                         "type": "string",
@@ -9269,15 +9270,15 @@
                 "properties": {
                     "title": {
                         "type": "string",
-                        "description": "\uc81c\ubaa9\uc785\ub2c8\ub2e4.",
-                        "example": "\uc544\uce68 \uc0b0\ucc45 \uba54\uc774\ud2b8 \uad6c\ud574\uc694",
+                        "description": "\uc0b0\ucc45 \ubaa8\uc9d1\uae00 \uc81c\ubaa9\uc785\ub2c8\ub2e4.",
+                        "example": "\uc8fc\ub9d0 \uc624\uc804 \uc0b0\ucc45 \uba54\uc774\ud2b8 \uad6c\ud574\uc694",
                         "maxLength": 30,
                         "minLength": 1
                     },
                     "description": {
                         "type": "string",
-                        "description": "\uc124\uba85 \ubb38\uad6c\uc785\ub2c8\ub2e4.",
-                        "example": "\ud55c\uac15\uacf5\uc6d0\uc5d0\uc11c 30\ubd84 \uc0b0\ucc45 \uc608\uc815\uc785\ub2c8\ub2e4.",
+                        "description": "\uc0b0\ucc45 \ubaa8\uc9d1\uae00 \uc124\uba85\uc785\ub2c8\ub2e4.",
+                        "example": "\uc11c\uc6b8\uc232\uc5d0\uc11c 40\ubd84 \uc815\ub3c4 \uac00\ubccd\uac8c \uc0b0\ucc45\ud560 \ubd84\uc744 \ucc3e\uace0 \uc788\uc5b4\uc694.",
                         "maxLength": 500,
                         "minLength": 1
                     },
@@ -9302,6 +9303,10 @@
                     "chatType": {
                         "type": "string",
                         "description": "\ucc44\ud305 \ud0c0\uc785 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: INDIVIDUAL(1:1), GROUP(\uadf8\ub8f9 \ubaa8\uc9d1).",
+                        "enum": [
+                            "INDIVIDUAL",
+                            "GROUP"
+                        ],
                         "example": "INDIVIDUAL",
                         "minLength": 1
                     },
@@ -9309,14 +9314,14 @@
                         "type": "integer",
                         "format": "int32",
                         "description": "\ucd5c\ub300 \ucc38\uc5ec \uc778\uc6d0\uc785\ub2c8\ub2e4.",
-                        "example": 20,
+                        "example": 1,
                         "maximum": 10,
                         "minimum": 2
                     },
                     "allowNonPetOwner": {
                         "type": "boolean",
                         "description": "\ube44\uc560\uacac\uc778 \ucc38\uc5ec \ud5c8\uc6a9 \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
-                        "example": false
+                        "example": true
                     },
                     "isVisibleAlways": {
                         "type": "boolean",
@@ -9325,20 +9330,17 @@
                     },
                     "location": {
                         "$ref": "#/components/schemas/LocationRequest",
-                        "description": "location \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc0b0\ucc45 \uc7a5\uc18c \uc815\ubcf4 \uac1d\uccb4\uc785\ub2c8\ub2e4.",
                         "example": {
                             "placeName": "\ud55c\uac15\uacf5\uc6d0",
-                            "latitude": 37.566295,
-                            "longitude": 126.977945
+                            "longitude": 126.977945,
+                            "latitude": 37.566295
                         }
                     },
                     "petIds": {
                         "type": "array",
-                        "description": "petIds \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            1,
-                            2
-                        ],
+                        "description": "\ubaa8\uc9d1\uae00\uc5d0 \uc5f0\uacb0\ud560 \ubc18\ub824\uacac ID \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "type": "integer",
                             "format": "int64"
@@ -9347,17 +9349,8 @@
                     },
                     "filters": {
                         "type": "array",
-                        "description": "filters \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            {
-                                "type": "AGE_GROUP",
-                                "values": [
-                                    "20",
-                                    "30"
-                                ],
-                                "isRequired": false
-                            }
-                        ],
+                        "description": "\ubaa8\uc9d1 \ud544\ud130 \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "$ref": "#/components/schemas/ThreadFilterRequest"
                         }
@@ -9381,22 +9374,20 @@
                     "type": {
                         "type": "string",
                         "description": "\ud544\ud130 \uc720\ud615 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
-                        "example": "INDIVIDUAL",
+                        "example": "AGE_GROUP",
                         "minLength": 1
                     },
                     "values": {
                         "type": "array",
                         "description": "\ud544\ud130 \uac12 \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            "\uc608\uc2dc \ubb38\uc790\uc5f4"
-                        ],
+                        "example": [],
                         "items": {
                             "type": "string"
                         }
                     },
                     "isRequired": {
                         "type": "boolean",
-                        "description": "\ud544\uc218 \ud544\ud130 \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
+                        "description": "\ud544\ud130 \ud544\uc218 \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
                         "example": true
                     }
                 },
@@ -9446,18 +9437,23 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
-                        "example": "ACTIVE"
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: RECRUITING, EXPIRED, DELETED.",
+                        "enum": [
+                            "RECRUITING",
+                            "EXPIRED",
+                            "DELETED"
+                        ],
+                        "example": "RECRUITING"
                     },
                     "chatRoomId": {
                         "type": "integer",
                         "format": "int64",
                         "description": "\ucc44\ud305\ubc29 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     }
                 }
             },
@@ -9469,13 +9465,13 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "authorId": {
                         "type": "integer",
                         "format": "int64",
                         "description": "\uc791\uc131\uc790 \ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "title": {
                         "type": "string",
@@ -9508,24 +9504,28 @@
                     "chatType": {
                         "type": "string",
                         "description": "\ucc44\ud305 \ud0c0\uc785 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: INDIVIDUAL(1:1), GROUP(\uadf8\ub8f9 \ubaa8\uc9d1).",
+                        "enum": [
+                            "INDIVIDUAL",
+                            "GROUP"
+                        ],
                         "example": "INDIVIDUAL"
                     },
                     "maxParticipants": {
                         "type": "integer",
                         "format": "int32",
                         "description": "\ucd5c\ub300 \ucc38\uc5ec \uc778\uc6d0\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "example": 1
                     },
                     "currentParticipants": {
                         "type": "integer",
                         "format": "int32",
                         "description": "\ud604\uc7ac \ucc38\uc5ec \uc778\uc6d0\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "example": 1
                     },
                     "allowNonPetOwner": {
                         "type": "boolean",
                         "description": "\ube44\uc560\uacac\uc778 \ucc38\uc5ec \ud5c8\uc6a9 \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
-                        "example": false
+                        "example": true
                     },
                     "isVisibleAlways": {
                         "type": "boolean",
@@ -9540,12 +9540,12 @@
                     "latitude": {
                         "type": "number",
                         "description": "\uc704\ub3c4\uc785\ub2c8\ub2e4.",
-                        "example": 37.566295
+                        "example": 1.0
                     },
                     "longitude": {
                         "type": "number",
                         "description": "\uacbd\ub3c4\uc785\ub2c8\ub2e4.",
-                        "example": 126.977945
+                        "example": 1.0
                     },
                     "address": {
                         "type": "string",
@@ -9554,16 +9554,18 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
-                        "example": "ACTIVE"
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: RECRUITING(\ubaa8\uc9d1\uc911), EXPIRED(\ub9c8\uac10), DELETED(\uc0ad\uc81c).",
+                        "enum": [
+                            "RECRUITING",
+                            "EXPIRED",
+                            "DELETED"
+                        ],
+                        "example": "RECRUITING"
                     },
                     "petIds": {
                         "type": "array",
-                        "description": "petIds \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            1,
-                            2
-                        ],
+                        "description": "\uc5f0\uacb0\ub41c \ubc18\ub824\uacac ID \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "type": "integer",
                             "format": "int64"
@@ -9571,12 +9573,8 @@
                     },
                     "applicants": {
                         "type": "array",
-                        "description": "applicants \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            {
-                                "note": "\uac1d\uccb4 \uc608\uc2dc"
-                            }
-                        ],
+                        "description": "\uc2e0\uccad\uc790 \ud68c\uc6d0 ID \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "$ref": "#/components/schemas/ApplicantSummary"
                         }
@@ -9589,11 +9587,8 @@
                 "properties": {
                     "petIds": {
                         "type": "array",
-                        "description": "petIds \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            1,
-                            2
-                        ],
+                        "description": "\uc5f0\uacb0\ub41c \ubc18\ub824\uacac ID \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "type": "integer",
                             "format": "int64"
@@ -9643,18 +9638,22 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\uc0b0\ucc45 \ubaa8\uc9d1\uae00 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "chatRoomId": {
                         "type": "integer",
                         "format": "int64",
                         "description": "\ucc44\ud305\ubc29 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "applicationStatus": {
                         "type": "string",
-                        "description": "\uc2e0\uccad \uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
-                        "example": "ACTIVE"
+                        "description": "\uc2e0\uccad \uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: JOINED(\uc2e0\uccad \uc644\ub8cc), CANCELED(\uc2e0\uccad \ucde8\uc18c).",
+                        "enum": [
+                            "JOINED",
+                            "CANCELED"
+                        ],
+                        "example": "JOINED"
                     },
                     "idempotentReplay": {
                         "type": "boolean",
@@ -9663,7 +9662,7 @@
                     },
                     "isIdempotentReplay": {
                         "type": "boolean",
-                        "description": "isIdempotentReplay \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ub3d9\uc77c \uba71\ub4f1 \ud0a4 \uc7ac\uc694\uccad\uc73c\ub85c \uae30\uc874 \uacb0\uacfc\ub97c \uc7ac\uc0ac\uc6a9\ud588\ub294\uc9c0 \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
                         "example": true
                     }
                 }
@@ -9711,26 +9710,26 @@
                 "properties": {
                     "photoUrl": {
                         "type": "string",
-                        "description": "\uc774\ubbf8\uc9c0 URL\uc785\ub2c8\ub2e4.",
+                        "description": "\ubaa9\uaca9 \uc0ac\uc9c4 URL\uc785\ub2c8\ub2e4.",
                         "example": "https://cdn.example.com/sample.jpg",
                         "minLength": 1
                     },
                     "foundAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "foundAt \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ubaa9\uaca9 \uc2dc\uac01(UTC)\uc785\ub2c8\ub2e4.",
                         "example": "2026-03-05T01:20:00Z"
                     },
                     "foundLocation": {
                         "type": "string",
-                        "description": "foundLocation \uac12\uc785\ub2c8\ub2e4.",
-                        "example": "\uc608\uc2dc \ubb38\uc790\uc5f4",
+                        "description": "\ubaa9\uaca9 \uc704\uce58 \uc124\uba85\uc785\ub2c8\ub2e4.",
+                        "example": "\uc11c\uc6b8\uc2dc \uc601\ub4f1\ud3ec\uad6c \uc5ec\uc758\ub3c4 \ud55c\uac15\uacf5\uc6d0",
                         "minLength": 1
                     },
                     "memo": {
                         "type": "string",
-                        "description": "memo \uac12\uc785\ub2c8\ub2e4.",
-                        "example": "\uc608\uc2dc \ubb38\uc790\uc5f4"
+                        "description": "\ucd94\uac00 \uba54\ubaa8\uc785\ub2c8\ub2e4.",
+                        "example": "\ube68\uac04 \ubaa9\uc904\uc744 \ucc29\uc6a9\ud558\uace0 \uc788\uc5c8\uc5b4\uc694."
                     }
                 },
                 "required": [
@@ -9780,18 +9779,22 @@
                     "sightingId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "sightingId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\ubaa9\uaca9 \uc2e0\uace0 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
-                        "example": "ACTIVE"
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: OPEN(\uc811\uc218), CLOSED(\uc885\ub8cc).",
+                        "enum": [
+                            "OPEN",
+                            "CLOSED"
+                        ],
+                        "example": "OPEN"
                     },
                     "foundAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "foundAt \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ubaa9\uaca9 \uc2dc\uac01(UTC)\uc785\ub2c8\ub2e4.",
                         "example": "2026-03-05T01:20:00Z"
                     }
                 }
@@ -9817,9 +9820,7 @@
                     "imageUrls": {
                         "type": "array",
                         "description": "\uc774\ubbf8\uc9c0 URL \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            "https://cdn.example.com/sample.jpg"
-                        ],
+                        "example": [],
                         "items": {
                             "type": "string"
                         },
@@ -9880,7 +9881,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "nickname": {
                         "type": "string",
@@ -9902,11 +9903,11 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "author": {
                         "$ref": "#/components/schemas/Author",
-                        "description": "author \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc791\uc131\uc790 \uc694\uc57d \uc815\ubcf4\uc785\ub2c8\ub2e4.",
                         "example": {
                             "note": "\uac1d\uccb4 \uc608\uc2dc"
                         }
@@ -9919,9 +9920,7 @@
                     "imageUrls": {
                         "type": "array",
                         "description": "\uc774\ubbf8\uc9c0 URL \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            "https://cdn.example.com/sample.jpg"
-                        ],
+                        "example": [],
                         "items": {
                             "type": "string"
                         }
@@ -9929,14 +9928,14 @@
                     "likeCount": {
                         "type": "integer",
                         "format": "int32",
-                        "description": "likeCount \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "description": "\uc88b\uc544\uc694 \uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "commentCount": {
                         "type": "integer",
                         "format": "int32",
-                        "description": "commentCount \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "description": "\ub313\uae00 \uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "createdAt": {
                         "type": "string",
@@ -9992,8 +9991,8 @@
                     "likeCount": {
                         "type": "integer",
                         "format": "int32",
-                        "description": "likeCount \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "description": "\uc88b\uc544\uc694 \uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "liked": {
                         "type": "boolean",
@@ -10008,8 +10007,8 @@
                 "properties": {
                     "content": {
                         "type": "string",
-                        "description": "\ubcf8\ubb38 \ub0b4\uc6a9\uc785\ub2c8\ub2e4.",
-                        "example": "\uac15\uc544\uc9c0\uc640 \uc990\uac70\uc6b4 \uc0b0\ucc45\uc744 \ud588\uc5b4\uc694.",
+                        "description": "\ub313\uae00 \ubcf8\ubb38\uc785\ub2c8\ub2e4.",
+                        "example": "\uac19\uc774 \uc0b0\ucc45\ud574\uc11c \uc990\uac70\uc6e0\uc5b4\uc694!",
                         "maxLength": 500,
                         "minLength": 1
                     }
@@ -10060,11 +10059,11 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "author": {
                         "$ref": "#/components/schemas/Author",
-                        "description": "author \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc791\uc131\uc790 \uc694\uc57d \uc815\ubcf4\uc785\ub2c8\ub2e4.",
                         "example": {
                             "note": "\uac1d\uccb4 \uc608\uc2dc"
                         }
@@ -10088,7 +10087,7 @@
                 "properties": {
                     "name": {
                         "type": "string",
-                        "description": "\uc774\ub984\uc785\ub2c8\ub2e4.",
+                        "description": "\ubc18\ub824\uacac \uc774\ub984\uc785\ub2c8\ub2e4.",
                         "example": "\ubabd\uc774",
                         "maxLength": 10,
                         "minLength": 1
@@ -10096,18 +10095,18 @@
                     "breedId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "breedId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\uacac\uc885 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "birthDate": {
                         "type": "string",
                         "format": "date",
-                        "description": "birthDate \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ubc18\ub824\uacac \uc0dd\ub144\uc6d4\uc77c\uc785\ub2c8\ub2e4.",
                         "example": "2026-03-05"
                     },
                     "gender": {
                         "type": "string",
-                        "description": "\uc131\ubcc4 \uac12\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: MALE, FEMALE.",
+                        "description": "\uc131\ubcc4 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: MALE(\uc218\ucef7), FEMALE(\uc554\ucef7).",
                         "enum": [
                             "MALE",
                             "FEMALE"
@@ -10116,7 +10115,7 @@
                     },
                     "size": {
                         "type": "string",
-                        "description": "\ud398\uc774\uc9c0 \ud06c\uae30\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: SMALL, MEDIUM, LARGE.",
+                        "description": "\ubc18\ub824\uacac \uccb4\ud615 \ud06c\uae30 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: SMALL(\uc18c\ud615\uacac), MEDIUM(\uc911\ud615\uacac), LARGE(\ub300\ud615\uacac).",
                         "enum": [
                             "SMALL",
                             "MEDIUM",
@@ -10148,28 +10147,23 @@
                     },
                     "certificationNumber": {
                         "type": "string",
-                        "description": "certificationNumber \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ub3d9\ubb3c\ub4f1\ub85d\ubc88\ud638\uc785\ub2c8\ub2e4.",
                         "example": "\uc608\uc2dc \ubb38\uc790\uc5f4",
                         "maxLength": 15,
                         "minLength": 0
                     },
                     "walkingStyles": {
                         "type": "array",
-                        "description": "walkingStyles \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            "\uc608\uc2dc \ubb38\uc790\uc5f4"
-                        ],
+                        "description": "\uc0b0\ucc45 \uc2a4\ud0c0\uc77c \ucf54\ub4dc \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "type": "string"
                         }
                     },
                     "personalityIds": {
                         "type": "array",
-                        "description": "personalityIds \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            1,
-                            2
-                        ],
+                        "description": "\ubc18\ub824\uacac \uc131\ud5a5 ID \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "type": "integer",
                             "format": "int64"
@@ -10227,7 +10221,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "name": {
                         "type": "string",
@@ -10242,7 +10236,7 @@
                             "MEDIUM",
                             "LARGE"
                         ],
-                        "example": "SMALL"
+                        "example": "\uc608\uc2dc \ubb38\uc790\uc5f4"
                     }
                 }
             },
@@ -10254,7 +10248,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "name": {
                         "type": "string",
@@ -10276,7 +10270,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "name": {
                         "type": "string",
@@ -10285,7 +10279,7 @@
                     },
                     "breed": {
                         "$ref": "#/components/schemas/BreedResponse",
-                        "description": "breed \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uacac\uc885 \uc815\ubcf4\uc785\ub2c8\ub2e4.",
                         "example": {
                             "note": "\uac1d\uccb4 \uc608\uc2dc"
                         }
@@ -10294,17 +10288,26 @@
                         "type": "integer",
                         "format": "int32",
                         "description": "\ub098\uc774\uc785\ub2c8\ub2e4.",
-                        "example": 28
+                        "example": 1
                     },
                     "gender": {
                         "type": "string",
-                        "description": "\uc131\ubcc4 \uac12\uc785\ub2c8\ub2e4.",
-                        "example": "\uc608\uc2dc \ubb38\uc790\uc5f4"
+                        "description": "\uc131\ubcc4 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: MALE(\uc218\ucef7), FEMALE(\uc554\ucef7).",
+                        "enum": [
+                            "MALE",
+                            "FEMALE"
+                        ],
+                        "example": "MALE"
                     },
                     "size": {
                         "type": "string",
-                        "description": "\ud398\uc774\uc9c0 \ud06c\uae30\uc785\ub2c8\ub2e4.",
-                        "example": "\uc608\uc2dc \ubb38\uc790\uc5f4"
+                        "description": "\ubc18\ub824\uacac \uccb4\ud615 \ud06c\uae30 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: SMALL(\uc18c\ud615\uacac), MEDIUM(\uc911\ud615\uacac), LARGE(\ub300\ud615\uacac).",
+                        "enum": [
+                            "SMALL",
+                            "MEDIUM",
+                            "LARGE"
+                        ],
+                        "example": "SMALL"
                     },
                     "mbti": {
                         "type": "string",
@@ -10328,27 +10331,21 @@
                     },
                     "isCertified": {
                         "type": "boolean",
-                        "description": "isCertified \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ubc18\ub824\uacac \uc778\uc99d \uc644\ub8cc \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
                         "example": true
                     },
                     "walkingStyles": {
                         "type": "array",
-                        "description": "walkingStyles \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            "\uc608\uc2dc \ubb38\uc790\uc5f4"
-                        ],
+                        "description": "\uc0b0\ucc45 \uc2a4\ud0c0\uc77c \ucf54\ub4dc \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "type": "string"
                         }
                     },
                     "personalities": {
                         "type": "array",
-                        "description": "personalities \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            {
-                                "note": "\uac1d\uccb4 \uc608\uc2dc"
-                            }
-                        ],
+                        "description": "\ubc18\ub824\uacac \uc131\ud5a5 \ud0dc\uadf8 \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "$ref": "#/components/schemas/PersonalityResponse"
                         }
@@ -10367,20 +10364,21 @@
                 "properties": {
                     "email": {
                         "type": "string",
-                        "description": "\uc774\uba54\uc77c \uc8fc\uc18c\uc785\ub2c8\ub2e4.",
+                        "description": "\ud68c\uc6d0 \uac00\uc785 \uc774\uba54\uc77c\uc785\ub2c8\ub2e4.",
                         "example": "user@example.com",
                         "minLength": 1
                     },
                     "password": {
                         "type": "string",
                         "description": "\ube44\ubc00\ubc88\ud638\uc785\ub2c8\ub2e4.",
+                        "example": "<MASKED>",
                         "maxLength": 64,
                         "minLength": 8,
                         "pattern": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+$"
                     },
                     "nickname": {
                         "type": "string",
-                        "description": "\ub2c9\ub124\uc784\uc785\ub2c8\ub2e4.",
+                        "description": "\ud68c\uc6d0 \ub2c9\ub124\uc784\uc785\ub2c8\ub2e4.",
                         "example": "\ubabd\uc774\uc544\ube60",
                         "maxLength": 10,
                         "minLength": 2,
@@ -10451,19 +10449,23 @@
                     },
                     "tokenType": {
                         "type": "string",
-                        "description": "\ud1a0\ud070 \ud0c0\uc785\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: Bearer(JWT Bearer \ud1a0\ud070)."
+                        "description": "\ud1a0\ud070 \ud0c0\uc785\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: Bearer(JWT Bearer \ud1a0\ud070).",
+                        "enum": [
+                            "Bearer"
+                        ],
+                        "example": "Bearer"
                     },
                     "expiresIn": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "expiresIn \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\ub9cc\ub8cc\uae4c\uc9c0 \ub0a8\uc740 \ucd08(second)\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "memberId": {
                         "type": "integer",
                         "format": "int64",
                         "description": "\ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "newMember": {
                         "type": "boolean",
@@ -10472,7 +10474,7 @@
                     },
                     "isNewMember": {
                         "type": "boolean",
-                        "description": "isNewMember \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ud68c\uc6d0 \ucd5c\ucd08 \ub85c\uadf8\uc778 \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
                         "example": true
                     }
                 }
@@ -10483,7 +10485,7 @@
                 "properties": {
                     "nickname": {
                         "type": "string",
-                        "description": "\ub2c9\ub124\uc784\uc785\ub2c8\ub2e4.",
+                        "description": "\ud68c\uc6d0 \ub2c9\ub124\uc784\uc785\ub2c8\ub2e4.",
                         "example": "\ubabd\uc774\uc544\ube60",
                         "maxLength": 10,
                         "minLength": 2,
@@ -10496,7 +10498,7 @@
                     },
                     "linkedNickname": {
                         "type": "string",
-                        "description": "linkedNickname \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc5f0\ub3d9 \uacc4\uc815 \ud45c\uc2dc \ub2c9\ub124\uc784\uc785\ub2c8\ub2e4.",
                         "example": "\ubabd\uc774\uc544\ube60",
                         "maxLength": 30,
                         "minLength": 0
@@ -10511,19 +10513,19 @@
                         "type": "integer",
                         "format": "int32",
                         "description": "\ub098\uc774\uc785\ub2c8\ub2e4.",
-                        "example": 28,
+                        "example": 1,
                         "maximum": 100,
                         "minimum": 1
                     },
                     "gender": {
                         "type": "string",
-                        "description": "\uc131\ubcc4 \uac12\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: MALE(\ub0a8\uc131), FEMALE(\uc5ec\uc131), UNKNOWN(\ubbf8\uc120\ud0dd).",
+                        "description": "\uc131\ubcc4 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: MALE(\ub0a8\uc131), FEMALE(\uc5ec\uc131), UNKNOWN(\ubbf8\uc120\ud0dd).",
                         "enum": [
                             "MALE",
                             "FEMALE",
                             "UNKNOWN"
                         ],
-                        "example": "MALE"
+                        "example": "UNKNOWN"
                     },
                     "mbti": {
                         "type": "string",
@@ -10548,11 +10550,8 @@
                     },
                     "personalityTypeIds": {
                         "type": "array",
-                        "description": "personalityTypeIds \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            1,
-                            2
-                        ],
+                        "description": "\ud68c\uc6d0 \uc131\ud5a5 \ud0c0\uc785 ID \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "type": "integer",
                             "format": "int64"
@@ -10605,7 +10604,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "name": {
                         "type": "string",
@@ -10627,7 +10626,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "email": {
                         "type": "string",
@@ -10656,7 +10655,7 @@
                     },
                     "linkedNickname": {
                         "type": "string",
-                        "description": "linkedNickname \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc5f0\ub3d9 \uacc4\uc815 \ud45c\uc2dc \ub2c9\ub124\uc784\uc785\ub2c8\ub2e4.",
                         "example": "\ubabd\uc774\uc544\ube60"
                     },
                     "phone": {
@@ -10668,17 +10667,17 @@
                         "type": "integer",
                         "format": "int32",
                         "description": "\ub098\uc774\uc785\ub2c8\ub2e4.",
-                        "example": 28
+                        "example": 1
                     },
                     "gender": {
                         "type": "string",
-                        "description": "\uc131\ubcc4 \uac12\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: MALE(\ub0a8\uc131), FEMALE(\uc5ec\uc131), UNKNOWN(\ubbf8\uc120\ud0dd).",
+                        "description": "\uc131\ubcc4 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: MALE(\ub0a8\uc131), FEMALE(\uc5ec\uc131), UNKNOWN(\ubbf8\uc120\ud0dd).",
                         "enum": [
                             "MALE",
                             "FEMALE",
                             "UNKNOWN"
                         ],
-                        "example": "MALE"
+                        "example": "UNKNOWN"
                     },
                     "mbti": {
                         "type": "string",
@@ -10697,24 +10696,20 @@
                     },
                     "personalityTypes": {
                         "type": "array",
-                        "description": "personalityTypes \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            {
-                                "note": "\uac1d\uccb4 \uc608\uc2dc"
-                            }
-                        ],
+                        "description": "\ud68c\uc6d0 \uc131\ud5a5 \ud0c0\uc785 \uc0c1\uc138 \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "$ref": "#/components/schemas/MemberPersonalityTypeResponse"
                         }
                     },
                     "mannerTemperature": {
                         "type": "number",
-                        "description": "mannerTemperature \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 5.0
+                        "description": "\ub9e4\ub108 \uc628\ub3c4 \uc810\uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1.0
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: ACTIVE, INACTIVE, BANNED.",
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: ACTIVE(\ud65c\uc131), INACTIVE(\ube44\ud65c\uc131), BANNED(\uc815\uc9c0).",
                         "enum": [
                             "ACTIVE",
                             "INACTIVE",
@@ -10731,7 +10726,7 @@
                     "nicknameChangedAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "nicknameChangedAt \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ub2c9\ub124\uc784 \ucd5c\uadfc \ubcc0\uacbd \uc2dc\uac01(UTC)\uc785\ub2c8\ub2e4.",
                         "example": "2026-03-05T01:20:00Z"
                     },
                     "verified": {
@@ -10791,7 +10786,7 @@
                     },
                     "isFollowing": {
                         "type": "boolean",
-                        "description": "isFollowing \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ud604\uc7ac \ub85c\uadf8\uc778 \uc0ac\uc6a9\uc790\uc758 \ud314\ub85c\uc6b0 \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
                         "example": true
                     }
                 }
@@ -10802,18 +10797,18 @@
                 "properties": {
                     "petName": {
                         "type": "string",
-                        "description": "petName \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc2e4\uc885 \ubc18\ub824\uacac \uc774\ub984\uc785\ub2c8\ub2e4.",
                         "example": "\ubabd\uc774",
                         "minLength": 1
                     },
                     "breed": {
                         "type": "string",
-                        "description": "breed \uac12\uc785\ub2c8\ub2e4.",
-                        "example": "\uc608\uc2dc \ubb38\uc790\uc5f4"
+                        "description": "\uacac\uc885\uba85\uc785\ub2c8\ub2e4.",
+                        "example": "\ub9d0\ud2f0\uc988"
                     },
                     "photoUrl": {
                         "type": "string",
-                        "description": "\uc774\ubbf8\uc9c0 URL\uc785\ub2c8\ub2e4.",
+                        "description": "\uc2e4\uc885 \ub2f9\uc2dc \ub300\ud45c \uc0ac\uc9c4 URL\uc785\ub2c8\ub2e4.",
                         "example": "https://cdn.example.com/sample.jpg",
                         "minLength": 1
                     },
@@ -10825,13 +10820,13 @@
                     "lastSeenAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "lastSeenAt \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ub9c8\uc9c0\ub9c9 \ubaa9\uaca9 \uc2dc\uac01(UTC)\uc785\ub2c8\ub2e4.",
                         "example": "2026-03-05T01:20:00Z"
                     },
                     "lastSeenLocation": {
                         "type": "string",
-                        "description": "lastSeenLocation \uac12\uc785\ub2c8\ub2e4.",
-                        "example": "\uc608\uc2dc \ubb38\uc790\uc5f4",
+                        "description": "\ub9c8\uc9c0\ub9c9 \ubaa9\uaca9 \uc704\uce58 \uc124\uba85\uc785\ub2c8\ub2e4.",
+                        "example": "\uc11c\uc6b8\uc2dc \uc601\ub4f1\ud3ec\uad6c \uc5ec\uc758\ub3c4 \ud55c\uac15\uacf5\uc6d0",
                         "minLength": 1
                     }
                 },
@@ -10884,11 +10879,16 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\uc2e4\uc885 \uc2e0\uace0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: ACTIVE(\uc9c4\ud589\uc911), RESOLVED(\ud574\uacb0), CLOSED(\uc885\ub8cc).",
+                        "enum": [
+                            "ACTIVE",
+                            "RESOLVED",
+                            "CLOSED"
+                        ],
                         "example": "ACTIVE"
                     },
                     "createdAt": {
@@ -10907,13 +10907,13 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ubd84\uc11d \uc138\uc158 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "sightingId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "sightingId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\ubaa9\uaca9 \uc2e0\uace0 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     }
                 },
                 "required": [
@@ -10962,19 +10962,27 @@
                     "matchId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "matchId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\uc2e4\uc885-\ubaa9\uaca9 \ub9e4\uce6d ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
-                        "example": "ACTIVE"
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: PENDING_APPROVAL(\uc2b9\uc778\ub300\uae30), APPROVED(\uc2b9\uc778), PENDING_CHAT_LINK(\ucc44\ud305\ubc29 \uc5f0\ub3d9\ub300\uae30), CHAT_LINKED(\uc5f0\ub3d9\uc644\ub8cc), REJECTED(\uac70\uc808), INVALIDATED(\ubb34\ud6a8\ud654).",
+                        "enum": [
+                            "PENDING_APPROVAL",
+                            "APPROVED",
+                            "PENDING_CHAT_LINK",
+                            "CHAT_LINKED",
+                            "REJECTED",
+                            "INVALIDATED"
+                        ],
+                        "example": "PENDING_APPROVAL"
                     },
                     "chatRoomId": {
                         "type": "integer",
                         "format": "int64",
                         "description": "\ucc44\ud305\ubc29 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     }
                 }
             },
@@ -10986,39 +10994,39 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\uc2e4\uc885 \uc2e0\uace0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "image": {
                         "type": "string",
-                        "description": "image \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc774\ubbf8\uc9c0 \ubc14\uc774\ub108\ub9ac(Base64 \ub4f1 \uc778\ub77c\uc778 \uc804\ub2ec)\uc785\ub2c8\ub2e4.",
                         "example": "\uc608\uc2dc \ubb38\uc790\uc5f4"
                     },
                     "imageUrl": {
                         "type": "string",
-                        "description": "imageUrl \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc774\ubbf8\uc9c0 \uc811\uadfc URL\uc785\ub2c8\ub2e4.",
                         "example": "https://cdn.example.com/sample.jpg"
                     },
                     "mode": {
                         "type": "string",
-                        "description": "mode \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "AI \ubd84\uc11d \ubaa8\ub4dc \ucf54\ub4dc\uc785\ub2c8\ub2e4.",
                         "example": "\uc608\uc2dc \ubb38\uc790\uc5f4"
                     },
                     "queryText": {
                         "type": "string",
-                        "description": "queryText \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc774\ubbf8\uc9c0 \ubd84\uc11d \ubcf4\uc870 \ud14d\uc2a4\ud2b8 \uc9c8\uc758\uc785\ub2c8\ub2e4.",
                         "example": "\uc608\uc2dc \ubb38\uc790\uc5f4"
                     },
                     "latitude": {
                         "type": "number",
                         "format": "double",
                         "description": "\uc704\ub3c4\uc785\ub2c8\ub2e4.",
-                        "example": 37.566295
+                        "example": 1.0
                     },
                     "longitude": {
                         "type": "number",
                         "format": "double",
                         "description": "\uacbd\ub3c4\uc785\ub2c8\ub2e4.",
-                        "example": 126.977945
+                        "example": 1.0
                     },
                     "imageProvided": {
                         "type": "boolean",
@@ -11071,45 +11079,49 @@
                     "sightingId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "sightingId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\ubaa9\uaca9 \uc2e0\uace0 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "finderId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "finderId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\ubaa9\uaca9 \uc2e0\uace0\uc790 \ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "scoreSimilarity": {
                         "type": "number",
-                        "description": "scoreSimilarity \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 5.0
+                        "description": "\uc774\ubbf8\uc9c0/\ud2b9\uc9d5 \uc720\uc0ac\ub3c4 \uc810\uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1.0
                     },
                     "scoreDistance": {
                         "type": "number",
-                        "description": "scoreDistance \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 5.0
+                        "description": "\uac70\ub9ac \uae30\ubc18 \uc720\uc0ac\ub3c4 \uc810\uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1.0
                     },
                     "scoreRecency": {
                         "type": "number",
-                        "description": "scoreRecency \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 5.0
+                        "description": "\uc2dc\uac04 \ucd5c\uc2e0\uc131 \uc810\uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1.0
                     },
                     "scoreTotal": {
                         "type": "number",
-                        "description": "scoreTotal \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 5.0
+                        "description": "\uac00\uc911 \ud569\uc0b0 \ucd5c\uc885 \uc810\uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1.0
                     },
                     "rank": {
                         "type": "integer",
                         "format": "int32",
-                        "description": "rank \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ud6c4\ubcf4 \uc6b0\uc120\uc21c\uc704(1\ubd80\ud130 \uc2dc\uc791)\uc785\ub2c8\ub2e4.",
                         "example": 1
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
-                        "example": "ACTIVE"
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: CANDIDATE(\ud6c4\ubcf4), APPROVED(\uc2b9\uc778).",
+                        "enum": [
+                            "CANDIDATE",
+                            "APPROVED"
+                        ],
+                        "example": "CANDIDATE"
                     }
                 }
             },
@@ -11121,21 +11133,17 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ubd84\uc11d \uc138\uc158 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "summary": {
                         "type": "string",
-                        "description": "summary \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "AI \ubd84\uc11d \uc694\uc57d\uc785\ub2c8\ub2e4.",
                         "example": "\uc608\uc2dc \ubb38\uc790\uc5f4"
                     },
                     "candidates": {
                         "type": "array",
-                        "description": "candidates \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            {
-                                "note": "\uac1d\uccb4 \uc608\uc2dc"
-                            }
-                        ],
+                        "description": "\ubd84\uc11d/\ub9e4\uce6d \ud6c4\ubcf4 \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "$ref": "#/components/schemas/LostPetAnalyzeCandidateResponse"
                         }
@@ -11148,20 +11156,28 @@
                 "properties": {
                     "purpose": {
                         "type": "string",
-                        "description": "\uc5c5\ub85c\ub4dc \ubaa9\uc801 \ucf54\ub4dc\uc785\ub2c8\ub2e4.",
-                        "example": "\uc608\uc2dc \ubb38\uc790\uc5f4",
+                        "description": "\uc774\ubbf8\uc9c0 \uc5c5\ub85c\ub4dc \ubaa9\uc801 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: PROFILE, PET_PHOTO, POST, WALK_DIARY, LOST_PET, SIGHTING.",
+                        "enum": [
+                            "PROFILE",
+                            "PET_PHOTO",
+                            "POST",
+                            "WALK_DIARY",
+                            "LOST_PET",
+                            "SIGHTING"
+                        ],
+                        "example": "POST",
                         "minLength": 1
                     },
                     "fileName": {
                         "type": "string",
-                        "description": "\ud30c\uc77c\uba85\uc785\ub2c8\ub2e4.",
-                        "example": "\ubabd\uc774",
+                        "description": "\uc5c5\ub85c\ub4dc\ud560 \uc6d0\ubcf8 \ud30c\uc77c\uba85\uc785\ub2c8\ub2e4.",
+                        "example": "walk-photo.jpg",
                         "minLength": 1
                     },
                     "contentType": {
                         "type": "string",
-                        "description": "\ud30c\uc77c MIME \ud0c0\uc785\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
-                        "example": "\uac15\uc544\uc9c0\uc640 \uc990\uac70\uc6b4 \uc0b0\ucc45\uc744 \ud588\uc5b4\uc694.",
+                        "description": "\uc5c5\ub85c\ub4dc \ud30c\uc77c MIME \ud0c0\uc785\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
+                        "example": "image/jpeg",
                         "minLength": 1
                     }
                 },
@@ -11211,25 +11227,25 @@
                 "properties": {
                     "uploadUrl": {
                         "type": "string",
-                        "description": "uploadUrl \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc5c5\ub85c\ub4dc\uc6a9 \uc0ac\uc804\uc11c\uba85 URL\uc785\ub2c8\ub2e4.",
                         "example": "https://cdn.example.com/sample.jpg"
                     },
                     "imageUrl": {
                         "type": "string",
-                        "description": "imageUrl \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc774\ubbf8\uc9c0 \uc811\uadfc URL\uc785\ub2c8\ub2e4.",
                         "example": "https://cdn.example.com/sample.jpg"
                     },
                     "expiresIn": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "expiresIn \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\ub9cc\ub8cc\uae4c\uc9c0 \ub0a8\uc740 \ucd08(second)\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "maxFileSizeBytes": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "maxFileSizeBytes \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "description": "\ud5c8\uc6a9 \ucd5c\ub300 \ud30c\uc77c \ud06c\uae30(Byte)\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     }
                 }
             },
@@ -11240,7 +11256,11 @@
                     "action": {
                         "type": "string",
                         "description": "\ub3d9\uc791 \uc561\uc158 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: CONFIRM(\uc0b0\ucc45 \ud655\uc815), CANCEL(\uc0b0\ucc45 \ud655\uc815 \ucde8\uc18c).",
-                        "example": "\uc608\uc2dc \ubb38\uc790\uc5f4",
+                        "enum": [
+                            "CONFIRM",
+                            "CANCEL"
+                        ],
+                        "example": "CONFIRM",
                         "minLength": 1
                     }
                 }
@@ -11286,31 +11306,33 @@
                     "roomId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "roomId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\ucc44\ud305\ubc29 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "memberId": {
                         "type": "integer",
                         "format": "int64",
                         "description": "\ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "myState": {
                         "type": "string",
-                        "description": "myState \uac12\uc785\ub2c8\ub2e4.",
-                        "example": "\uc608\uc2dc \ubb38\uc790\uc5f4"
+                        "description": "\uc694\uccad\uc790 \ubcf8\uc778\uc758 \uc0b0\ucc45 \ud655\uc815 \uc0c1\ud0dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: UNCONFIRMED(\ubbf8\ud655\uc815), CONFIRMED(\ud655\uc815).",
+                        "enum": [
+                            "UNCONFIRMED",
+                            "CONFIRMED"
+                        ],
+                        "example": "UNCONFIRMED"
                     },
                     "allConfirmed": {
                         "type": "boolean",
-                        "description": "allConfirmed \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ucc38\uc5ec\uc790 \uc804\uc6d0 \uc0b0\ucc45 \ud655\uc815 \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
                         "example": false
                     },
                     "confirmedMemberIds": {
                         "type": "array",
-                        "description": "confirmedMemberIds \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            101
-                        ],
+                        "description": "\uc0b0\ucc45 \ud655\uc815\uc744 \uc644\ub8cc\ud55c \ud68c\uc6d0 ID \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "type": "integer",
                             "format": "int64"
@@ -11326,13 +11348,13 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\ubdf0 \ub300\uc0c1 \ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "score": {
                         "type": "integer",
                         "format": "int32",
                         "description": "\uc810\uc218\uc785\ub2c8\ub2e4.",
-                        "example": 5,
+                        "example": 1,
                         "maximum": 5,
                         "minimum": 1
                     },
@@ -11389,31 +11411,31 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "chatRoomId": {
                         "type": "integer",
                         "format": "int64",
                         "description": "\ucc44\ud305\ubc29 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "reviewerId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "reviewerId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\ub9ac\ubdf0 \uc791\uc131\uc790 \ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "revieweeId": {
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\ubdf0 \ub300\uc0c1 \ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "score": {
                         "type": "integer",
                         "format": "int32",
                         "description": "\uc810\uc218\uc785\ub2c8\ub2e4.",
-                        "example": 5
+                        "example": 1
                     },
                     "comment": {
                         "type": "string",
@@ -11434,20 +11456,24 @@
                 "properties": {
                     "content": {
                         "type": "string",
-                        "description": "\ubcf8\ubb38 \ub0b4\uc6a9\uc785\ub2c8\ub2e4.",
-                        "example": "\uac15\uc544\uc9c0\uc640 \uc990\uac70\uc6b4 \uc0b0\ucc45\uc744 \ud588\uc5b4\uc694.",
+                        "description": "\uc804\uc1a1\ud560 \uba54\uc2dc\uc9c0 \ubcf8\ubb38\uc785\ub2c8\ub2e4.",
+                        "example": "\uc624\ub298 \uc800\ub141 7\uc2dc\uc5d0 \ud55c\uac15\uacf5\uc6d0\uc5d0\uc11c \ub9cc\ub098\uc694.",
                         "maxLength": 500,
                         "minLength": 1
                     },
                     "messageType": {
                         "type": "string",
                         "description": "\uba54\uc2dc\uc9c0 \ud0c0\uc785 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: USER(\uc0ac\uc6a9\uc790 \uba54\uc2dc\uc9c0), SYSTEM(\uc2dc\uc2a4\ud15c \uba54\uc2dc\uc9c0).",
-                        "example": "\uac15\uc544\uc9c0\uc640 \uc990\uac70\uc6b4 \uc0b0\ucc45\uc744 \ud588\uc5b4\uc694."
+                        "enum": [
+                            "USER",
+                            "SYSTEM"
+                        ],
+                        "example": "USER"
                     },
                     "clientMessageId": {
                         "type": "string",
-                        "description": "clientMessageId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": "\uac15\uc544\uc9c0\uc640 \uc990\uac70\uc6b4 \uc0b0\ucc45\uc744 \ud588\uc5b4\uc694."
+                        "description": "\ud074\ub77c\uc774\uc5b8\ud2b8 \uba54\uc2dc\uc9c0 \uba71\ub4f1 \ud0a4\uc785\ub2c8\ub2e4. \ub3d9\uc77c \ucc44\ud305\ubc29/\ubc1c\uc2e0\uc790\uc5d0\uc11c \uc911\ubcf5 \uc804\uc1a1 \ubc29\uc9c0\uc5d0 \uc0ac\uc6a9\ud569\ub2c8\ub2e4.",
+                        "example": "msg-20260305-0001"
                     }
                 },
                 "required": [
@@ -11496,17 +11522,17 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "roomId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "roomId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\ucc44\ud305\ubc29 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "sender": {
                         "$ref": "#/components/schemas/ChatSenderResponse",
-                        "description": "sender \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uba54\uc2dc\uc9c0 \ubc1c\uc2e0\uc790 \uc815\ubcf4\uc785\ub2c8\ub2e4.",
                         "example": {
                             "note": "\uac1d\uccb4 \uc608\uc2dc"
                         }
@@ -11519,22 +11545,29 @@
                     "messageType": {
                         "type": "string",
                         "description": "\uba54\uc2dc\uc9c0 \ud0c0\uc785 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: USER(\uc0ac\uc6a9\uc790 \uba54\uc2dc\uc9c0), SYSTEM(\uc2dc\uc2a4\ud15c \uba54\uc2dc\uc9c0).",
-                        "example": "\uac15\uc544\uc9c0\uc640 \uc990\uac70\uc6b4 \uc0b0\ucc45\uc744 \ud588\uc5b4\uc694."
+                        "enum": [
+                            "USER",
+                            "SYSTEM"
+                        ],
+                        "example": "USER"
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
-                        "example": "ACTIVE"
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: CREATED(\uc0dd\uc131 \uc644\ub8cc).",
+                        "enum": [
+                            "CREATED"
+                        ],
+                        "example": "CREATED"
                     },
                     "clientMessageId": {
                         "type": "string",
-                        "description": "clientMessageId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": "\uac15\uc544\uc9c0\uc640 \uc990\uac70\uc6b4 \uc0b0\ucc45\uc744 \ud588\uc5b4\uc694."
+                        "description": "\ud074\ub77c\uc774\uc5b8\ud2b8 \uba54\uc2dc\uc9c0 \uba71\ub4f1 \ud0a4\uc785\ub2c8\ub2e4. \ud074\ub77c\uc774\uc5b8\ud2b8\uac00 \uc804\uc1a1\ud55c \uac12\uc744 \uadf8\ub300\ub85c \ubc18\ud658\ud569\ub2c8\ub2e4.",
+                        "example": "msg-20260305-0001"
                     },
                     "sentAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "sentAt \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uba54\uc2dc\uc9c0 \uc804\uc1a1 \uc2dc\uac01(UTC)\uc785\ub2c8\ub2e4.",
                         "example": "2026-03-05T01:20:00Z"
                     }
                 }
@@ -11547,7 +11580,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     }
                 }
             },
@@ -11558,13 +11591,13 @@
                     "messageId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "messageId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 28
+                        "description": "\uba54\uc2dc\uc9c0 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "readAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "readAt \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc77d\uc74c \ucc98\ub9ac \uc2dc\uac01(UTC)\uc785\ub2c8\ub2e4.",
                         "example": "2026-03-05T01:20:00Z"
                     }
                 },
@@ -11613,20 +11646,20 @@
                     "roomId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "roomId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\ucc44\ud305\ubc29 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "memberId": {
                         "type": "integer",
                         "format": "int64",
                         "description": "\ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "lastReadMessageId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "lastReadMessageId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 28
+                        "description": "\ub9c8\uc9c0\ub9c9\uc73c\ub85c \uc77d\uc740 \uba54\uc2dc\uc9c0 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "updatedAt": {
                         "type": "string",
@@ -11677,17 +11710,21 @@
                     "roomId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "roomId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\ucc44\ud305\ubc29 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "left": {
                         "type": "boolean",
-                        "description": "left \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ucc44\ud305\ubc29 \ud1f4\uc7a5 \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
                         "example": false
                     },
                     "roomStatus": {
                         "type": "string",
-                        "description": "\ucc44\ud305\ubc29 \uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
+                        "description": "\ucc44\ud305\ubc29 \uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: ACTIVE(\ud65c\uc131), CLOSED(\uc885\ub8cc).",
+                        "enum": [
+                            "ACTIVE",
+                            "CLOSED"
+                        ],
                         "example": "ACTIVE"
                     }
                 }
@@ -11699,8 +11736,8 @@
                     "partnerId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "partnerId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "1:1 \ucc44\ud305 \uc0c1\ub300 \ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     }
                 },
                 "required": [
@@ -11749,7 +11786,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ubc18\ub824\uacac ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "name": {
                         "type": "string",
@@ -11766,26 +11803,26 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "walkConfirmState": {
                         "type": "string",
-                        "description": "walkConfirmState \uac12\uc785\ub2c8\ub2e4.",
-                        "example": "\uc608\uc2dc \ubb38\uc790\uc5f4"
+                        "description": "\ucc38\uc5ec\uc790\uc758 \uc0b0\ucc45 \ud655\uc815 \uc0c1\ud0dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: UNCONFIRMED(\ubbf8\ud655\uc815), CONFIRMED(\ud655\uc815).",
+                        "enum": [
+                            "UNCONFIRMED",
+                            "CONFIRMED"
+                        ],
+                        "example": "UNCONFIRMED"
                     },
                     "left": {
                         "type": "boolean",
-                        "description": "left \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ucc44\ud305\ubc29 \ud1f4\uc7a5 \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
                         "example": false
                     },
                     "pets": {
                         "type": "array",
-                        "description": "pets \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            {
-                                "note": "\uac1d\uccb4 \uc608\uc2dc"
-                            }
-                        ],
+                        "description": "\ucc38\uc5ec\uc790 \ubc18\ub824\uacac \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "$ref": "#/components/schemas/ChatParticipantPetResponse"
                         }
@@ -11800,38 +11837,42 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ucc44\ud305\ubc29 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "chatType": {
                         "type": "string",
                         "description": "\ucc44\ud305 \ud0c0\uc785 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: DIRECT(1:1 \ucc44\ud305), GROUP(\uadf8\ub8f9 \ucc44\ud305).",
-                        "example": "INDIVIDUAL"
+                        "enum": [
+                            "DIRECT",
+                            "GROUP"
+                        ],
+                        "example": "DIRECT"
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: ACTIVE(\ud65c\uc131), CLOSED(\uc885\ub8cc).",
+                        "enum": [
+                            "ACTIVE",
+                            "CLOSED"
+                        ],
                         "example": "ACTIVE"
                     },
                     "walkConfirmed": {
                         "type": "boolean",
-                        "description": "walkConfirmed \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc0b0\ucc45 \ud655\uc815 \uc644\ub8cc \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
                         "example": false
                     },
                     "participants": {
                         "type": "array",
-                        "description": "participants \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            {
-                                "note": "\uac1d\uccb4 \uc608\uc2dc"
-                            }
-                        ],
+                        "description": "\ucc44\ud305\ubc29 \ucc38\uc5ec\uc790 \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "$ref": "#/components/schemas/ChatParticipantResponse"
                         }
                     },
                     "lastMessage": {
                         "$ref": "#/components/schemas/ChatMessageResponse",
-                        "description": "lastMessage \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ucc44\ud305\ubc29 \ub9c8\uc9c0\ub9c9 \uba54\uc2dc\uc9c0 \uc815\ubcf4\uc785\ub2c8\ub2e4.",
                         "example": {
                             "note": "\uac1d\uccb4 \uc608\uc2dc"
                         }
@@ -11844,7 +11885,8 @@
                 "properties": {
                     "refreshToken": {
                         "type": "string",
-                        "description": "\ub9ac\ud504\ub808\uc2dc \ud1a0\ud070 \ubb38\uc790\uc5f4\uc785\ub2c8\ub2e4.",
+                        "description": "\uc7ac\ubc1c\uae09\uc5d0 \uc0ac\uc6a9\ud560 \ub9ac\ud504\ub808\uc2dc \ud1a0\ud070\uc785\ub2c8\ub2e4.",
+                        "example": "<REFRESH_TOKEN>",
                         "minLength": 1
                     }
                 },
@@ -11858,7 +11900,8 @@
                 "properties": {
                     "refreshToken": {
                         "type": "string",
-                        "description": "\ub9ac\ud504\ub808\uc2dc \ud1a0\ud070 \ubb38\uc790\uc5f4\uc785\ub2c8\ub2e4.",
+                        "description": "\ub85c\uadf8\uc544\uc6c3 \uc2dc \ud3d0\uae30\ud560 \ub9ac\ud504\ub808\uc2dc \ud1a0\ud070\uc785\ub2c8\ub2e4.",
+                        "example": "<REFRESH_TOKEN>",
                         "minLength": 1
                     }
                 },
@@ -11872,13 +11915,14 @@
                 "properties": {
                     "email": {
                         "type": "string",
-                        "description": "\uc774\uba54\uc77c \uc8fc\uc18c\uc785\ub2c8\ub2e4.",
+                        "description": "\ub85c\uadf8\uc778\uc5d0 \uc0ac\uc6a9\ud560 \uc774\uba54\uc77c \uc8fc\uc18c\uc785\ub2c8\ub2e4.",
                         "example": "user@example.com",
                         "minLength": 1
                     },
                     "password": {
                         "type": "string",
-                        "description": "\ube44\ubc00\ubc88\ud638\uc785\ub2c8\ub2e4.",
+                        "description": "\ub85c\uadf8\uc778 \ube44\ubc00\ubc88\ud638\uc785\ub2c8\ub2e4.",
+                        "example": "<MASKED>",
                         "minLength": 1
                     }
                 },
@@ -11895,7 +11939,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\uc5f0\uacb0\ub41c \uc2a4\ub808\ub4dc ID\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "title": {
                         "type": "string",
@@ -11914,9 +11958,7 @@
                     "photoUrls": {
                         "type": "array",
                         "description": "\uc77c\uae30 \uc0ac\uc9c4 URL \ubaa9\ub85d\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uace0, [] \uc804\ub2ec \uc2dc \uc804\uccb4 \ud574\uc81c\ud569\ub2c8\ub2e4.",
-                        "example": [
-                            "https://cdn.example.com/sample.jpg"
-                        ],
+                        "example": [],
                         "items": {
                             "type": "string"
                         },
@@ -11975,20 +12017,24 @@
                     "chatType": {
                         "type": "string",
                         "description": "\ucc44\ud305 \ud0c0\uc785\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. \uac00\ub2a5 \uac12: INDIVIDUAL(1:1), GROUP(\uadf8\ub8f9 \ubaa8\uc9d1).",
+                        "enum": [
+                            "INDIVIDUAL",
+                            "GROUP"
+                        ],
                         "example": "INDIVIDUAL"
                     },
                     "maxParticipants": {
                         "type": "integer",
                         "format": "int32",
                         "description": "\ucd5c\ub300 \ucc38\uc5ec \uc778\uc6d0\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
-                        "example": 20,
+                        "example": 1,
                         "maximum": 10,
                         "minimum": 2
                     },
                     "allowNonPetOwner": {
                         "type": "boolean",
                         "description": "\ube44\uc560\uacac\uc778 \ucc38\uc5ec \ud5c8\uc6a9 \uc5ec\ubd80\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
-                        "example": false
+                        "example": true
                     },
                     "isVisibleAlways": {
                         "type": "boolean",
@@ -12000,17 +12046,14 @@
                         "description": "\uc7a5\uc18c \uc815\ubcf4 \uac1d\uccb4\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
                         "example": {
                             "placeName": "\ud55c\uac15\uacf5\uc6d0",
-                            "latitude": 37.566295,
-                            "longitude": 126.977945
+                            "longitude": 126.977945,
+                            "latitude": 37.566295
                         }
                     },
                     "petIds": {
                         "type": "array",
                         "description": "\ubaa8\uc9d1\uae00\uc5d0 \uc5f0\uacb0\ud560 \ubc18\ub824\uacac ID \ubaa9\ub85d\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uace0, [] \uc804\ub2ec \uc2dc \uc804\uccb4 \ud574\uc81c\ud569\ub2c8\ub2e4.",
-                        "example": [
-                            1,
-                            2
-                        ],
+                        "example": [],
                         "items": {
                             "type": "integer",
                             "format": "int64"
@@ -12019,16 +12062,7 @@
                     "filters": {
                         "type": "array",
                         "description": "\ubaa8\uc9d1 \ud544\ud130 \ubaa9\ub85d\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uace0, [] \uc804\ub2ec \uc2dc \uc804\uccb4 \ud574\uc81c\ud569\ub2c8\ub2e4.",
-                        "example": [
-                            {
-                                "type": "AGE_GROUP",
-                                "values": [
-                                    "20",
-                                    "30"
-                                ],
-                                "isRequired": false
-                            }
-                        ],
+                        "example": [],
                         "items": {
                             "$ref": "#/components/schemas/ThreadFilterRequest"
                         }
@@ -12056,9 +12090,7 @@
                     "imageUrls": {
                         "type": "array",
                         "description": "\uac8c\uc2dc\uae00 \uc774\ubbf8\uc9c0 URL \ubaa9\ub85d\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uace0, [] \uc804\ub2ec \uc2dc \uc804\uccb4 \ud574\uc81c\ud569\ub2c8\ub2e4.",
-                        "example": [
-                            "https://cdn.example.com/sample.jpg"
-                        ],
+                        "example": [],
                         "items": {
                             "type": "string"
                         },
@@ -12112,10 +12144,7 @@
                     "personalityIds": {
                         "type": "array",
                         "description": "\uc131\ud5a5 ID \ubaa9\ub85d\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uace0, [] \uc804\ub2ec \uc2dc \uc804\uccb4 \ud574\uc81c\ud569\ub2c8\ub2e4.",
-                        "example": [
-                            1,
-                            2
-                        ],
+                        "example": [],
                         "items": {
                             "type": "integer",
                             "format": "int64"
@@ -12124,9 +12153,7 @@
                     "walkingStyles": {
                         "type": "array",
                         "description": "\uc0b0\ucc45 \uc2a4\ud0c0\uc77c \ucf54\ub4dc \ubaa9\ub85d(\ub808\uac70\uc2dc \ud544\ub4dc)\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uace0, [] \uc804\ub2ec \uc2dc \uc804\uccb4 \ud574\uc81c\ud569\ub2c8\ub2e4.",
-                        "example": [
-                            "\uc608\uc2dc \ubb38\uc790\uc5f4"
-                        ],
+                        "example": [],
                         "items": {
                             "type": "string"
                         }
@@ -12134,9 +12161,7 @@
                     "walkingStyleCodes": {
                         "type": "array",
                         "description": "\uc0b0\ucc45 \uc2a4\ud0c0\uc77c \ucf54\ub4dc \ubaa9\ub85d(\uad8c\uc7a5 \ud544\ub4dc)\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uace0, [] \uc804\ub2ec \uc2dc \uc804\uccb4 \ud574\uc81c\ud569\ub2c8\ub2e4.",
-                        "example": [
-                            "C002"
-                        ],
+                        "example": [],
                         "items": {
                             "type": "string"
                         }
@@ -12185,7 +12210,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "name": {
                         "type": "string",
@@ -12233,7 +12258,7 @@
                         "type": "integer",
                         "format": "int32",
                         "description": "\ub098\uc774\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
-                        "example": 28,
+                        "example": 1,
                         "maximum": 100,
                         "minimum": 1
                     },
@@ -12271,10 +12296,7 @@
                     "personalityTypeIds": {
                         "type": "array",
                         "description": "\ud68c\uc6d0 \uc131\ud5a5 \ud0c0\uc785 ID \ubaa9\ub85d\uc785\ub2c8\ub2e4. null\uc774\uba74 \ubcc0\uacbd\ud558\uc9c0 \uc54a\uace0, [] \uc804\ub2ec \uc2dc \uc804\uccb4 \ud574\uc81c\ud569\ub2c8\ub2e4.",
-                        "example": [
-                            1,
-                            2
-                        ],
+                        "example": [],
                         "items": {
                             "type": "integer",
                             "format": "int64"
@@ -12329,7 +12351,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "name": {
                         "type": "string",
@@ -12509,7 +12531,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "title": {
                         "type": "string",
@@ -12524,19 +12546,23 @@
                     "chatType": {
                         "type": "string",
                         "description": "\ucc44\ud305 \ud0c0\uc785 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: INDIVIDUAL(1:1), GROUP(\uadf8\ub8f9 \ubaa8\uc9d1).",
+                        "enum": [
+                            "INDIVIDUAL",
+                            "GROUP"
+                        ],
                         "example": "INDIVIDUAL"
                     },
                     "maxParticipants": {
                         "type": "integer",
                         "format": "int32",
                         "description": "\ucd5c\ub300 \ucc38\uc5ec \uc778\uc6d0\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "example": 1
                     },
                     "currentParticipants": {
                         "type": "integer",
                         "format": "int32",
                         "description": "\ud604\uc7ac \ucc38\uc5ec \uc778\uc6d0\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "example": 1
                     },
                     "placeName": {
                         "type": "string",
@@ -12546,12 +12572,12 @@
                     "latitude": {
                         "type": "number",
                         "description": "\uc704\ub3c4\uc785\ub2c8\ub2e4.",
-                        "example": 37.566295
+                        "example": 1.0
                     },
                     "longitude": {
                         "type": "number",
                         "description": "\uacbd\ub3c4\uc785\ub2c8\ub2e4.",
-                        "example": 126.977945
+                        "example": 1.0
                     },
                     "startTime": {
                         "type": "string",
@@ -12567,8 +12593,13 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
-                        "example": "ACTIVE"
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: RECRUITING(\ubaa8\uc9d1\uc911), EXPIRED(\ub9c8\uac10), DELETED(\uc0ad\uc81c).",
+                        "enum": [
+                            "RECRUITING",
+                            "EXPIRED",
+                            "DELETED"
+                        ],
+                        "example": "RECRUITING"
                     },
                     "applied": {
                         "type": "boolean",
@@ -12577,7 +12608,7 @@
                     },
                     "isApplied": {
                         "type": "boolean",
-                        "description": "isApplied \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ud604\uc7ac \ub85c\uadf8\uc778 \uc0ac\uc6a9\uc790\uc758 \uc2e0\uccad \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
                         "example": true
                     }
                 }
@@ -12629,7 +12660,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\uc0b0\ucc45 \ubaa8\uc9d1\uae00 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "title": {
                         "type": "string",
@@ -12638,30 +12669,34 @@
                     },
                     "chatType": {
                         "type": "string",
-                        "description": "\ucc44\ud305 \ud0c0\uc785 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
+                        "description": "\ucc44\ud305 \ud0c0\uc785 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: INDIVIDUAL(1:1), GROUP(\uadf8\ub8f9 \ubaa8\uc9d1).",
+                        "enum": [
+                            "INDIVIDUAL",
+                            "GROUP"
+                        ],
                         "example": "INDIVIDUAL"
                     },
                     "currentParticipants": {
                         "type": "integer",
                         "format": "int32",
                         "description": "\ud604\uc7ac \ucc38\uc5ec \uc778\uc6d0\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "example": 1
                     },
                     "maxParticipants": {
                         "type": "integer",
                         "format": "int32",
                         "description": "\ucd5c\ub300 \ucc38\uc5ec \uc778\uc6d0\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "example": 1
                     },
                     "latitude": {
                         "type": "number",
                         "description": "\uc704\ub3c4\uc785\ub2c8\ub2e4.",
-                        "example": 37.566295
+                        "example": 1.0
                     },
                     "longitude": {
                         "type": "number",
                         "description": "\uacbd\ub3c4\uc785\ub2c8\ub2e4.",
-                        "example": 126.977945
+                        "example": 1.0
                     },
                     "placeName": {
                         "type": "string",
@@ -12715,14 +12750,14 @@
                 "properties": {
                     "region": {
                         "type": "string",
-                        "description": "region \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ud56b\uc2a4\ud31f \uc9c0\uc5ed\uba85\uc785\ub2c8\ub2e4.",
                         "example": "\uc608\uc2dc \ubb38\uc790\uc5f4"
                     },
                     "count": {
                         "type": "integer",
                         "format": "int64",
                         "description": "\uac1c\uc218\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "example": 1
                     }
                 }
             },
@@ -13014,11 +13049,11 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "author": {
                         "$ref": "#/components/schemas/Author",
-                        "description": "author \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\uc791\uc131\uc790 \uc694\uc57d \uc815\ubcf4\uc785\ub2c8\ub2e4.",
                         "example": {
                             "note": "\uac1d\uccb4 \uc608\uc2dc"
                         }
@@ -13031,9 +13066,7 @@
                     "imageUrls": {
                         "type": "array",
                         "description": "\uc774\ubbf8\uc9c0 URL \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            "https://cdn.example.com/sample.jpg"
-                        ],
+                        "example": [],
                         "items": {
                             "type": "string"
                         }
@@ -13041,14 +13074,14 @@
                     "likeCount": {
                         "type": "integer",
                         "format": "int32",
-                        "description": "likeCount \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "description": "\uc88b\uc544\uc694 \uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "commentCount": {
                         "type": "integer",
                         "format": "int32",
-                        "description": "commentCount \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "description": "\ub313\uae00 \uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "createdAt": {
                         "type": "string",
@@ -13058,12 +13091,8 @@
                     },
                     "comments": {
                         "type": "array",
-                        "description": "comments \uac12\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            {
-                                "note": "\uac1d\uccb4 \uc608\uc2dc"
-                            }
-                        ],
+                        "description": "\ub313\uae00 \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
+                        "example": [],
                         "items": {
                             "$ref": "#/components/schemas/CommentResponse"
                         }
@@ -13352,14 +13381,14 @@
                     "date": {
                         "type": "string",
                         "format": "date",
-                        "description": "date \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ud1b5\uacc4 \uc9d1\uacc4 \ub0a0\uc9dc\uc785\ub2c8\ub2e4.",
                         "example": "2026-03-05"
                     },
                     "count": {
                         "type": "integer",
                         "format": "int32",
                         "description": "\uac1c\uc218\uc785\ub2c8\ub2e4.",
-                        "example": 20
+                        "example": 1
                     }
                 }
             },
@@ -13376,13 +13405,13 @@
                     "startDate": {
                         "type": "string",
                         "format": "date",
-                        "description": "startDate \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ud1b5\uacc4 \uc9d1\uacc4 \uc2dc\uc791 \ub0a0\uc9dc\uc785\ub2c8\ub2e4.",
                         "example": "2026-03-05"
                     },
                     "endDate": {
                         "type": "string",
                         "format": "date",
-                        "description": "endDate \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ud1b5\uacc4 \uc9d1\uacc4 \uc885\ub8cc \ub0a0\uc9dc\uc785\ub2c8\ub2e4.",
                         "example": "2026-03-05"
                     },
                     "timezone": {
@@ -13399,11 +13428,7 @@
                     "points": {
                         "type": "array",
                         "description": "\uc77c\uc790\ubcc4 \uc9d1\uacc4 \ud3ec\uc778\ud2b8 \ubaa9\ub85d\uc785\ub2c8\ub2e4.",
-                        "example": [
-                            {
-                                "note": "\uac1d\uccb4 \uc608\uc2dc"
-                            }
-                        ],
+                        "example": [],
                         "items": {
                             "$ref": "#/components/schemas/WalkStatsPointResponse"
                         }
@@ -13452,7 +13477,7 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ub9ac\uc18c\uc2a4 \uc2dd\ubcc4\uc790\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "nickname": {
                         "type": "string",
@@ -13467,12 +13492,12 @@
                     "mannerTemperature": {
                         "type": "number",
                         "description": "mannerTemperature \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 5.0
+                        "example": 1.0
                     },
                     "followedAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "followedAt \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ud314\ub85c\uc6b0 \uc0dd\uc131 \uc2dc\uac01(UTC)\uc785\ub2c8\ub2e4.",
                         "example": "2026-03-05T01:20:00Z"
                     }
                 }
@@ -13603,22 +13628,27 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\uc2e4\uc885 \uc2e0\uace0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "petName": {
                         "type": "string",
-                        "description": "petName \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ubc18\ub824\uacac \uc774\ub984\uc785\ub2c8\ub2e4.",
                         "example": "\ubabd\uc774"
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: ACTIVE(\uc9c4\ud589\uc911), RESOLVED(\ud574\uacb0), CLOSED(\uc885\ub8cc).",
+                        "enum": [
+                            "ACTIVE",
+                            "RESOLVED",
+                            "CLOSED"
+                        ],
                         "example": "ACTIVE"
                     },
                     "lastSeenAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "lastSeenAt \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ub9c8\uc9c0\ub9c9 \ubaa9\uaca9 \uc2dc\uac01(UTC)\uc785\ub2c8\ub2e4.",
                         "example": "2026-03-05T01:20:00Z"
                     }
                 }
@@ -13710,17 +13740,17 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\uc2e4\uc885 \uc2e0\uace0 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "ownerId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "ownerId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\uc2e4\uc885 \uc2e0\uace0 \ub4f1\ub85d\uc790 \ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "petName": {
                         "type": "string",
-                        "description": "petName \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ubc18\ub824\uacac \uc774\ub984\uc785\ub2c8\ub2e4.",
                         "example": "\ubabd\uc774"
                     },
                     "photoUrl": {
@@ -13731,17 +13761,22 @@
                     "lastSeenAt": {
                         "type": "string",
                         "format": "date-time",
-                        "description": "lastSeenAt \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ub9c8\uc9c0\ub9c9 \ubaa9\uaca9 \uc2dc\uac01(UTC)\uc785\ub2c8\ub2e4.",
                         "example": "2026-03-05T01:20:00Z"
                     },
                     "lastSeenLocation": {
                         "type": "string",
-                        "description": "lastSeenLocation \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ub9c8\uc9c0\ub9c9 \ubaa9\uaca9 \uc704\uce58 \uc124\uba85\uc785\ub2c8\ub2e4.",
                         "example": "\uc608\uc2dc \ubb38\uc790\uc5f4"
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: ACTIVE(\uc9c4\ud589\uc911), RESOLVED(\ud574\uacb0), CLOSED(\uc885\ub8cc).",
+                        "enum": [
+                            "ACTIVE",
+                            "RESOLVED",
+                            "CLOSED"
+                        ],
                         "example": "ACTIVE"
                     }
                 }
@@ -13788,50 +13823,54 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ubd84\uc11d \uc138\uc158 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "sightingId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "sightingId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\ubaa9\uaca9 \uc2e0\uace0 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "finderId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "finderId \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "description": "\ubaa9\uaca9 \uc2e0\uace0\uc790 \ud68c\uc6d0 ID\uc785\ub2c8\ub2e4.",
+                        "example": 1
                     },
                     "scoreSimilarity": {
                         "type": "number",
-                        "description": "scoreSimilarity \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 5.0
+                        "description": "\uc774\ubbf8\uc9c0/\ud2b9\uc9d5 \uc720\uc0ac\ub3c4 \uc810\uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1.0
                     },
                     "scoreDistance": {
                         "type": "number",
-                        "description": "scoreDistance \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 5.0
+                        "description": "\uac70\ub9ac \uae30\ubc18 \uc720\uc0ac\ub3c4 \uc810\uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1.0
                     },
                     "scoreRecency": {
                         "type": "number",
-                        "description": "scoreRecency \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 5.0
+                        "description": "\uc2dc\uac04 \ucd5c\uc2e0\uc131 \uc810\uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1.0
                     },
                     "scoreTotal": {
                         "type": "number",
-                        "description": "scoreTotal \uac12\uc785\ub2c8\ub2e4.",
-                        "example": 5.0
+                        "description": "\uac00\uc911 \ud569\uc0b0 \ucd5c\uc885 \uc810\uc218\uc785\ub2c8\ub2e4.",
+                        "example": 1.0
                     },
                     "rank": {
                         "type": "integer",
                         "format": "int32",
-                        "description": "rank \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ud6c4\ubcf4 \uc6b0\uc120\uc21c\uc704(1\ubd80\ud130 \uc2dc\uc791)\uc785\ub2c8\ub2e4.",
                         "example": 1
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
-                        "example": "ACTIVE"
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: CANDIDATE(\ud6c4\ubcf4), APPROVED(\uc2b9\uc778).",
+                        "enum": [
+                            "CANDIDATE",
+                            "APPROVED"
+                        ],
+                        "example": "CANDIDATE"
                     }
                 }
             },
@@ -13922,21 +13961,29 @@
                         "type": "integer",
                         "format": "int64",
                         "description": "\ucc44\ud305\ubc29 ID\uc785\ub2c8\ub2e4.",
-                        "example": 101
+                        "example": 1
                     },
                     "chatType": {
                         "type": "string",
                         "description": "\ucc44\ud305 \ud0c0\uc785 \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: DIRECT(1:1 \ucc44\ud305), GROUP(\uadf8\ub8f9 \ucc44\ud305).",
-                        "example": "INDIVIDUAL"
+                        "enum": [
+                            "DIRECT",
+                            "GROUP"
+                        ],
+                        "example": "DIRECT"
                     },
                     "status": {
                         "type": "string",
-                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: \ub3c4\uba54\uc778\uc5d0\uc11c \uc815\uc758\ud55c \ucf54\ub4dc \ubb38\uc790\uc5f4(\uac12 \uc758\ubbf8\ub294 API \ub3c4\uba54\uc778 \uaddc\uce59 \ucc38\uc870).",
+                        "description": "\uc0c1\ud0dc \ucf54\ub4dc\uc785\ub2c8\ub2e4. \uac00\ub2a5 \uac12: ACTIVE(\ud65c\uc131), CLOSED(\uc885\ub8cc).",
+                        "enum": [
+                            "ACTIVE",
+                            "CLOSED"
+                        ],
                         "example": "ACTIVE"
                     },
                     "lastMessage": {
                         "$ref": "#/components/schemas/ChatMessageResponse",
-                        "description": "lastMessage \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ucc44\ud305\ubc29 \ub9c8\uc9c0\ub9c9 \uba54\uc2dc\uc9c0 \uc815\ubcf4\uc785\ub2c8\ub2e4.",
                         "example": {
                             "note": "\uac1d\uccb4 \uc608\uc2dc"
                         }
@@ -14113,12 +14160,12 @@
                 "properties": {
                     "exists": {
                         "type": "boolean",
-                        "description": "exists \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ub9ac\uc18c\uc2a4 \uc874\uc7ac \uc5ec\ubd80\uc785\ub2c8\ub2e4.",
                         "example": true
                     },
                     "review": {
                         "$ref": "#/components/schemas/ChatReviewResponse",
-                        "description": "review \uac12\uc785\ub2c8\ub2e4.",
+                        "description": "\ub9ac\ubdf0 \uc0c1\uc138 \uc815\ubcf4\uc785\ub2c8\ub2e4.",
                         "example": {
                             "note": "\uac1d\uccb4 \uc608\uc2dc"
                         }

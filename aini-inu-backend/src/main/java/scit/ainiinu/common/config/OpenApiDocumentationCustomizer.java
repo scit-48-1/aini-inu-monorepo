@@ -116,15 +116,22 @@ public class OpenApiDocumentationCustomizer {
             Map.entry("id", "리소스 식별자입니다."),
             Map.entry("memberId", "회원 ID입니다."),
             Map.entry("authorId", "작성자 회원 ID입니다."),
+            Map.entry("ownerId", "실종 신고 등록자 회원 ID입니다."),
+            Map.entry("finderId", "목격 신고자 회원 ID입니다."),
+            Map.entry("reviewerId", "리뷰 작성자 회원 ID입니다."),
             Map.entry("targetId", "대상 회원 ID입니다."),
             Map.entry("revieweeId", "리뷰 대상 회원 ID입니다."),
             Map.entry("chatRoomId", "채팅방 ID입니다."),
+            Map.entry("roomId", "채팅방 ID입니다."),
             Map.entry("threadId", "산책 모집글 ID입니다."),
             Map.entry("diaryId", "산책일기 ID입니다."),
             Map.entry("postId", "게시글 ID입니다."),
             Map.entry("commentId", "댓글 ID입니다."),
             Map.entry("petId", "반려견 ID입니다."),
+            Map.entry("breedId", "견종 ID입니다."),
             Map.entry("lostPetId", "실종 신고 ID입니다."),
+            Map.entry("sightingId", "목격 신고 ID입니다."),
+            Map.entry("matchId", "실종-목격 매칭 ID입니다."),
             Map.entry("sessionId", "분석 세션 ID입니다."),
             Map.entry("candidateId", "후보 ID입니다."),
             Map.entry("q", "검색 키워드입니다."),
@@ -134,15 +141,20 @@ public class OpenApiDocumentationCustomizer {
             Map.entry("profileImageUrl", "프로필 이미지 URL입니다."),
             Map.entry("phone", "전화번호입니다."),
             Map.entry("age", "나이입니다."),
-            Map.entry("gender", "성별 값입니다."),
+            Map.entry("gender", "성별 코드입니다."),
             Map.entry("mbti", "MBTI 문자열입니다."),
             Map.entry("personality", "성격 설명 문자열입니다."),
             Map.entry("selfIntroduction", "자기소개 문구입니다."),
+            Map.entry("linkedNickname", "연동 계정 표시 닉네임입니다."),
+            Map.entry("personalityTypeIds", "회원 성향 타입 ID 목록입니다."),
+            Map.entry("personalityTypes", "회원 성향 타입 상세 목록입니다."),
             Map.entry("content", "본문 내용입니다."),
             Map.entry("title", "제목입니다."),
             Map.entry("description", "설명 문구입니다."),
             Map.entry("caption", "캡션 텍스트입니다."),
             Map.entry("message", "메시지 내용입니다."),
+            Map.entry("summary", "AI 분석 요약입니다."),
+            Map.entry("memo", "추가 메모입니다."),
             Map.entry("comment", "코멘트 내용입니다."),
             Map.entry("messageType", "메시지 타입 코드입니다."),
             Map.entry("action", "동작 액션 코드입니다."),
@@ -150,23 +162,44 @@ public class OpenApiDocumentationCustomizer {
             Map.entry("token", "토큰 문자열입니다."),
             Map.entry("refreshToken", "리프레시 토큰 문자열입니다."),
             Map.entry("accessToken", "액세스 토큰 문자열입니다."),
-            Map.entry("tokenType", "토큰 타입입니다."),
+            Map.entry("tokenType", "토큰 타입 코드입니다."),
             Map.entry("photoUrl", "이미지 URL입니다."),
+            Map.entry("uploadUrl", "업로드용 사전서명 URL입니다."),
+            Map.entry("imageUrl", "이미지 접근 URL입니다."),
+            Map.entry("image", "이미지 바이너리(Base64 등 인라인 전달)입니다."),
+            Map.entry("queryText", "이미지 분석 보조 텍스트 질의입니다."),
+            Map.entry("mode", "AI 분석 모드 코드입니다."),
             Map.entry("imageUrls", "이미지 URL 목록입니다."),
             Map.entry("photoUrls", "사진 URL 목록입니다."),
             Map.entry("fileName", "파일명입니다."),
             Map.entry("contentType", "파일 MIME 타입입니다."),
             Map.entry("purpose", "업로드 목적 코드입니다."),
+            Map.entry("maxFileSizeBytes", "허용 최대 파일 크기(Byte)입니다."),
+            Map.entry("expiresIn", "만료까지 남은 초(second)입니다."),
+            Map.entry("certificationNumber", "반려견 등록번호입니다."),
             Map.entry("walkDate", "산책 날짜입니다."),
             Map.entry("startTime", "시작 시각(UTC)입니다."),
             Map.entry("endTime", "종료 시각(UTC)입니다."),
+            Map.entry("foundAt", "목격 시각(UTC)입니다."),
             Map.entry("createdAt", "생성 시각(UTC)입니다."),
             Map.entry("updatedAt", "수정 시각(UTC)입니다."),
             Map.entry("deletedAt", "삭제 시각(UTC)입니다."),
+            Map.entry("sentAt", "메시지 전송 시각(UTC)입니다."),
+            Map.entry("readAt", "읽음 처리 시각(UTC)입니다."),
+            Map.entry("lastSeenAt", "마지막 목격 시각(UTC)입니다."),
+            Map.entry("followedAt", "팔로우 생성 시각(UTC)입니다."),
+            Map.entry("nicknameChangedAt", "닉네임 최근 변경 시각(UTC)입니다."),
+            Map.entry("startDate", "통계 집계 시작 날짜입니다."),
+            Map.entry("endDate", "통계 집계 종료 날짜입니다."),
+            Map.entry("date", "통계 집계 날짜입니다."),
+            Map.entry("birthDate", "생년월일입니다."),
             Map.entry("latitude", "위도입니다."),
             Map.entry("longitude", "경도입니다."),
             Map.entry("placeName", "장소명입니다."),
             Map.entry("address", "상세 주소입니다."),
+            Map.entry("location", "산책 장소 정보 객체입니다."),
+            Map.entry("lastSeenLocation", "마지막 목격 위치 설명입니다."),
+            Map.entry("region", "핫스팟 지역명입니다."),
             Map.entry("maxParticipants", "최대 참여 인원입니다."),
             Map.entry("currentParticipants", "현재 참여 인원입니다."),
             Map.entry("allowNonPetOwner", "비애견인 참여 허용 여부입니다."),
@@ -174,10 +207,26 @@ public class OpenApiDocumentationCustomizer {
             Map.entry("isPublic", "공개 여부입니다."),
             Map.entry("isMain", "대표 반려견 여부입니다."),
             Map.entry("isNeutered", "중성화 여부입니다."),
+            Map.entry("isLiked", "현재 로그인 사용자의 좋아요 여부입니다."),
+            Map.entry("isFollowing", "현재 로그인 사용자의 팔로우 여부입니다."),
+            Map.entry("isApplied", "현재 로그인 사용자의 신청 여부입니다."),
+            Map.entry("isCertified", "반려견 인증 완료 여부입니다."),
+            Map.entry("isNewMember", "회원 최초 로그인 여부입니다."),
+            Map.entry("isIdempotentReplay", "동일 멱등 키 재요청으로 기존 결과를 재사용했는지 여부입니다."),
+            Map.entry("left", "채팅방 퇴장 여부입니다."),
+            Map.entry("exists", "리소스 존재 여부입니다."),
+            Map.entry("walkConfirmed", "산책 확정 완료 여부입니다."),
+            Map.entry("allConfirmed", "참여자 전원 산책 확정 여부입니다."),
+            Map.entry("isRequired", "필터 필수 여부입니다."),
             Map.entry("verified", "인증 여부입니다."),
             Map.entry("isVerified", "인증 여부입니다."),
             Map.entry("rating", "평점입니다."),
             Map.entry("score", "점수입니다."),
+            Map.entry("scoreSimilarity", "이미지/특징 유사도 점수입니다."),
+            Map.entry("scoreDistance", "거리 기반 유사도 점수입니다."),
+            Map.entry("scoreRecency", "시간 최신성 점수입니다."),
+            Map.entry("scoreTotal", "가중 합산 최종 점수입니다."),
+            Map.entry("rank", "후보 우선순위(1부터 시작)입니다."),
             Map.entry("page", "페이지 번호(0부터 시작)입니다."),
             Map.entry("size", "페이지 크기입니다."),
             Map.entry("sort", "정렬 조건입니다."),
@@ -191,10 +240,33 @@ public class OpenApiDocumentationCustomizer {
             Map.entry("code", "코드 문자열입니다."),
             Map.entry("name", "이름입니다."),
             Map.entry("count", "개수입니다."),
+            Map.entry("petName", "반려견 이름입니다."),
+            Map.entry("breed", "견종명 또는 견종 코드입니다."),
             Map.entry("totalWalks", "총 산책 횟수입니다."),
+            Map.entry("likeCount", "좋아요 수입니다."),
+            Map.entry("commentCount", "댓글 수입니다."),
             Map.entry("windowDays", "집계 윈도우 일수입니다."),
             Map.entry("timezone", "시간대 식별자입니다."),
             Map.entry("points", "일자별 집계 포인트 목록입니다."),
+            Map.entry("author", "작성자 요약 정보입니다."),
+            Map.entry("sender", "메시지 발신자 정보입니다."),
+            Map.entry("review", "리뷰 상세 정보입니다."),
+            Map.entry("comments", "댓글 목록입니다."),
+            Map.entry("candidates", "분석/매칭 후보 목록입니다."),
+            Map.entry("participants", "채팅방 참여자 목록입니다."),
+            Map.entry("pets", "참여자 반려견 목록입니다."),
+            Map.entry("lastMessage", "채팅방 마지막 메시지 정보입니다."),
+            Map.entry("applicants", "신청자 회원 ID 목록입니다."),
+            Map.entry("walkingStyles", "산책 스타일 코드 목록입니다."),
+            Map.entry("personalities", "반려견 성향 태그 목록입니다."),
+            Map.entry("petIds", "연결된 반려견 ID 목록입니다."),
+            Map.entry("personalityIds", "반려견 성향 ID 목록입니다."),
+            Map.entry("confirmedMemberIds", "산책 확정을 완료한 회원 ID 목록입니다."),
+            Map.entry("lastReadMessageId", "마지막으로 읽은 메시지 ID입니다."),
+            Map.entry("partnerId", "1:1 채팅 상대 회원 ID입니다."),
+            Map.entry("messageId", "메시지 ID입니다."),
+            Map.entry("myState", "요청자 본인의 산책 확정 상태입니다."),
+            Map.entry("values", "필터 값 목록입니다."),
             Map.entry("memberType", "회원 유형 코드입니다."),
             Map.entry("chatType", "채팅 타입 코드입니다."),
             Map.entry("linkedThreadStatus", "연결 스레드 상태입니다."),
@@ -227,13 +299,87 @@ public class OpenApiDocumentationCustomizer {
             Map.entry("ThreadCreateRequest.chatType", "INDIVIDUAL(1:1), GROUP(그룹 모집)"),
             Map.entry("ThreadPatchRequest.chatType", "INDIVIDUAL(1:1), GROUP(그룹 모집)"),
             Map.entry("ThreadSummaryResponse.chatType", "INDIVIDUAL(1:1), GROUP(그룹 모집)"),
+            Map.entry("ThreadMapResponse.chatType", "INDIVIDUAL(1:1), GROUP(그룹 모집)"),
             Map.entry("ThreadResponse.chatType", "INDIVIDUAL(1:1), GROUP(그룹 모집)"),
             Map.entry("ChatRoomSummaryResponse.chatType", "DIRECT(1:1 채팅), GROUP(그룹 채팅)"),
             Map.entry("ChatRoomDetailResponse.chatType", "DIRECT(1:1 채팅), GROUP(그룹 채팅)"),
+            Map.entry("ChatParticipantResponse.walkConfirmState", "UNCONFIRMED(미확정), CONFIRMED(확정)"),
+            Map.entry("WalkConfirmResponse.myState", "UNCONFIRMED(미확정), CONFIRMED(확정)"),
             Map.entry("WalkConfirmRequest.action", "CONFIRM(산책 확정), CANCEL(산책 확정 취소)"),
             Map.entry("ChatMessageResponse.messageType", "USER(사용자 메시지), SYSTEM(시스템 메시지)"),
             Map.entry("ChatMessageCreateRequest.messageType", "USER(사용자 메시지), SYSTEM(시스템 메시지)"),
+            Map.entry("ThreadApplyResponse.applicationStatus", "JOINED(신청 완료), CANCELED(신청 취소)"),
+            Map.entry("ChatRoomSummaryResponse.status", "ACTIVE(활성), CLOSED(종료)"),
+            Map.entry("ChatRoomDetailResponse.status", "ACTIVE(활성), CLOSED(종료)"),
+            Map.entry("LeaveRoomResponse.roomStatus", "ACTIVE(활성), CLOSED(종료)"),
+            Map.entry("ChatMessageResponse.status", "CREATED(생성 완료)"),
+            Map.entry("ThreadSummaryResponse.status", "RECRUITING(모집중), EXPIRED(마감), DELETED(삭제)"),
+            Map.entry("ThreadResponse.status", "RECRUITING(모집중), EXPIRED(마감), DELETED(삭제)"),
+            Map.entry("WalkDiaryResponse.linkedThreadStatus", "RECRUITING(모집중), EXPIRED(마감), DELETED(삭제)"),
+            Map.entry("LostPetResponse.status", "ACTIVE(진행중), RESOLVED(해결), CLOSED(종료)"),
+            Map.entry("LostPetSummaryResponse.status", "ACTIVE(진행중), RESOLVED(해결), CLOSED(종료)"),
+            Map.entry("LostPetDetailResponse.status", "ACTIVE(진행중), RESOLVED(해결), CLOSED(종료)"),
+            Map.entry("SightingResponse.status", "OPEN(접수), CLOSED(종료)"),
+            Map.entry("LostPetMatchResponse.status", "PENDING_APPROVAL(승인대기), APPROVED(승인), PENDING_CHAT_LINK(채팅방 연동대기), CHAT_LINKED(연동완료), REJECTED(거절), INVALIDATED(무효화)"),
+            Map.entry("LostPetMatchCandidateResponse.status", "CANDIDATE(후보), APPROVED(승인)"),
+            Map.entry("LostPetAnalyzeCandidateResponse.status", "CANDIDATE(후보), APPROVED(승인)"),
+            Map.entry("MemberCreateRequest.memberType", "PET_OWNER(반려견 보호자), NON_PET_OWNER(비보호자), ADMIN(관리자)"),
+            Map.entry("MemberSignupRequest.memberType", "PET_OWNER(반려견 보호자), NON_PET_OWNER(비보호자), ADMIN(관리자)"),
+            Map.entry("MemberResponse.memberType", "PET_OWNER(반려견 보호자), NON_PET_OWNER(비보호자), ADMIN(관리자)"),
+            Map.entry("MemberResponse.status", "ACTIVE(활성), INACTIVE(비활성), BANNED(정지)"),
+            Map.entry("MemberCreateRequest.gender", "MALE(남성), FEMALE(여성), UNKNOWN(미선택)"),
+            Map.entry("MemberProfilePatchRequest.gender", "MALE(남성), FEMALE(여성), UNKNOWN(미선택)"),
+            Map.entry("MemberResponse.gender", "MALE(남성), FEMALE(여성), UNKNOWN(미선택)"),
+            Map.entry("PetCreateRequest.gender", "MALE(수컷), FEMALE(암컷)"),
+            Map.entry("PetUpdateRequest.gender", "MALE(수컷), FEMALE(암컷)"),
+            Map.entry("PetResponse.gender", "MALE(수컷), FEMALE(암컷)"),
+            Map.entry("PetCreateRequest.size", "SMALL(소형견), MEDIUM(중형견), LARGE(대형견)"),
+            Map.entry("PetUpdateRequest.size", "SMALL(소형견), MEDIUM(중형견), LARGE(대형견)"),
+            Map.entry("PetResponse.size", "SMALL(소형견), MEDIUM(중형견), LARGE(대형견)"),
             Map.entry("LoginResponse.tokenType", "Bearer(JWT Bearer 토큰)")
+    );
+
+    private static final Map<String, List<String>> ENUM_LIKE_FIELD_VALUES = Map.ofEntries(
+            Map.entry("ThreadCreateRequest.chatType", List.of("INDIVIDUAL", "GROUP")),
+            Map.entry("ThreadPatchRequest.chatType", List.of("INDIVIDUAL", "GROUP")),
+            Map.entry("ThreadSummaryResponse.chatType", List.of("INDIVIDUAL", "GROUP")),
+            Map.entry("ThreadMapResponse.chatType", List.of("INDIVIDUAL", "GROUP")),
+            Map.entry("ThreadResponse.chatType", List.of("INDIVIDUAL", "GROUP")),
+            Map.entry("ChatRoomSummaryResponse.chatType", List.of("DIRECT", "GROUP")),
+            Map.entry("ChatRoomDetailResponse.chatType", List.of("DIRECT", "GROUP")),
+            Map.entry("ChatParticipantResponse.walkConfirmState", List.of("UNCONFIRMED", "CONFIRMED")),
+            Map.entry("WalkConfirmResponse.myState", List.of("UNCONFIRMED", "CONFIRMED")),
+            Map.entry("WalkConfirmRequest.action", List.of("CONFIRM", "CANCEL")),
+            Map.entry("ChatMessageResponse.messageType", List.of("USER", "SYSTEM")),
+            Map.entry("ChatMessageCreateRequest.messageType", List.of("USER", "SYSTEM")),
+            Map.entry("ThreadApplyResponse.applicationStatus", List.of("JOINED", "CANCELED")),
+            Map.entry("ChatRoomSummaryResponse.status", List.of("ACTIVE", "CLOSED")),
+            Map.entry("ChatRoomDetailResponse.status", List.of("ACTIVE", "CLOSED")),
+            Map.entry("LeaveRoomResponse.roomStatus", List.of("ACTIVE", "CLOSED")),
+            Map.entry("ChatMessageResponse.status", List.of("CREATED")),
+            Map.entry("ThreadSummaryResponse.status", List.of("RECRUITING", "EXPIRED", "DELETED")),
+            Map.entry("ThreadResponse.status", List.of("RECRUITING", "EXPIRED", "DELETED")),
+            Map.entry("WalkDiaryResponse.linkedThreadStatus", List.of("RECRUITING", "EXPIRED", "DELETED")),
+            Map.entry("LostPetResponse.status", List.of("ACTIVE", "RESOLVED", "CLOSED")),
+            Map.entry("LostPetSummaryResponse.status", List.of("ACTIVE", "RESOLVED", "CLOSED")),
+            Map.entry("LostPetDetailResponse.status", List.of("ACTIVE", "RESOLVED", "CLOSED")),
+            Map.entry("SightingResponse.status", List.of("OPEN", "CLOSED")),
+            Map.entry("LostPetMatchResponse.status", List.of("PENDING_APPROVAL", "APPROVED", "PENDING_CHAT_LINK", "CHAT_LINKED", "REJECTED", "INVALIDATED")),
+            Map.entry("LostPetMatchCandidateResponse.status", List.of("CANDIDATE", "APPROVED")),
+            Map.entry("LostPetAnalyzeCandidateResponse.status", List.of("CANDIDATE", "APPROVED")),
+            Map.entry("MemberCreateRequest.memberType", List.of("PET_OWNER", "NON_PET_OWNER", "ADMIN")),
+            Map.entry("MemberSignupRequest.memberType", List.of("PET_OWNER", "NON_PET_OWNER", "ADMIN")),
+            Map.entry("MemberResponse.memberType", List.of("PET_OWNER", "NON_PET_OWNER", "ADMIN")),
+            Map.entry("MemberCreateRequest.gender", List.of("MALE", "FEMALE", "UNKNOWN")),
+            Map.entry("MemberProfilePatchRequest.gender", List.of("MALE", "FEMALE", "UNKNOWN")),
+            Map.entry("MemberResponse.gender", List.of("MALE", "FEMALE", "UNKNOWN")),
+            Map.entry("PetCreateRequest.gender", List.of("MALE", "FEMALE")),
+            Map.entry("PetUpdateRequest.gender", List.of("MALE", "FEMALE")),
+            Map.entry("PetResponse.gender", List.of("MALE", "FEMALE")),
+            Map.entry("PetCreateRequest.size", List.of("SMALL", "MEDIUM", "LARGE")),
+            Map.entry("PetUpdateRequest.size", List.of("SMALL", "MEDIUM", "LARGE")),
+            Map.entry("PetResponse.size", List.of("SMALL", "MEDIUM", "LARGE")),
+            Map.entry("LoginResponse.tokenType", List.of("Bearer"))
     );
 
     @Bean
@@ -334,8 +480,12 @@ public class OpenApiDocumentationCustomizer {
     private void normalizeProperty(String schemaName, String propertyName, Schema property) {
         String fieldKey = schemaName + "." + propertyName;
 
-        if (isBlank(property.getDescription())) {
-            property.setDescription(resolvePropertyDescription(schemaName, propertyName));
+        String currentDescription = Objects.toString(property.getDescription(), "");
+        if (shouldRefreshDescription(currentDescription, propertyName)) {
+            String resolvedDescription = resolvePropertyDescription(schemaName, propertyName);
+            if (isBlank(currentDescription) || !resolvedDescription.equals(propertyName + " 값입니다.")) {
+                property.setDescription(resolvedDescription);
+            }
         }
 
         if (schemaName.endsWith("PatchRequest") && !property.getDescription().contains("null이면")) {
@@ -349,6 +499,7 @@ public class OpenApiDocumentationCustomizer {
             appendEnumGuide(schemaName, propertyName, property);
         }
 
+        applyEnumLikeAllowableValues(schemaName, propertyName, property);
         appendEnumLikeGuide(schemaName, propertyName, property);
 
         if (!isSensitiveField(propertyName)) {
@@ -392,7 +543,10 @@ public class OpenApiDocumentationCustomizer {
         }
 
         String key = schemaName + "." + propertyName;
-        String valueGuide = switch (key) {
+        String explicitGuide = ENUM_LIKE_FIELD_GUIDES.get(key);
+        String valueGuide = !isBlank(explicitGuide)
+                ? explicitGuide
+                : switch (key) {
             case "MemberResponse.memberType", "MemberSignupRequest.memberType" ->
                     "PET_OWNER(반려견 보호자), NON_PET_OWNER(비보호자), ADMIN(관리자)";
             case "MemberCreateRequest.gender", "MemberProfilePatchRequest.gender", "MemberResponse.gender" ->
@@ -426,6 +580,30 @@ public class OpenApiDocumentationCustomizer {
         property.setDescription(current + " 가능 값: " + guide + ".");
     }
 
+    private void applyEnumLikeAllowableValues(String schemaName, String propertyName, Schema property) {
+        String propertyType = resolveSchemaType(property);
+        if (!"string".equals(propertyType)) {
+            return;
+        }
+
+        String key = schemaName + "." + propertyName;
+        List<String> values = ENUM_LIKE_FIELD_VALUES.get(key);
+        if (values == null || values.isEmpty()) {
+            return;
+        }
+
+        @SuppressWarnings("unchecked")
+        List<Object> current = property.getEnum();
+        if (current == null || current.isEmpty()) {
+            property.setEnum(new ArrayList<>(values));
+        }
+
+        Object currentExample = property.getExample();
+        if (currentExample == null || !values.contains(String.valueOf(currentExample))) {
+            property.setExample(values.get(0));
+        }
+    }
+
     private boolean isEnumLikeField(String propertyName) {
         if (propertyName == null) {
             return false;
@@ -434,6 +612,7 @@ public class OpenApiDocumentationCustomizer {
         return lower.endsWith("type")
                 || lower.endsWith("status")
                 || lower.endsWith("action")
+                || lower.endsWith("state")
                 || lower.endsWith("messagetype");
     }
 
@@ -1000,6 +1179,23 @@ public class OpenApiDocumentationCustomizer {
         }
 
         return propertyName + " 값입니다.";
+    }
+
+    private boolean shouldRefreshDescription(String description, String propertyName) {
+        if (isBlank(description)) {
+            return true;
+        }
+
+        String trimmed = description.trim();
+        if (trimmed.equals(propertyName + " 값입니다.") || trimmed.equals(propertyName + " 값입니다")) {
+            return true;
+        }
+        if ("성별 값입니다.".equals(trimmed)) {
+            return true;
+        }
+        return trimmed.endsWith(" 값입니다.")
+                && !trimmed.contains("가능 값")
+                && !trimmed.contains("null이면");
     }
 
     private String resolveParameterDescription(String path, String parameterName) {
