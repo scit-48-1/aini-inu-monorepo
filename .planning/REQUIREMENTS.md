@@ -15,12 +15,12 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 
 ### Common Infrastructure (Phase 2)
 
-- [ ] **INFRA-01**: API 레이어 중앙화 — 모든 도메인 API 호출을 `api/` 폴더 내 서비스 모듈로 통합
-- [ ] **INFRA-02**: ApiResponse<T> 봉투 패턴 공통 처리 — `{success, status, data, errorCode, message}` 구조 파싱
-- [ ] **INFRA-03**: 공통 에러 핸들링 — 에러 코드별 사용자 메시지 매핑, toast 정책 통일 (PRD §11.3)
+- [x] **INFRA-01**: API 레이어 중앙화 — 모든 도메인 API 호출을 `api/` 폴더 내 서비스 모듈로 통합
+- [x] **INFRA-02**: ApiResponse<T> 봉투 패턴 공통 처리 — `{success, status, data, errorCode, message}` 구조 파싱
+- [x] **INFRA-03**: 공통 에러 핸들링 — 에러 코드별 사용자 메시지 매핑, toast 정책 통일 (PRD §11.3)
 - [ ] **INFRA-04**: 페이지네이션 공통 처리 — SliceResponse/CursorResponse/PageResponse 타입 및 훅
 - [ ] **INFRA-05**: presigned URL 기반 이미지 업로드 유틸 공통화 (`UPLOAD-PRESIGNED-POST` → `UPLOAD-PRESIGNED-PUT` → `IMAGE-LOCAL-GET`)
-- [ ] **INFRA-06**: 인증 인터셉터 — JWT Bearer 토큰 자동 첨부, 401 시 리프레시, 만료 시 로그아웃 전이
+- [x] **INFRA-06**: 인증 인터셉터 — JWT Bearer 토큰 자동 첨부, 401 시 리프레시, 만료 시 로그아웃 전이
 - [ ] **INFRA-07**: 5종 상태 패턴 공통 컴포넌트 — default/loading/empty/error/success (PRD §10.2)
 
 ### Authentication (Phase 3) — FR-AUTH
@@ -176,12 +176,12 @@ Deferred to future release. Tracked but not in current roadmap.
 | BUG-01 | Phase 1 | Complete |
 | BUG-02 | Phase 1 | Complete |
 | BUG-03 | Phase 1 | Pending |
-| INFRA-01 | Phase 2 | Pending |
-| INFRA-02 | Phase 2 | Pending |
-| INFRA-03 | Phase 2 | Pending |
+| INFRA-01 | Phase 2 | Complete |
+| INFRA-02 | Phase 2 | Complete |
+| INFRA-03 | Phase 2 | Complete |
 | INFRA-04 | Phase 2 | Pending |
 | INFRA-05 | Phase 2 | Pending |
-| INFRA-06 | Phase 2 | Pending |
+| INFRA-06 | Phase 2 | Complete |
 | INFRA-07 | Phase 2 | Pending |
 | AUTH-01 | Phase 3 | Pending |
 | AUTH-02 | Phase 3 | Pending |

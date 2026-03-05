@@ -55,7 +55,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — API client foundation: types, auth store, HTTP client with envelope unwrap, JWT interceptor, refresh queue, error toast
+- [x] 02-01-PLAN.md — API client foundation: types, auth store, HTTP client with envelope unwrap, JWT interceptor, refresh queue, error toast
 - [ ] 02-02-PLAN.md — Domain API modules (auth, members, pets, threads, diaries) — 40 typed endpoint functions
 - [ ] 02-03-PLAN.md — Domain API modules (chat, lost pets, community, upload) — 33 typed endpoint functions + image upload utility
 
@@ -227,7 +227,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Critical Bugs | 2/2 | Complete | 2026-03-06 |
-| 2. Common Infrastructure | 0/3 | Not started | - |
+| 2. Common Infrastructure | 1/3 | In progress | - |
 | 3. Authentication | 0/2 | Not started | - |
 | 4. Member Profile/Relations | 0/3 | Not started | - |
 | 5. Pet Management | 0/2 | Not started | - |
