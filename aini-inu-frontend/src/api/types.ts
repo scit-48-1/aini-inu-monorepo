@@ -49,3 +49,14 @@ export interface CursorPaginationParams {
   size?: number;
   direction?: string;
 }
+
+// --- INFRA-07: UI async state types ---
+
+/** UI async state — 5 states per PRD section 10.2. Components built in domain phases. */
+export type AsyncState = 'idle' | 'loading' | 'empty' | 'error' | 'success';
+
+export interface AsyncData<T> {
+  state: AsyncState;
+  data: T | null;
+  error: ApiError | null;
+}
