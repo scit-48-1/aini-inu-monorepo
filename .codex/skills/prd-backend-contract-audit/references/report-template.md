@@ -18,6 +18,18 @@
 - OpenAPI 추출: `<command or script>`
   - 결과: `<success/fail + size>`
   - 근거: `<artifact path>`
+- 자동 신호 스캔: `<command>`
+  - 결과: `<signal count summary>`
+  - 근거:
+    - `<signals.json path>`
+    - `<signals.md path>`
+
+## 2.1 매트릭스 커버리지 체크
+- [ ] PRD/API ref vs OpenAPI
+- [ ] OpenAPI vs Controller
+- [ ] Controller vs Test
+- [ ] Service public method vs Test
+- [ ] Seed/fixture vs backend auth/domain invariants
 
 ## 3. 이슈 요약
 
@@ -59,3 +71,5 @@
 - `aini-inu-backend/src/test/java/...`
 - `<openapi artifact path>`
 - `<test report path>`
+- `<signals.json path>`
+- `<signals.md path>`

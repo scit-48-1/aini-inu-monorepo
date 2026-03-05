@@ -1,93 +1,111 @@
 ---
 name: prd-backend-contract-audit
-description: Audit alignment between `common-docs/PROJECT_PRD.md` and the backend implementation (`aini-inu-backend`), test code, and Swagger/OpenAPI runtime spec. Use when asked to find and document `계약상 불일치`, `미구현`, `초과구현`, `논리적 어긋남`, especially when the result must be saved as a report file under `common-docs`.
+description: Detect contract gaps and missing coverage across PRD, backend implementation, tests, and OpenAPI. Use when asked to comprehensively find `계약상 불일치`, `미구현`, `초과구현`, `논리적 어긋남` and produce evidence-backed reports.
 ---
 
-# Prd Backend Contract Audit
+# PRD Backend Contract Audit
 
-## Overview
+## Objective
 
-Execute a deterministic PRD-contract audit workflow for backend code, tests, and Swagger/OpenAPI.  
-Produce evidence-backed findings and save a report markdown file in `common-docs`.
+Run a **detect-only** audit that finds as many high-confidence gaps as possible across:
+- PRD policy (`common-docs/PROJECT_PRD.md`)
+- Runtime/snapshot OpenAPI
+- Backend controller/service/repository implementation
+- Backend tests
 
-## Workflow
+This skill is for **finding** issues, not fixing them.
 
-### 1) Gather Baseline Inputs
+## Execution Mode
 
-- Read baseline docs:
+- Default mode: `detect-only` (no source edits outside report output).
+- Allowed outputs:
+  - `/tmp/aini_contract_audit/*` artifacts
+  - report markdown under `common-docs/`
+- If user asks implementation, switch to a separate workstream after audit closure.
+
+## Workflow (Mandatory)
+
+### 1) Baseline Lock
+- Read:
   - `common-docs/PROJECT_PRD.md`
-  - (Optional for cross-check) `common-docs/API_SPEC.md`, `common-docs/FEATURE_SPEC.md`
-- Confirm target code scope:
-  - `aini-inu-backend/src/main/java`
-  - `aini-inu-backend/src/test/java`
-- If available, capture branch/commit for traceability.
+  - `common-docs/openapi/openapi.v1.json`
+- Capture branch + commit (`git rev-parse --short HEAD`).
+- Define scope explicitly:
+  - default is full backend + PRD/OpenAPI contracts.
 
-### 2) Collect Runtime Evidence
+### 2) Runtime Evidence Collection
 
-Run the bundled script:
+Run:
 
 ```bash
 .codex/skills/prd-backend-contract-audit/scripts/collect_audit_artifacts.sh
 ```
 
-The script does both:
-- Re-runs backend tests (`./gradlew test --no-daemon --rerun-tasks`)
-- Boots backend and captures runtime OpenAPI from `/v3/api-docs`
+What it collects:
+- full backend test run log
+- runtime OpenAPI (`/v3/api-docs`)
+- automatic broad signal artifacts:
+  - `/tmp/aini_contract_audit/signals.json`
+  - `/tmp/aini_contract_audit/signals.md`
 
-Artifacts are written to `/tmp/aini_contract_audit` by default.
+### 3) Automated Wide Scan (Required)
 
-If sandbox blocks execution, re-run with escalated permissions.
+Use auto signals as *candidate findings*, not final verdicts:
 
-### 3) Perform Contract Audit
+```bash
+python3 .codex/skills/prd-backend-contract-audit/scripts/generate_audit_signals.py \
+  --root . \
+  --out-dir /tmp/aini_contract_audit
+```
 
-Use `references/checklist.md` to classify every finding into:
+This scan covers:
+- controller endpoint vs OpenAPI presence
+- endpoint direct-test evidence gaps
+- service public-method test reference gaps
+- auth-flow vs seed-data consistency signals
+
+### 4) Manual Triage + Classification
+
+Apply `references/checklist.md` and keep one primary type:
 - `계약상 불일치`
 - `미구현`
 - `초과구현`
 - `논리적 어긋남`
 
 For each finding, include:
-- Severity: `Critical|High|Medium|Low`
-- Status: `확정|의심`
-- Evidence: concrete file path and line, endpoint, schema field, test name, or OpenAPI path
+- Severity (`Critical|High|Medium|Low`)
+- Status (`확정|의심`)
+- Evidence with concrete path/line or endpoint/schema path.
 
-### 4) Write Report in `common-docs`
+### 5) Report Output
 
-Start from `references/report-template.md` and fill actual findings.
-
-Default naming rule:
+Create:
 - `common-docs/PRD_BACKEND_SWAGGER_AUDIT_YYYY-MM-DD.md`
 
-Required sections:
-- Scope and baseline
-- Execution results (tests/OpenAPI extraction)
-- Issue summary table
-- Detailed findings
-- Matched/aligned items
-- Evidence files/paths
-
-### 5) Final Verification
-
-Before delivering:
-- Ensure every claim has evidence.
-- Mark low-confidence claims as `의심`.
-- Distinguish document mismatch vs implementation bug vs intentionally added feature.
-- Confirm the report file exists under `common-docs`.
+Use `references/report-template.md` and include:
+- execution evidence
+- summary table
+- detailed findings
+- explicit `확정` vs `의심`
+- aligned/verified items
 
 ## Resources
 
 ### scripts/
 - `scripts/collect_audit_artifacts.sh`
-  - Runs tests
-  - Extracts runtime OpenAPI
-  - Writes logs and artifacts under `/tmp/aini_contract_audit`
+  - tests + runtime OpenAPI + signal generation
+- `scripts/generate_audit_signals.py`
+  - broad static/rule-based gap signal generation
 
 ### references/
-- `references/checklist.md`: classification and decision rules
-- `references/report-template.md`: output markdown structure
+- `references/checklist.md`
+- `references/report-template.md`
+- `references/signal-catalog.md`
 
-## Constraints
-- Do not claim pass/fail without command output evidence.
-- Do not treat Swagger annotation text alone as source of truth if runtime spec conflicts.
-- Prefer runtime OpenAPI (`/v3/api-docs`) over static assumptions.
-- Keep report factual; avoid remediation plans unless user asks.
+## Guardrails
+- Never assert a finding without evidence.
+- Treat automated signal output as draft candidates until triaged.
+- Runtime OpenAPI outranks annotation assumptions.
+- Distinguish:
+  - contract mismatch vs missing implementation vs missing tests.
+- Avoid remediation proposals unless user requests them.

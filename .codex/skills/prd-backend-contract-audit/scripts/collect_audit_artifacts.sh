@@ -12,6 +12,9 @@ OPENAPI_PRETTY="$OUT_DIR/openapi_pretty.json"
 BOOT_LOG="$OUT_DIR/boot.log"
 TEST_LOG="$OUT_DIR/test.log"
 STATUS_FILE="$OUT_DIR/status.txt"
+SIGNALS_JSON="$OUT_DIR/signals.json"
+SIGNALS_MD="$OUT_DIR/signals.md"
+SIGNAL_SCRIPT="$ROOT_DIR/.codex/skills/prd-backend-contract-audit/scripts/generate_audit_signals.py"
 
 mkdir -p "$OUT_DIR"
 
@@ -82,6 +85,15 @@ extract_openapi() {
   log "openapi artifacts: $OPENAPI_RAW, $OPENAPI_PRETTY"
 }
 
+generate_signals() {
+  if [ ! -f "$SIGNAL_SCRIPT" ]; then
+    log "signal script not found, skip: $SIGNAL_SCRIPT"
+    return 0
+  fi
+  log "generating broad audit signals"
+  python3 "$SIGNAL_SCRIPT" --root "$ROOT_DIR" --out-dir "$OUT_DIR"
+}
+
 write_status() {
   {
     echo "timestamp=$(date '+%Y-%m-%d %H:%M:%S %z')"
@@ -92,6 +104,8 @@ write_status() {
     echo "boot_log=$BOOT_LOG"
     echo "test_log=$TEST_LOG"
     echo "test_report=$BACKEND_DIR/build/reports/tests/test/index.html"
+    echo "signals_json=$SIGNALS_JSON"
+    echo "signals_md=$SIGNALS_MD"
   } >"$STATUS_FILE"
 }
 
@@ -103,6 +117,7 @@ main() {
 
   run_tests
   extract_openapi
+  generate_signals
   write_status
   log "artifact collection complete (status: $STATUS_FILE)"
 }

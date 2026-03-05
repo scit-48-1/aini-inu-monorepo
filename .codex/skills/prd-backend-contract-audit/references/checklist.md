@@ -1,5 +1,11 @@
 # PRD Backend Contract Audit Checklist
 
+## 0) Detect-Only Principle
+
+- Audit phase must not mix implementation fixes.
+- Produce findings first, with evidence.
+- If fix is requested later, run as separate workstream.
+
 ## 1) Finding Categories
 
 Use exactly one primary category per finding.
@@ -36,8 +42,21 @@ Every finding must include at least one concrete evidence item:
 - Endpoint + method + schema path
 - Test class/method behavior
 - Runtime OpenAPI snippet source (artifact path)
+- Automated signal id/code (`signals.json`) when applicable
 
 Avoid statements without direct evidence.
+
+## 4.1) Mandatory Matrices
+
+Every audit must cover these matrices (manual or script-assisted):
+
+1. PRD/API ref vs OpenAPI endpoint presence
+2. OpenAPI endpoint vs controller mapping
+3. Controller endpoint vs test evidence
+4. Public service method vs test evidence
+5. Seed/fixture vs backend auth/domain invariants
+
+If any matrix is skipped, report why.
 
 ## 5) Contract Comparison Order
 
@@ -58,3 +77,6 @@ Before finalizing report, confirm:
 - Each finding has evidence path
 - Confirmed/uncertain claims are clearly separated
 - Report file is saved under `common-docs`
+- Automated scan outputs are referenced:
+  - `/tmp/aini_contract_audit/signals.json`
+  - `/tmp/aini_contract_audit/signals.md`
