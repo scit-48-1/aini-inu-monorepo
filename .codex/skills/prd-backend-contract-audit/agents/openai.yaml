@@ -1,0 +1,3 @@
+interface:
+  display_name: "PRD Contract Auditor"
+  short_description: "Audit PRD vs backend/test/Swagger alignment"

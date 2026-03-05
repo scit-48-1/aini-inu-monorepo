@@ -1,0 +1,11 @@
+.git
+.gradle
+.idea
+build
+bin
+out
+node_modules
+var
+*.iml
+*.log
+.DS_Store
