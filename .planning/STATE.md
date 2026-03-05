@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-05T23:04:47.514Z"
-last_activity: 2026-03-06 -- Completed plan 02-03 (chat, lostpet, community, upload API modules)
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-05T23:22:04Z"
+last_activity: 2026-03-06 -- Completed plan 03-01 (AuthProvider, login page, layout auth guard)
 progress:
   total_phases: 12
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 6
+  completed_plans: 6
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** 프론트엔드의 모든 API 호출이 백엔드 Swagger 명세와 100% 일치하고, PRD 요구사항이 빠짐없이 구현되어 런타임 에러 0건을 달성하는 것.
-**Current focus:** Phase 2: Common Infrastructure (in progress)
+**Current focus:** Phase 3: Authentication
 
 ## Current Position
 
-Phase: 2 of 12 (Common Infrastructure)
-Plan: 3 of 3 in current phase (02-03 complete -- phase done)
+Phase: 3 of 12 (Authentication)
+Plan: 1 of 3 in current phase (03-01 complete)
 Status: Executing
-Last activity: 2026-03-06 -- Completed plan 02-03 (chat, lostpet, community, upload API modules)
+Last activity: 2026-03-06 -- Completed plan 03-01 (AuthProvider, login page, layout auth guard)
 
 Progress: [██████████] 100%
 
@@ -53,6 +53,7 @@ Progress: [██████████] 100%
 *Updated after each plan completion*
 | Phase 02 P02 | 2 | 2 tasks | 5 files |
 | Phase 02 P03 | 2 | 2 tasks | 5 files |
+| Phase 03 P01 | 2 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,10 @@ Recent decisions affecting current work:
 - [Phase 02]: buildQuery helper duplicated per file rather than creating shared util dependency
 - [Phase 02]: Binary upload uses raw fetch (not apiClient) since apiClient assumes JSON content-type
 - [Phase 02]: INFRA-07 state types added to types.ts as type contract only (UI deferred to domain phases)
+- [03-01]: AuthProvider uses React 19 use(AuthContext) hook, not useContext, per project skill
+- [03-01]: MemberResponse mapped to UserType inside useUserStore to preserve type boundary
+- [03-01]: Logout catches and ignores auth/logout API errors to always complete local cleanup
+- [03-01]: clearProfile() is canonical reset method; all auth flows call it for consistent state
 
 ### Pending Todos
 
@@ -88,6 +93,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-05T23:04:47.511Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-authentication/03-CONTEXT.md
+Last session: 2026-03-05T23:22:04Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: .planning/phases/03-authentication/03-02-PLAN.md

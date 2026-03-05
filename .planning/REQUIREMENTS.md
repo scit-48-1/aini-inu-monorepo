@@ -25,10 +25,10 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 
 ### Authentication (Phase 3) — FR-AUTH
 
-- [ ] **AUTH-01**: 이메일 로그인 (FR-AUTH-001, `AUTH-LOGIN`)
+- [x] **AUTH-01**: 이메일 로그인 (FR-AUTH-001, `AUTH-LOGIN`)
 - [ ] **AUTH-02**: 회원가입 3단계 플로우 — Account → Profile → Pet (FR-AUTH-002, `AUTH-SIGNUP` → `MEM-PROFILE-CREATE` → `PET-CREATE`)
-- [ ] **AUTH-03**: 리프레시 토큰 갱신 (FR-AUTH-003, `AUTH-REFRESH`)
-- [ ] **AUTH-04**: 로그아웃 — 리프레시 토큰 폐기 (FR-AUTH-004, `AUTH-LOGOUT`)
+- [x] **AUTH-03**: 리프레시 토큰 갱신 (FR-AUTH-003, `AUTH-REFRESH`)
+- [x] **AUTH-04**: 로그아웃 — 리프레시 토큰 폐기 (FR-AUTH-004, `AUTH-LOGOUT`)
 - [ ] **AUTH-05**: 가입 폼 검증 — 이메일 형식, 비밀번호 강도(대/소문자/숫자/특수문자), 닉네임 2~10자 (PRD §9.2)
 - [ ] **AUTH-06**: 가입 단계별 진행 조건 충족 시에만 다음 단계 활성화 (PRD §8.3)
 
@@ -183,10 +183,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | INFRA-05 | Phase 2 | Complete |
 | INFRA-06 | Phase 2 | Complete |
 | INFRA-07 | Phase 2 | Complete |
-| AUTH-01 | Phase 3 | Pending |
+| AUTH-01 | Phase 3 | Complete |
 | AUTH-02 | Phase 3 | Pending |
-| AUTH-03 | Phase 3 | Pending |
-| AUTH-04 | Phase 3 | Pending |
+| AUTH-03 | Phase 3 | Complete |
+| AUTH-04 | Phase 3 | Complete |
 | AUTH-05 | Phase 3 | Pending |
 | AUTH-06 | Phase 3 | Pending |
 | MEM-01 | Phase 4 | Pending |
