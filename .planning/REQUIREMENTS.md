@@ -67,34 +67,34 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CNTR-01 | TBD | Pending |
-| CNTR-02 | TBD | Pending |
-| CNTR-03 | TBD | Pending |
-| CNTR-04 | TBD | Pending |
-| APIL-01 | TBD | Pending |
-| APIL-02 | TBD | Pending |
-| APIL-03 | TBD | Pending |
-| APIL-04 | TBD | Pending |
-| AUTH-01 | TBD | Pending |
-| AUTH-02 | TBD | Pending |
-| AUTH-03 | TBD | Pending |
-| AUTH-04 | TBD | Pending |
-| WALK-01 | TBD | Pending |
-| WALK-02 | TBD | Pending |
-| COMM-01 | TBD | Pending |
-| CHAT-01 | TBD | Pending |
-| PETF-01 | TBD | Pending |
-| PROF-01 | TBD | Pending |
-| PROF-02 | TBD | Pending |
-| STAB-01 | TBD | Pending |
-| STAB-02 | TBD | Pending |
-| UAT-01 | TBD | Pending |
-| UAT-02 | TBD | Pending |
+| CNTR-01 | Phase 2 | Pending |
+| CNTR-02 | Phase 2 | Pending |
+| CNTR-03 | Phase 2 | Pending |
+| CNTR-04 | Phase 8 | Pending |
+| APIL-01 | Phase 2 | Pending |
+| APIL-02 | Phase 2 | Pending |
+| APIL-03 | Phase 2 | Pending |
+| APIL-04 | Phase 2 | Pending |
+| AUTH-01 | Phase 3 | Pending |
+| AUTH-02 | Phase 3 | Pending |
+| AUTH-03 | Phase 3 | Pending |
+| AUTH-04 | Phase 3 | Pending |
+| WALK-01 | Phase 4 | Pending |
+| WALK-02 | Phase 4 | Pending |
+| COMM-01 | Phase 7 | Pending |
+| CHAT-01 | Phase 7 | Pending |
+| PETF-01 | Phase 5 | Pending |
+| PROF-01 | Phase 6 | Pending |
+| PROF-02 | Phase 6 | Pending |
+| STAB-01 | Phase 8 | Pending |
+| STAB-02 | Phase 1 | Pending |
+| UAT-01 | Phase 8 | Pending |
+| UAT-02 | Phase 8 | Pending |
 
 **Coverage:**
 - v1 requirements: 23 total
-- Mapped to phases: 0
-- Unmapped: 23 ⚠️
+- Mapped to phases: 23
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-05*
