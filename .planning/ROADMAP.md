@@ -39,7 +39,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Infrastructure safety net: API proxy rewrites, MSW toggle fix, error boundaries for all routes
+- [x] 01-01-PLAN.md — Infrastructure safety net: API proxy rewrites, MSW toggle fix, error boundaries for all routes
 - [ ] 01-02-PLAN.md — Per-page defensive patches (infinite polling, null guards) + API mismatch catalog for Phase 2
 
 ### Phase 2: Common Infrastructure
@@ -226,7 +226,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Critical Bugs | 0/2 | Planned | - |
+| 1. Critical Bugs | 1/2 | In Progress|  |
 | 2. Common Infrastructure | 0/3 | Not started | - |
 | 3. Authentication | 0/2 | Not started | - |
 | 4. Member Profile/Relations | 0/3 | Not started | - |
