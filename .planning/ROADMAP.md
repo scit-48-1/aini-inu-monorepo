@@ -69,11 +69,11 @@ Plans:
   3. Form validation enforces email format, password strength (upper/lower/digit/special), and nickname 2-10 chars with inline error messages
   4. Session persists across browser refreshes via automatic token refresh, and expired sessions redirect to login
   5. User can log out from the app and their refresh token is invalidated on the backend
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md — AuthProvider, login rewiring, store fixes, layout auth guard
+- [ ] 03-02-PLAN.md — 3-step signup flow (Account + Profile + Pet) with validation and per-step API calls
 
 ### Phase 4: Member Profile/Relations
 **Goal**: Users can view and edit their profile, browse other members, follow/unfollow, search members, and see walk activity stats
@@ -85,7 +85,7 @@ Plans:
   3. User can follow/unfollow another member with immediate UI update, and follower/following counts update accordingly
   4. User can search members by keyword and browse follower/following lists with pagination
   5. User can view their walk activity statistics (total walks, distance, etc.)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
 - [ ] 04-01: TBD
@@ -101,7 +101,7 @@ Plans:
   2. User can edit and delete existing pets, with the pet list reflecting changes immediately
   3. User can designate a main pet and the selection persists across page loads
   4. Registration is blocked when the user already has 10 pets, with a clear message explaining the limit
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
 - [ ] 05-01: TBD
@@ -117,7 +117,7 @@ Plans:
   3. User can apply to a thread and get immediate entry, with capacity-exceeded instantly rejected and duplicate apply treated idempotently
   4. User can cancel their application, and thread owners can edit/delete their threads
   5. Hotspot markers are visible on the map and threads auto-expire after 60 minutes
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
 - [ ] 06-01: TBD
@@ -133,7 +133,7 @@ Plans:
   2. User can view diary details, edit content, and delete entries with the list reflecting changes
   3. User can browse a following feed showing diary entries from members they follow
   4. Story section shows one grouped icon per member, stories expire after 24 hours, and only follower content appears
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
 - [ ] 07-01: TBD
@@ -149,7 +149,7 @@ Plans:
   3. User can send messages (max 500 chars) and see them appear in real-time via WebSocket STOMP, with created/delivered/read status indicators
   4. Failed message sends show a retry bubble, and WebSocket disconnect falls back to 5-second polling
   5. User can confirm a walk, leave a chat room, write a one-time non-editable review per room/target, and view their own review history
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
 - [ ] 08-01: TBD
@@ -165,7 +165,7 @@ Plans:
   2. User can view post details, edit their own posts (content required), and delete their posts
   3. User can add, edit, and delete comments -- with comment deletion allowed for both comment author and post author
   4. User can like/unlike a post with optimistic UI update that rolls back on failure
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
 - [ ] 09-01: TBD
@@ -181,7 +181,7 @@ Plans:
   3. User can approve a match, which creates a direct chat room with the sighting reporter
   4. AI analysis failure (500 / L500_AI_ANALYZE_FAILED) shows a clear error message and does not create a session
   5. Around-me page includes a sighting/report tab with the full image analysis flow accessible
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
 - [ ] 10-01: TBD
@@ -196,7 +196,7 @@ Plans:
   2. Walk recommendation cards appear based on hotspot data, and latest neighborhood threads are summarized
   3. Pending review modal appears for rooms with unwritten reviews, with submit and failure retry working
   4. If any individual section's API call fails, only that section shows an error fallback -- other sections remain functional
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
 - [ ] 11-01: TBD
@@ -212,7 +212,7 @@ Plans:
   3. All 73 API endpoints match Swagger spec (URL, method, request/response shapes) with zero mismatches
   4. All 34 PRD FR requirements and 31 DEC policy lock values are verified as implemented in the frontend
   5. Zero runtime errors across all pages and flows, confirmed by agent-browser UAT with screenshot evidence
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
 - [ ] 12-01: TBD
