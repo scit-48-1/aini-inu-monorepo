@@ -5,14 +5,14 @@ import { useRouter } from 'next/navigation';
 import { CheckCircle2, Star, ArrowRight, Sparkles } from 'lucide-react';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
+import { useUserStore } from '@/store/useUserStore';
 import confetti from 'canvas-confetti';
 
 interface SignupCompleteProps {
   nickname: string;
-  petName: string;
 }
 
-export const SignupComplete: React.FC<SignupCompleteProps> = ({ nickname, petName }) => {
+export const SignupComplete: React.FC<SignupCompleteProps> = ({ nickname }) => {
   const router = useRouter();
 
   const fireConfetti = useCallback(() => {
@@ -23,11 +23,24 @@ export const SignupComplete: React.FC<SignupCompleteProps> = ({ nickname, petNam
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    // Fire confetti celebration
+    const confettiTimer = setTimeout(() => {
       fireConfetti();
     }, 300);
-    return () => clearTimeout(timer);
-  }, [fireConfetti]);
+
+    // Fetch updated profile now that signup is complete (force=true to bypass hasFetched guard)
+    useUserStore.getState().fetchProfile(true);
+
+    // Auto-redirect to dashboard after 5 seconds
+    const redirectTimer = setTimeout(() => {
+      router.push('/dashboard');
+    }, 5000);
+
+    return () => {
+      clearTimeout(confettiTimer);
+      clearTimeout(redirectTimer);
+    };
+  }, [fireConfetti, router]);
 
   return (
     <div className="text-center space-y-12 animate-in zoom-in-95 duration-1000 py-10">
@@ -41,11 +54,11 @@ export const SignupComplete: React.FC<SignupCompleteProps> = ({ nickname, petNam
           <Star size={24} fill="currentColor" />
         </div>
       </div>
-      
+
       <div className="space-y-6">
         <h2 className="text-5xl md:text-6xl font-serif font-black text-navy-900 italic tracking-tighter">Ready to Walk!</h2>
         <Typography variant="body" className="text-2xl text-zinc-400 font-medium leading-relaxed">
-          환영합니다! <br /> <span className="text-navy-900 font-bold">{nickname}</span>님과 <span className="text-amber-500 font-bold">{petName}</span>의 <br /> 즐거운 산책 라이프가 시작됩니다.
+          환영합니다! <br /> <span className="text-navy-900 font-bold">{nickname}</span>님의 <br /> 즐거운 산책 라이프가 시작됩니다.
         </Typography>
       </div>
 

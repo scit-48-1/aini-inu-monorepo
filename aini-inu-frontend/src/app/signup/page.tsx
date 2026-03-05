@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Mail, User, Dog, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
@@ -23,13 +23,8 @@ const STEPS = [
 const STEP_ORDER: SignupStep[] = ['ACCOUNT', 'PROFILE', 'PET', 'COMPLETE'];
 
 export default function SignupPage() {
-  const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<SignupStep>('ACCOUNT');
   const [nickname, setNickname] = useState('');
-
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) return null;
 
   const handleAccountComplete = (tokens: LoginResponse, accountNickname: string) => {
     useAuthStore.getState().setTokens(tokens.accessToken, tokens.refreshToken);
