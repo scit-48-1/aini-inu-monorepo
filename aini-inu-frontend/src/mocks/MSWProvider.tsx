@@ -7,8 +7,8 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initMsw = async () => {
-      // 브라우저 환경에서만 실행 (서버 환경 제외)
-      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      // 브라우저 환경에서만 실행 (서버 환경 제외), NEXT_PUBLIC_ENABLE_MSW=false 이면 MSW 비활성화
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_ENABLE_MSW !== 'false') {
         const { worker } = await import('./browser');
         await worker.start({
           onUnhandledRequest: 'bypass',

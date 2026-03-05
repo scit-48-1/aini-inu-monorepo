@@ -12,6 +12,15 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'developers.kakao.com' },
     ],
   },
+  async rewrites() {
+    const target = process.env.NEXT_PUBLIC_API_PROXY_TARGET || 'http://localhost:8080';
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: `${target}/api/v1/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
