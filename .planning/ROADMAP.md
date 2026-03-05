@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Critical Bugs** - Runtime error audit, classification, and fix for page crashes, infinite loops, and network errors
 - [ ] **Phase 2: Common Infrastructure** - Centralized API layer, ApiResponse envelope, error handling, pagination, image upload, auth interceptor, state patterns
-- [ ] **Phase 3: Authentication** - 3-step signup flow (Account/Profile/Pet), login, token refresh, logout
+- [x] **Phase 3: Authentication** - 3-step signup flow (Account/Profile/Pet), login, token refresh, logout (completed 2026-03-05)
 - [ ] **Phase 4: Member Profile/Relations** - Profile view/edit, other member profiles, follow/unfollow, search, walk stats, personality types
 - [ ] **Phase 5: Pet Management** - Pet CRUD, main pet selection, breed/personality/walk-style master data
 - [ ] **Phase 6: Walk Threads** - Thread CRUD, apply/cancel, map exploration, hotspots, GPS, chat-type selection
@@ -228,7 +228,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 |-------|----------------|--------|-----------|
 | 1. Critical Bugs | 2/2 | Complete | 2026-03-06 |
 | 2. Common Infrastructure | 1/3 | In progress | - |
-| 3. Authentication | 1/2 | In Progress|  |
+| 3. Authentication | 2/2 | Complete   | 2026-03-05 |
 | 4. Member Profile/Relations | 0/3 | Not started | - |
 | 5. Pet Management | 0/2 | Not started | - |
 | 6. Walk Threads | 0/3 | Not started | - |

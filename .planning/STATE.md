@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-05T23:22:04Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-03-05T23:31:35.869Z"
 last_activity: 2026-03-06 -- Completed plan 03-01 (AuthProvider, login page, layout auth guard)
 progress:
   total_phases: 12
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  completed_phases: 3
+  total_plans: 7
+  completed_plans: 7
   percent: 100
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 3 of 12 (Authentication)
-Plan: 1 of 3 in current phase (03-01 complete)
+Plan: 2 of 3 in current phase (03-02 complete)
 Status: Executing
-Last activity: 2026-03-06 -- Completed plan 03-01 (AuthProvider, login page, layout auth guard)
+Last activity: 2026-03-06 -- Completed plan 03-02 (3-step signup flow: Account->Profile->Pet->Complete)
 
 Progress: [██████████] 100%
 
@@ -54,6 +54,7 @@ Progress: [██████████] 100%
 | Phase 02 P02 | 2 | 2 tasks | 5 files |
 | Phase 02 P03 | 2 | 2 tasks | 5 files |
 | Phase 03 P01 | 2 | 2 tasks | 6 files |
+| Phase 03 P02 | 7 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,9 @@ Recent decisions affecting current work:
 - [03-01]: MemberResponse mapped to UserType inside useUserStore to preserve type boundary
 - [03-01]: Logout catches and ignores auth/logout API errors to always complete local cleanup
 - [03-01]: clearProfile() is canonical reset method; all auth flows call it for consistent state
+- [Phase 03-02]: signup/createProfile in members.ts accept optional ApiRequestOptions param to enable suppressToast per call site
+- [Phase 03-02]: ImageIcon alias from lucide-react used in SignupProfileStep to avoid jsx-a11y/alt-text false positive on Image component
+- [Phase 03-02]: SignupComplete auto-redirects to /dashboard after 5s and calls fetchProfile(true) to populate user state post-signup
 
 ### Pending Todos
 
@@ -93,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-05T23:22:04Z
-Stopped at: Completed 03-01-PLAN.md
-Resume file: .planning/phases/03-authentication/03-02-PLAN.md
+Last session: 2026-03-05T23:31:35.867Z
+Stopped at: Completed 03-02-PLAN.md
+Resume file: None
