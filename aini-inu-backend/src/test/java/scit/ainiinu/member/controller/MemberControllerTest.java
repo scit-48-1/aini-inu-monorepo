@@ -16,20 +16,33 @@ import scit.ainiinu.common.security.interceptor.JwtAuthInterceptor;
 import scit.ainiinu.common.security.annotation.CurrentMember;
 import scit.ainiinu.common.security.resolver.CurrentMemberArgumentResolver;
 import scit.ainiinu.member.dto.request.MemberCreateRequest;
+import scit.ainiinu.member.dto.request.MemberProfilePatchRequest;
+import scit.ainiinu.member.dto.request.MemberSignupRequest;
+import scit.ainiinu.member.dto.response.FollowStatusResponse;
+import scit.ainiinu.member.dto.response.MemberFollowResponse;
 import scit.ainiinu.member.dto.response.MemberResponse;
+import scit.ainiinu.member.dto.response.WalkStatsPointResponse;
+import scit.ainiinu.member.dto.response.WalkStatsResponse;
 import scit.ainiinu.member.entity.enums.Gender;
+import scit.ainiinu.member.entity.enums.MemberType;
 import scit.ainiinu.member.service.AuthService;
 import scit.ainiinu.member.service.MemberService;
+import scit.ainiinu.pet.dto.response.PetResponse;
 import scit.ainiinu.pet.service.PetService;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -144,5 +157,227 @@ class MemberControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.content[0].nickname").value("이웃멍멍"));
+    }
+
+    @Nested
+    @DisplayName("회원가입")
+    class Signup {
+
+        @Test
+        @WithMockUser
+        @DisplayName("유효한 정보로 회원가입하면 토큰을 반환한다")
+        void signup_success() throws Exception {
+            MemberSignupRequest request = new MemberSignupRequest();
+            request.setEmail("new-member@test.com");
+            request.setPassword("Abcd1234!");
+            request.setNickname("신규회원");
+            request.setMemberType(MemberType.NON_PET_OWNER);
+
+            scit.ainiinu.member.dto.response.LoginResponse response = scit.ainiinu.member.dto.response.LoginResponse.builder()
+                    .memberId(10L)
+                    .accessToken("access-token")
+                    .refreshToken("refresh-token")
+                    .tokenType("Bearer")
+                    .expiresIn(3600L)
+                    .isNewMember(true)
+                    .build();
+            given(authService.signup(any(MemberSignupRequest.class))).willReturn(response);
+
+            mockMvc.perform(post("/api/v1/members/signup")
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.memberId").value(10L));
+        }
+    }
+
+    @Nested
+    @DisplayName("프로필 조회/수정")
+    class ProfileReadWrite {
+
+        @Test
+        @WithMockUser
+        @DisplayName("내 프로필 조회 API를 호출하면 내 프로필을 반환한다")
+        void getMyProfile_success() throws Exception {
+            MemberResponse response = MemberResponse.builder()
+                    .id(1L)
+                    .email("me@test.com")
+                    .nickname("내닉네임")
+                    .personalityTypes(new ArrayList<>())
+                    .build();
+            given(memberService.getMyProfile(1L)).willReturn(response);
+
+            mockMvc.perform(get("/api/v1/members/me"))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.nickname").value("내닉네임"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("내 프로필 수정 API를 호출하면 수정된 프로필을 반환한다")
+        void patchMyProfile_success() throws Exception {
+            MemberProfilePatchRequest request = new MemberProfilePatchRequest();
+            request.setNickname("수정닉네임");
+
+            MemberResponse response = MemberResponse.builder()
+                    .id(1L)
+                    .nickname("수정닉네임")
+                    .personalityTypes(new ArrayList<>())
+                    .build();
+            given(memberService.updateMyProfile(eq(1L), any(MemberProfilePatchRequest.class))).willReturn(response);
+
+            mockMvc.perform(patch("/api/v1/members/me")
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.nickname").value("수정닉네임"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("타 회원 프로필 조회 API를 호출하면 해당 회원을 반환한다")
+        void getMemberProfile_success() throws Exception {
+            MemberResponse response = MemberResponse.builder()
+                    .id(2L)
+                    .nickname("타회원")
+                    .personalityTypes(new ArrayList<>())
+                    .build();
+            given(memberService.getMemberProfile(2L)).willReturn(response);
+
+            mockMvc.perform(get("/api/v1/members/{memberId}", 2L))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.id").value(2L))
+                    .andExpect(jsonPath("$.data.nickname").value("타회원"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("타 회원 반려견 목록 조회 API를 호출하면 목록을 반환한다")
+        void getMemberPets_success() throws Exception {
+            PetResponse pet = PetResponse.builder()
+                    .id(100L)
+                    .name("멍멍이")
+                    .isMain(true)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            given(petService.getUserPets(2L)).willReturn(List.of(pet));
+
+            mockMvc.perform(get("/api/v1/members/{memberId}/pets", 2L))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data[0].id").value(100L))
+                    .andExpect(jsonPath("$.data[0].name").value("멍멍이"));
+        }
+    }
+
+    @Nested
+    @DisplayName("팔로우 관계")
+    class FollowRelation {
+
+        @Test
+        @WithMockUser
+        @DisplayName("팔로워 목록 조회 API를 호출하면 SliceResponse를 반환한다")
+        void getFollowers_success() throws Exception {
+            MemberFollowResponse follower = MemberFollowResponse.builder()
+                    .id(2L)
+                    .nickname("팔로워")
+                    .followedAt(LocalDateTime.now())
+                    .build();
+            given(memberService.getFollowers(eq(1L), any()))
+                    .willReturn(new scit.ainiinu.common.response.SliceResponse<>(List.of(follower), 0, 20, true, true, false));
+
+            mockMvc.perform(get("/api/v1/members/me/followers")
+                            .param("page", "0")
+                            .param("size", "20"))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.content[0].id").value(2L))
+                    .andExpect(jsonPath("$.data.content[0].nickname").value("팔로워"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("팔로잉 목록 조회 API를 호출하면 SliceResponse를 반환한다")
+        void getFollowing_success() throws Exception {
+            MemberFollowResponse following = MemberFollowResponse.builder()
+                    .id(3L)
+                    .nickname("팔로잉")
+                    .followedAt(LocalDateTime.now())
+                    .build();
+            given(memberService.getFollowing(eq(1L), any()))
+                    .willReturn(new scit.ainiinu.common.response.SliceResponse<>(List.of(following), 0, 20, true, true, false));
+
+            mockMvc.perform(get("/api/v1/members/me/following")
+                            .param("page", "0")
+                            .param("size", "20"))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.content[0].id").value(3L))
+                    .andExpect(jsonPath("$.data.content[0].nickname").value("팔로잉"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("팔로우 API를 호출하면 팔로잉 상태를 반환한다")
+        void follow_success() throws Exception {
+            given(memberService.follow(1L, 2L)).willReturn(new FollowStatusResponse(true));
+
+            mockMvc.perform(post("/api/v1/members/me/follows/{targetId}", 2L)
+                            .with(csrf()))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.isFollowing").value(true));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("언팔로우 API를 호출하면 언팔로우 상태를 반환한다")
+        void unfollow_success() throws Exception {
+            given(memberService.unfollow(1L, 2L)).willReturn(new FollowStatusResponse(false));
+
+            mockMvc.perform(delete("/api/v1/members/me/follows/{targetId}", 2L)
+                            .with(csrf()))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.isFollowing").value(false));
+        }
+    }
+
+    @Nested
+    @DisplayName("산책 통계")
+    class WalkStats {
+
+        @Test
+        @WithMockUser
+        @DisplayName("산책 통계 조회 API를 호출하면 구조화된 통계를 반환한다")
+        void getWalkStats_success() throws Exception {
+            WalkStatsResponse response = WalkStatsResponse.builder()
+                    .windowDays(126)
+                    .startDate(LocalDate.of(2025, 11, 1))
+                    .endDate(LocalDate.of(2026, 3, 6))
+                    .timezone("Asia/Seoul")
+                    .totalWalks(3)
+                    .points(List.of(
+                            WalkStatsPointResponse.builder().date(LocalDate.of(2026, 3, 4)).count(2).build(),
+                            WalkStatsPointResponse.builder().date(LocalDate.of(2026, 3, 5)).count(1).build()
+                    ))
+                    .build();
+            given(memberService.getWalkStats(1L)).willReturn(response);
+
+            mockMvc.perform(get("/api/v1/members/me/stats/walk"))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.windowDays").value(126))
+                    .andExpect(jsonPath("$.data.totalWalks").value(3))
+                    .andExpect(jsonPath("$.data.points[0].count").value(2));
+        }
     }
 }

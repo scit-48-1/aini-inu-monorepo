@@ -78,6 +78,50 @@ class WalkDiaryServiceTest {
     }
 
     @Nested
+    @DisplayName("일기 목록 조회")
+    class GetWalkDiaries {
+
+        @Test
+        @DisplayName("내 일기 목록은 본인 memberId 기준으로 조회된다")
+        void getMyDiaries_success() {
+            // given
+            WalkDiary diary = WalkDiary.create(1L, null, "내 일기", "내용", List.of(), LocalDate.now(), true);
+            ReflectionTestUtils.setField(diary, "id", 11L);
+            PageRequest pageable = PageRequest.of(0, 20);
+            Slice<WalkDiary> slice = new SliceImpl<>(List.of(diary), pageable, false);
+
+            given(walkDiaryRepository.findByMemberIdAndDeletedAtIsNull(1L, pageable)).willReturn(slice);
+
+            // when
+            SliceResponse<WalkDiaryResponse> response = walkDiaryService.getWalkDiaries(1L, null, pageable);
+
+            // then
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.getContent().get(0).getId()).isEqualTo(11L);
+            then(walkDiaryRepository).should().findByMemberIdAndDeletedAtIsNull(1L, pageable);
+        }
+    }
+
+    @Nested
+    @DisplayName("일기 단건 조회")
+    class GetDiary {
+
+        @Test
+        @DisplayName("비공개 일기를 작성자가 아닌 사용자가 조회하면 예외가 발생한다")
+        void getPrivateDiary_byNonOwner_fail() {
+            // given
+            WalkDiary diary = WalkDiary.create(2L, null, "비공개", "내용", List.of(), LocalDate.now(), false);
+            ReflectionTestUtils.setField(diary, "id", 1L);
+            given(walkDiaryRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(diary));
+
+            // when & then
+            assertThatThrownBy(() -> walkDiaryService.getDiary(1L, 1L))
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", WalkDiaryErrorCode.DIARY_PRIVATE);
+        }
+    }
+
+    @Nested
     @DisplayName("일기 수정")
     class PatchDiary {
 
@@ -97,6 +141,26 @@ class WalkDiaryServiceTest {
             assertThatThrownBy(() -> walkDiaryService.updateDiary(1L, 1L, request))
                     .isInstanceOf(BusinessException.class)
                     .hasFieldOrPropertyWithValue("errorCode", WalkDiaryErrorCode.DIARY_OWNER_ONLY);
+        }
+    }
+
+    @Nested
+    @DisplayName("일기 삭제")
+    class DeleteDiary {
+
+        @Test
+        @DisplayName("작성자가 일기를 삭제하면 soft delete 처리된다")
+        void delete_owner_success() {
+            // given
+            WalkDiary diary = WalkDiary.create(1L, null, "삭제 대상", "내용", List.of(), LocalDate.now(), true);
+            ReflectionTestUtils.setField(diary, "id", 1L);
+            given(walkDiaryRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(diary));
+
+            // when
+            walkDiaryService.deleteDiary(1L, 1L);
+
+            // then
+            assertThat(diary.getDeletedAt()).isNotNull();
         }
     }
 

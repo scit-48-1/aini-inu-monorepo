@@ -391,6 +391,41 @@ class PostServiceTest {
     }
 
     @Nested
+    @DisplayName("게시글 삭제")
+    class DeletePost {
+
+        @Test
+        @DisplayName("작성자가 본인의 게시글을 삭제하면 성공한다")
+        void success() {
+            // given
+            Long postId = 1L;
+            Long authorId = 1L;
+            Post post = Post.create(authorId, "삭제 대상", Collections.emptyList());
+            given(postRepository.findById(postId)).willReturn(Optional.of(post));
+
+            // when
+            postService.deletePost(authorId, postId);
+
+            // then
+            then(postRepository).should().delete(post);
+        }
+
+        @Test
+        @DisplayName("작성자가 아닌 사용자가 삭제하려 하면 예외가 발생한다 (CO002)")
+        void fail_notOwner() {
+            // given
+            Long postId = 1L;
+            Post post = Post.create(1L, "삭제 대상", Collections.emptyList());
+            given(postRepository.findById(postId)).willReturn(Optional.of(post));
+
+            // when & then
+            assertThatThrownBy(() -> postService.deletePost(2L, postId))
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", CommunityErrorCode.NOT_POST_OWNER);
+        }
+    }
+
+    @Nested
     @DisplayName("댓글 목록 조회")
     class GetComments {
 

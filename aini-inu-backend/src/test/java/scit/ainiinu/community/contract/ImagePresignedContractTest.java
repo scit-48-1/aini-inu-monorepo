@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,9 +26,11 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -105,5 +108,23 @@ class ImagePresignedContractTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.errorCode").value("CO009"));
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("로컬 이미지 조회에 성공하면 바이너리 응답을 반환한다")
+    void getLocalFileSuccess() throws Exception {
+        ByteArrayResource resource = new ByteArrayResource("image-binary".getBytes()) {
+            @Override
+            public String getFilename() {
+                return "story.jpg";
+            }
+        };
+        given(imageUploadService.getLocalImage("community/post/story.jpg")).willReturn(resource);
+
+        mockMvc.perform(get("/api/v1/images/local")
+                        .param("key", "community/post/story.jpg"))
+                .andExpect(status().isOk())
+                .andExpect(content().bytes("image-binary".getBytes()));
     }
 }

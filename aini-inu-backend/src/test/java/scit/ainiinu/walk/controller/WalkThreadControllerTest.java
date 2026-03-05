@@ -323,4 +323,43 @@ class WalkThreadControllerTest {
                     .andExpect(jsonPath("$.errorCode").value("T403_THREAD_OWNER_ONLY"));
         }
     }
+
+    @Nested
+    @DisplayName("스레드 상세/삭제 API")
+    class DetailDeleteThread {
+
+        @Test
+        @WithMockUser
+        @DisplayName("성공: 스레드 상세 조회를 반환한다")
+        void getThread_success() throws Exception {
+            Long threadId = 1L;
+            ThreadResponse response = ThreadResponse.builder()
+                    .id(threadId)
+                    .title("상세 조회 스레드")
+                    .description("상세 설명")
+                    .build();
+            given(walkThreadService.getThread(anyLong(), eq(threadId))).willReturn(response);
+
+            mockMvc.perform(get("/api/v1/threads/{threadId}", threadId))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.id").value(threadId))
+                    .andExpect(jsonPath("$.data.title").value("상세 조회 스레드"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("성공: 스레드 삭제를 수행한다")
+        void deleteThread_success() throws Exception {
+            Long threadId = 1L;
+
+            mockMvc.perform(delete("/api/v1/threads/{threadId}", threadId)
+                            .with(csrf()))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data").value(org.hamcrest.Matchers.nullValue()));
+        }
+    }
 }

@@ -1,0 +1,315 @@
+package scit.ainiinu.chat.service;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
+import org.springframework.test.util.ReflectionTestUtils;
+import scit.ainiinu.chat.dto.request.ChatMessageCreateRequest;
+import scit.ainiinu.chat.dto.request.ChatReviewCreateRequest;
+import scit.ainiinu.chat.dto.request.MessageReadRequest;
+import scit.ainiinu.chat.dto.response.ChatMessageResponse;
+import scit.ainiinu.chat.dto.response.ChatReviewResponse;
+import scit.ainiinu.chat.dto.response.ChatRoomDetailResponse;
+import scit.ainiinu.chat.dto.response.ChatRoomSummaryResponse;
+import scit.ainiinu.chat.dto.response.LeaveRoomResponse;
+import scit.ainiinu.chat.dto.response.MyChatReviewResponse;
+import scit.ainiinu.chat.dto.response.WalkConfirmResponse;
+import scit.ainiinu.chat.entity.ChatMessageType;
+import scit.ainiinu.chat.entity.ChatParticipant;
+import scit.ainiinu.chat.entity.ChatReview;
+import scit.ainiinu.chat.entity.ChatRoom;
+import scit.ainiinu.chat.entity.ChatRoomStatus;
+import scit.ainiinu.chat.entity.ChatRoomType;
+import scit.ainiinu.chat.entity.Message;
+import scit.ainiinu.chat.realtime.ChatRealtimeEventHandler;
+import scit.ainiinu.chat.repository.ChatParticipantPetRepository;
+import scit.ainiinu.chat.repository.ChatParticipantRepository;
+import scit.ainiinu.chat.repository.ChatReviewRepository;
+import scit.ainiinu.chat.repository.ChatRoomRepository;
+import scit.ainiinu.chat.repository.MessageRepository;
+import scit.ainiinu.common.response.CursorResponse;
+import scit.ainiinu.common.response.SliceResponse;
+import scit.ainiinu.member.repository.MemberRepository;
+import scit.ainiinu.pet.repository.PetRepository;
+
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
+
+@ExtendWith(MockitoExtension.class)
+class ChatServiceCoverageTest {
+
+    @Mock
+    private ChatRoomRepository chatRoomRepository;
+    @Mock
+    private ChatParticipantRepository chatParticipantRepository;
+    @Mock
+    private ChatParticipantPetRepository chatParticipantPetRepository;
+    @Mock
+    private MessageRepository messageRepository;
+    @Mock
+    private MemberRepository memberRepository;
+    @Mock
+    private PetRepository petRepository;
+    @Mock
+    private ChatRealtimeEventHandler chatRealtimeEventHandler;
+    @Mock
+    private ChatReviewRepository chatReviewRepository;
+
+    @InjectMocks
+    private ChatRoomService chatRoomService;
+    @InjectMocks
+    private MessageService messageService;
+    @InjectMocks
+    private WalkConfirmService walkConfirmService;
+    @InjectMocks
+    private ChatReviewService chatReviewService;
+
+    @Nested
+    @DisplayName("ChatRoomService")
+    class ChatRoomServiceCoverage {
+
+        @Test
+        @DisplayName("채팅방 목록 조회에 성공한다")
+        void getRooms_success() {
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ReflectionTestUtils.setField(room, "id", 10L);
+            Slice<ChatRoom> slice = new SliceImpl<>(List.of(room), PageRequest.of(0, 20), false);
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(1L, null, PageRequest.of(0, 20))).willReturn(slice);
+            given(messageRepository.findTopByChatRoomIdOrderByIdDesc(10L)).willReturn(Optional.empty());
+
+            SliceResponse<ChatRoomSummaryResponse> response = chatRoomService.getRooms(1L, null, PageRequest.of(0, 20));
+
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.getContent().get(0).getChatRoomId()).isEqualTo(10L);
+        }
+
+        @Test
+        @DisplayName("채팅방 상세 조회에 성공한다")
+        void getRoomDetail_success() {
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ReflectionTestUtils.setField(room, "id", 20L);
+            ChatParticipant participant = ChatParticipant.create(20L, 1L);
+            ReflectionTestUtils.setField(participant, "id", 100L);
+
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(20L, 1L)).willReturn(true);
+            given(chatRoomRepository.findById(20L)).willReturn(Optional.of(room));
+            given(chatParticipantRepository.findAllByChatRoomId(20L)).willReturn(List.of(participant));
+            given(chatParticipantPetRepository.findAllByChatParticipantIdIn(List.of(100L))).willReturn(List.of());
+            given(messageRepository.findTopByChatRoomIdOrderByIdDesc(20L)).willReturn(Optional.empty());
+
+            ChatRoomDetailResponse response = chatRoomService.getRoomDetail(1L, 20L);
+
+            assertThat(response.getChatRoomId()).isEqualTo(20L);
+            assertThat(response.getParticipants()).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("채팅방 나가기에 성공한다")
+        void leaveRoom_success() {
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ReflectionTestUtils.setField(room, "id", 30L);
+            ChatParticipant participant = ChatParticipant.create(30L, 1L);
+
+            given(chatRoomRepository.findByIdForUpdate(30L)).willReturn(Optional.of(room));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(30L, 1L))
+                    .willReturn(Optional.of(participant));
+            given(chatParticipantRepository.countByChatRoomIdAndLeftAtIsNull(30L)).willReturn(0L);
+
+            LeaveRoomResponse response = chatRoomService.leaveRoom(1L, 30L);
+
+            assertThat(response.getRoomId()).isEqualTo(30L);
+            assertThat(response.isLeft()).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("MessageService")
+    class MessageServiceCoverage {
+
+        @Test
+        @DisplayName("메시지 조회에 성공한다")
+        void getMessages_success() {
+            Message message = Message.create(10L, 1L, "안녕하세요", ChatMessageType.USER, "c1");
+            ReflectionTestUtils.setField(message, "id", 101L);
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(10L, 1L)).willReturn(true);
+            given(messageRepository.findByRoomIdWithCursor(10L, null, 51, "before")).willReturn(List.of(message));
+
+            CursorResponse<ChatMessageResponse> response = messageService.getMessages(1L, 10L, null, 50, "before");
+
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.getContent().get(0).getId()).isEqualTo(101L);
+        }
+
+        @Test
+        @DisplayName("메시지 전송에 성공한다")
+        void createMessage_success() {
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ReflectionTestUtils.setField(room, "id", 10L);
+            Message saved = Message.create(10L, 1L, "메시지", ChatMessageType.USER, "cid-1");
+            ReflectionTestUtils.setField(saved, "id", 500L);
+
+            ChatMessageCreateRequest request = new ChatMessageCreateRequest();
+            request.setContent("메시지");
+            request.setMessageType("USER");
+            request.setClientMessageId("cid-1");
+
+            given(chatRoomRepository.findById(10L)).willReturn(Optional.of(room));
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(10L, 1L)).willReturn(true);
+            given(messageRepository.save(any(Message.class))).willReturn(saved);
+
+            ChatMessageResponse response = messageService.createMessage(1L, 10L, request);
+
+            assertThat(response.getId()).isEqualTo(500L);
+            assertThat(response.getContent()).isEqualTo("메시지");
+        }
+
+        @Test
+        @DisplayName("메시지 읽음 처리에 성공한다")
+        void markRead_success() {
+            ChatParticipant participant = ChatParticipant.create(10L, 1L);
+            Message message = Message.create(10L, 2L, "읽음", ChatMessageType.USER, "cid-2");
+            ReflectionTestUtils.setField(message, "id", 900L);
+
+            MessageReadRequest request = new MessageReadRequest();
+            request.setMessageId(900L);
+            request.setReadAt(OffsetDateTime.now());
+
+            given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(10L, 1L))
+                    .willReturn(Optional.of(participant));
+            given(messageRepository.findById(900L)).willReturn(Optional.of(message));
+
+            var response = messageService.markRead(1L, 10L, request);
+
+            assertThat(response.getRoomId()).isEqualTo(10L);
+            assertThat(response.getLastReadMessageId()).isEqualTo(900L);
+        }
+    }
+
+    @Nested
+    @DisplayName("WalkConfirmService")
+    class WalkConfirmServiceCoverage {
+
+        @Test
+        @DisplayName("산책 확정 처리에 성공한다")
+        void confirmWalk_success() {
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ReflectionTestUtils.setField(room, "id", 1L);
+            ChatParticipant me = ChatParticipant.create(1L, 1L);
+
+            given(chatRoomRepository.findByIdForUpdate(1L)).willReturn(Optional.of(room));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(1L, 1L)).willReturn(Optional.of(me));
+            given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(1L)).willReturn(List.of(me));
+            given(chatRoomRepository.findById(1L)).willReturn(Optional.of(room));
+
+            WalkConfirmResponse response = walkConfirmService.confirmWalk(1L, 1L);
+
+            assertThat(response.getMyState()).isEqualTo("CONFIRMED");
+            assertThat(response.isAllConfirmed()).isTrue();
+        }
+
+        @Test
+        @DisplayName("산책 확정 상태 조회에 성공한다")
+        void getWalkConfirm_success() {
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ReflectionTestUtils.setField(room, "id", 2L);
+            ChatParticipant me = ChatParticipant.create(2L, 1L);
+
+            given(chatRoomRepository.findById(2L)).willReturn(Optional.of(room));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(2L, 1L)).willReturn(Optional.of(me));
+            given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(2L)).willReturn(List.of(me));
+
+            WalkConfirmResponse response = walkConfirmService.getWalkConfirm(1L, 2L);
+
+            assertThat(response.getRoomId()).isEqualTo(2L);
+            assertThat(response.getMyState()).isEqualTo("UNCONFIRMED");
+        }
+
+        @Test
+        @DisplayName("산책 확정 취소 처리에 성공한다")
+        void cancelWalkConfirm_success() {
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ReflectionTestUtils.setField(room, "id", 3L);
+            ChatParticipant me = ChatParticipant.create(3L, 1L);
+
+            given(chatRoomRepository.findByIdForUpdate(3L)).willReturn(Optional.of(room));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(3L, 1L)).willReturn(Optional.of(me));
+            given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(3L)).willReturn(List.of(me));
+            given(chatRoomRepository.findById(3L)).willReturn(Optional.of(room));
+
+            walkConfirmService.cancelWalkConfirm(1L, 3L);
+
+            assertThat(me.getWalkConfirmState().name()).isEqualTo("UNCONFIRMED");
+        }
+    }
+
+    @Nested
+    @DisplayName("ChatReviewService")
+    class ChatReviewServiceCoverage {
+
+        @Test
+        @DisplayName("리뷰 생성에 성공한다")
+        void createReview_success() {
+            ChatReviewCreateRequest request = new ChatReviewCreateRequest();
+            request.setRevieweeId(2L);
+            request.setScore(5);
+            request.setComment("좋아요");
+
+            ChatReview saved = ChatReview.create(10L, 1L, 2L, 5, "좋아요");
+            ReflectionTestUtils.setField(saved, "id", 77L);
+
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(10L, 1L)).willReturn(true);
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(10L, 2L)).willReturn(true);
+            given(chatReviewRepository.existsByChatRoomIdAndReviewerIdAndRevieweeId(10L, 1L, 2L)).willReturn(false);
+            given(chatReviewRepository.save(any(ChatReview.class))).willReturn(saved);
+
+            ChatReviewResponse response = chatReviewService.createReview(1L, 10L, request);
+
+            assertThat(response.getId()).isEqualTo(77L);
+            assertThat(response.getScore()).isEqualTo(5);
+        }
+
+        @Test
+        @DisplayName("내 리뷰 조회에 성공한다")
+        void getMyReview_success() {
+            ChatReview saved = ChatReview.create(10L, 1L, 2L, 4, "친절");
+            ReflectionTestUtils.setField(saved, "id", 88L);
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(10L, 1L)).willReturn(true);
+            given(chatReviewRepository.findTopByChatRoomIdAndReviewerIdOrderByCreatedAtDesc(10L, 1L))
+                    .willReturn(Optional.of(saved));
+
+            MyChatReviewResponse response = chatReviewService.getMyReview(1L, 10L);
+
+            assertThat(response.isExists()).isTrue();
+            assertThat(response.getReview().getId()).isEqualTo(88L);
+        }
+
+        @Test
+        @DisplayName("리뷰 목록 조회에 성공한다")
+        void getReviews_success() {
+            ChatReview saved = ChatReview.create(10L, 1L, 2L, 3, "무난");
+            ReflectionTestUtils.setField(saved, "id", 99L);
+            Slice<ChatReview> slice = new SliceImpl<>(List.of(saved), PageRequest.of(0, 20), false);
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(10L, 1L)).willReturn(true);
+            given(chatReviewRepository.findByChatRoomIdOrderByCreatedAtDescIdDesc(10L, PageRequest.of(0, 20)))
+                    .willReturn(slice);
+
+            SliceResponse<ChatReviewResponse> response = chatReviewService.getReviews(1L, 10L, PageRequest.of(0, 20));
+
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.getContent().get(0).getId()).isEqualTo(99L);
+        }
+    }
+}

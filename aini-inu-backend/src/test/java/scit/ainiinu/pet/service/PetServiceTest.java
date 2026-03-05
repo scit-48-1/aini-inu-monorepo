@@ -11,8 +11,11 @@ import scit.ainiinu.common.exception.BusinessException;
 import scit.ainiinu.member.service.MemberService;
 import scit.ainiinu.pet.dto.request.PetCreateRequest;
 import scit.ainiinu.pet.dto.request.PetUpdateRequest;
+import scit.ainiinu.pet.dto.response.BreedResponse;
 import scit.ainiinu.pet.dto.response.MainPetChangeResponse;
+import scit.ainiinu.pet.dto.response.PersonalityResponse;
 import scit.ainiinu.pet.dto.response.PetResponse;
+import scit.ainiinu.pet.dto.response.WalkingStyleResponse;
 import scit.ainiinu.pet.entity.Breed;
 import scit.ainiinu.pet.entity.Personality;
 import scit.ainiinu.pet.entity.Pet;
@@ -568,6 +571,56 @@ class PetServiceTest {
             assertThatThrownBy(() -> petService.changeMainPet(memberId, petId))
                     .isInstanceOf(BusinessException.class)
                     .hasFieldOrPropertyWithValue("errorCode", PetErrorCode.NOT_YOUR_PET);
+        }
+    }
+
+    @Nested
+    @DisplayName("마스터 데이터 조회")
+    class MasterData {
+
+        @Test
+        @DisplayName("견종 목록 조회에 성공한다")
+        void getAllBreeds_success() {
+            Breed breed = mock(Breed.class);
+            given(breed.getId()).willReturn(1L);
+            given(breed.getName()).willReturn("말티즈");
+            given(breed.getSize()).willReturn(PetSize.SMALL);
+            given(breedRepository.findAll()).willReturn(List.of(breed));
+
+            List<BreedResponse> response = petService.getAllBreeds();
+
+            assertThat(response).hasSize(1);
+            assertThat(response.get(0).getName()).isEqualTo("말티즈");
+        }
+
+        @Test
+        @DisplayName("성향 목록 조회에 성공한다")
+        void getAllPersonalities_success() {
+            Personality personality = mock(Personality.class);
+            given(personality.getId()).willReturn(1L);
+            given(personality.getName()).willReturn("활발해요");
+            given(personality.getCode()).willReturn("ACTIVE");
+            given(personalityRepository.findAll()).willReturn(List.of(personality));
+
+            List<PersonalityResponse> response = petService.getAllPersonalities();
+
+            assertThat(response).hasSize(1);
+            assertThat(response.get(0).getCode()).isEqualTo("ACTIVE");
+        }
+
+        @Test
+        @DisplayName("산책 스타일 목록 조회에 성공한다")
+        void getAllWalkingStyles_success() {
+            WalkingStyle walkingStyle = mock(WalkingStyle.class);
+            given(walkingStyle.getId()).willReturn(1L);
+            given(walkingStyle.getName()).willReturn("느긋한 산책");
+            given(walkingStyle.getCode()).willReturn("RELAXED");
+            given(walkingStyleRepository.findAll()).willReturn(List.of(walkingStyle));
+
+            List<WalkingStyleResponse> response = petService.getAllWalkingStyles();
+
+            assertThat(response).hasSize(1);
+            assertThat(response.get(0).getName()).isEqualTo("느긋한 산책");
         }
     }
 }

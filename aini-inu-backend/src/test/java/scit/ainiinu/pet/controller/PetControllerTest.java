@@ -21,6 +21,7 @@ import scit.ainiinu.pet.dto.response.BreedResponse;
 import scit.ainiinu.pet.dto.response.MainPetChangeResponse;
 import scit.ainiinu.pet.dto.response.PersonalityResponse;
 import scit.ainiinu.pet.dto.response.PetResponse;
+import scit.ainiinu.pet.dto.response.WalkingStyleResponse;
 import scit.ainiinu.pet.entity.enums.PetGender;
 import scit.ainiinu.pet.entity.enums.PetSize;
 import scit.ainiinu.pet.exception.PetErrorCode;
@@ -455,6 +456,28 @@ class PetControllerTest {
                     .andExpect(jsonPath("$.data.length()").value(2))
                     .andExpect(jsonPath("$.data[0].name").value("소심해요"))
                     .andExpect(jsonPath("$.data[0].code").value("SHY"));
+        }
+
+        @Test
+        @DisplayName("산책 스타일 목록 조회 API 성공 테스트")
+        @WithMockUser
+        void getWalkingStyles_Success() throws Exception {
+            // given
+            List<WalkingStyleResponse> mockResponse = List.of(
+                    WalkingStyleResponse.builder().id(1L).name("느긋한 산책").code("RELAXED").build(),
+                    WalkingStyleResponse.builder().id(2L).name("활동적인 산책").code("ACTIVE").build()
+            );
+            given(petService.getAllWalkingStyles()).willReturn(mockResponse);
+
+            // when & then
+            mockMvc.perform(get("/api/v1/walking-styles")
+                            .with(csrf()))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.length()").value(2))
+                    .andExpect(jsonPath("$.data[0].name").value("느긋한 산책"))
+                    .andExpect(jsonPath("$.data[0].code").value("RELAXED"));
         }
     }
 }

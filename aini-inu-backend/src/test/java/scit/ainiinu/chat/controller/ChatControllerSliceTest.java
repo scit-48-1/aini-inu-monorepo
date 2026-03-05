@@ -16,6 +16,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import scit.ainiinu.chat.dto.request.ChatReviewCreateRequest;
+import scit.ainiinu.chat.dto.request.ChatMessageCreateRequest;
 import scit.ainiinu.chat.dto.request.ChatRoomDirectCreateRequest;
 import scit.ainiinu.chat.dto.request.MessageReadRequest;
 import scit.ainiinu.chat.dto.request.WalkConfirmRequest;
@@ -126,6 +127,68 @@ class ChatControllerSliceTest {
     }
 
     @Nested
+    @DisplayName("CHAT-ROOMS/DETAIL/LEAVE 계약")
+    class RoomContract {
+
+        @Test
+        @WithMockUser
+        @DisplayName("성공: 채팅방 목록을 SliceResponse로 반환한다")
+        void getChatRooms_success() throws Exception {
+            ChatRoomSummaryResponse room = ChatRoomSummaryResponse.builder()
+                    .chatRoomId(100L)
+                    .chatType("DIRECT")
+                    .status("ACTIVE")
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+            Slice<ChatRoomSummaryResponse> slice = new SliceImpl<>(List.of(room), PageRequest.of(0, 20), false);
+            given(chatRoomService.getRooms(anyLong(), any(), any())).willReturn(SliceResponse.of(slice));
+
+            mockMvc.perform(get("/api/v1/chat-rooms")
+                            .param("page", "0")
+                            .param("size", "20"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.content[0].chatRoomId").value(100L));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("성공: 채팅방 상세를 반환한다")
+        void getChatRoom_success() throws Exception {
+            ChatRoomDetailResponse detail = ChatRoomDetailResponse.builder()
+                    .chatRoomId(100L)
+                    .chatType("DIRECT")
+                    .status("ACTIVE")
+                    .walkConfirmed(false)
+                    .participants(List.of())
+                    .build();
+            given(chatRoomService.getRoomDetail(anyLong(), anyLong())).willReturn(detail);
+
+            mockMvc.perform(get("/api/v1/chat-rooms/{chatRoomId}", 100L))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.chatRoomId").value(100L));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("성공: 채팅방 나가기 응답을 반환한다")
+        void leaveRoom_success() throws Exception {
+            given(chatRoomService.leaveRoom(anyLong(), anyLong())).willReturn(
+                    scit.ainiinu.chat.dto.response.LeaveRoomResponse.builder()
+                            .roomId(100L)
+                            .left(true)
+                            .roomStatus("ACTIVE")
+                            .build()
+            );
+
+            mockMvc.perform(post("/api/v1/chat-rooms/{chatRoomId}/leave", 100L).with(csrf()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.roomId").value(100L))
+                    .andExpect(jsonPath("$.data.left").value(true));
+        }
+    }
+
+    @Nested
     @DisplayName("CHAT-MSG-LIST 계약")
     class MessageListContract {
 
@@ -155,6 +218,41 @@ class ChatControllerSliceTest {
                     .andExpect(jsonPath("$.data.content[0].id").value(301L))
                     .andExpect(jsonPath("$.data.nextCursor").value("300"))
                     .andExpect(jsonPath("$.data.hasMore").value(true));
+        }
+    }
+
+    @Nested
+    @DisplayName("CHAT-MSG-SEND 계약")
+    class MessageSendContract {
+
+        @Test
+        @WithMockUser
+        @DisplayName("성공: 메시지 전송 응답을 반환한다")
+        void createMessage_success() throws Exception {
+            ChatMessageCreateRequest request = new ChatMessageCreateRequest();
+            request.setContent("메시지 전송");
+            request.setMessageType("USER");
+            request.setClientMessageId("c1");
+
+            ChatMessageResponse response = ChatMessageResponse.builder()
+                    .id(400L)
+                    .roomId(100L)
+                    .sender(ChatSenderResponse.of(1L))
+                    .content("메시지 전송")
+                    .messageType("USER")
+                    .status("CREATED")
+                    .sentAt(OffsetDateTime.now())
+                    .build();
+            given(messageService.createMessage(anyLong(), anyLong(), any(ChatMessageCreateRequest.class)))
+                    .willReturn(response);
+
+            mockMvc.perform(post("/api/v1/chat-rooms/{chatRoomId}/messages", 100L)
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.id").value(400L))
+                    .andExpect(jsonPath("$.data.content").value("메시지 전송"));
         }
     }
 
