@@ -11,7 +11,7 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 
 - [x] **BUG-01**: 전체 프론트엔드 런타임 에러 전수 조사 및 분류
 - [x] **BUG-02**: 크리티컬 런타임 에러 즉시 수정 (페이지 크래시, 무한 루프, 렌더링 실패)
-- [ ] **BUG-03**: API 호출 불일치로 인한 네트워크 에러 수정 (잘못된 URL/method/payload)
+- [x] **BUG-03**: API 호출 불일치로 인한 네트워크 에러 수정 (잘못된 URL/method/payload)
 
 ### Common Infrastructure (Phase 2)
 
