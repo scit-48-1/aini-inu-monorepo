@@ -89,18 +89,18 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 ### Chat System (Phase 8) — FR-CHAT
 
 - [x] **CHAT-01**: 채팅방 목록 조회 — loading/empty/error 상태 (FR-CHAT-001, `CHAT-ROOMS-GET`)
-- [ ] **CHAT-02**: 채팅방 상세 조회 (FR-CHAT-001, `CHAT-ROOM-GET`)
+- [x] **CHAT-02**: 채팅방 상세 조회 (FR-CHAT-001, `CHAT-ROOM-GET`)
 - [x] **CHAT-03**: 1:1 채팅방 시작 — 기존 방 재사용 (FR-CHAT-001A, `CHAT-ROOM-DIRECT-CREATE`)
-- [ ] **CHAT-04**: 메시지 커서 기반 조회 — 최신 우선, 과거 역방향 (FR-CHAT-002/DEC-017, `CHAT-MSG-LIST`)
-- [ ] **CHAT-05**: 메시지 전송 (FR-CHAT-002, `CHAT-MSG-SEND`)
-- [ ] **CHAT-06**: 메시지 상태 실시간 반영 — WebSocket created/delivered/read (FR-CHAT-002A/DEC-021, `CHAT-WS-EVENTS`)
-- [ ] **CHAT-07**: 전송 실패 버블 재시도 (FR-CHAT-003/DEC-015, `CHAT-MSG-SEND`)
+- [x] **CHAT-04**: 메시지 커서 기반 조회 — 최신 우선, 과거 역방향 (FR-CHAT-002/DEC-017, `CHAT-MSG-LIST`)
+- [x] **CHAT-05**: 메시지 전송 (FR-CHAT-002, `CHAT-MSG-SEND`)
+- [x] **CHAT-06**: 메시지 상태 실시간 반영 — WebSocket created/delivered/read (FR-CHAT-002A/DEC-021, `CHAT-WS-EVENTS`)
+- [x] **CHAT-07**: 전송 실패 버블 재시도 (FR-CHAT-003/DEC-015, `CHAT-MSG-SEND`)
 - [ ] **CHAT-08**: 채팅방 나가기 (FR-CHAT-004, `CHAT-LEAVE`)
 - [ ] **CHAT-09**: 산책 확정 (FR-CHAT-004, `CHAT-WALK-CONFIRM-*`)
 - [ ] **CHAT-10**: 후기 작성 — 채팅방/대상 1회, 수정 불가 (FR-CHAT-004/DEC-007, `CHAT-REVIEW-CREATE`)
 - [ ] **CHAT-11**: 내 후기 조회 (FR-CHAT-004, `CHAT-REVIEW-ME`)
 - [x] **CHAT-12**: WebSocket STOMP 연결 — `/ws/chat-rooms/{roomId}` JWT 인증 (DEC-021)
-- [ ] **CHAT-13**: 채팅 메시지 최대 500자, 폴링 5초 fallback (PRD §8.1/DEC-016)
+- [x] **CHAT-13**: 채팅 메시지 최대 500자, 폴링 5초 fallback (PRD §8.1/DEC-016)
 - [x] **CHAT-14**: 그룹 채팅 정원 3~10명 (PRD §8.1)
 
 ### Community Feed (Phase 9) — FR-COMMUNITY
@@ -232,18 +232,18 @@ Deferred to future release. Tracked but not in current roadmap.
 | DIARY-06 | Phase 7 | Complete |
 | DIARY-07 | Phase 7 | Complete |
 | CHAT-01 | Phase 8 | Complete |
-| CHAT-02 | Phase 8 | Pending |
+| CHAT-02 | Phase 8 | Complete |
 | CHAT-03 | Phase 8 | Complete |
-| CHAT-04 | Phase 8 | Pending |
-| CHAT-05 | Phase 8 | Pending |
-| CHAT-06 | Phase 8 | Pending |
-| CHAT-07 | Phase 8 | Pending |
+| CHAT-04 | Phase 8 | Complete |
+| CHAT-05 | Phase 8 | Complete |
+| CHAT-06 | Phase 8 | Complete |
+| CHAT-07 | Phase 8 | Complete |
 | CHAT-08 | Phase 8 | Pending |
 | CHAT-09 | Phase 8 | Pending |
 | CHAT-10 | Phase 8 | Pending |
 | CHAT-11 | Phase 8 | Pending |
 | CHAT-12 | Phase 8 | Complete |
-| CHAT-13 | Phase 8 | Pending |
+| CHAT-13 | Phase 8 | Complete |
 | CHAT-14 | Phase 8 | Complete |
 | FEED-01 | Phase 9 | Pending |
 | FEED-02 | Phase 9 | Pending |
