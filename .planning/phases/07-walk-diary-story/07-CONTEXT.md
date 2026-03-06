@@ -39,45 +39,54 @@ Rewire all walk diary and story screens to Phase 2 `api/diaries.ts` and `api/com
 <decisions>
 ## Implementation Decisions
 
-### Diary CRUD
-- Create diary with: title, content (max 300 chars), photoUrls (image upload), walkDate, isPublic toggle, optional threadId link
-- Default visibility: public (DEC-011); user can toggle to private
-- Edit: same fields as create, content max 300 chars enforced
-- Delete: confirmation dialog, then DELETE endpoint, refresh list
-- Image upload: use Phase 2 presigned URL flow (`api/upload.ts`)
+### Diary access & navigation
+- **CRUD main access**: Profile HISTORY tab (프로필 산책일기 탭)
+  - Diary list, detail view, create/edit/delete all accessible from here
+  - '+' button in HISTORY tab opens create modal
+- **Following feed**: Accessed via story viewer only (no separate card listing in feed)
+- **Story row**: Top of feed page (인스타 패턴) — icon row → click opens viewer
+- **Diary detail viewer**: Same DiaryBookModal flipbook used everywhere (profile + feed story)
 
-### Following feed
-- `GET /api/v1/walk-diaries/following` with SliceResponse pagination
-- Shows diary entries from members the user follows
-- Load-more pagination (existing SliceResponse pattern from Phase 6)
+### Story viewer UX
+- **Style**: Existing flipbook DiaryBookModal (Desktop/Mobile engines already built)
+- **Member transition**: Auto-advance to next member after finishing one member's diaries (인스타 스토리 패턴)
+- **Header**: Top bar with avatar + nickname + created time, updates on member transition
+- **Close**: X button + background click to dismiss
+- **Navigation**: Page flip within member's diaries, then auto-advance to next member group
 
-### Story display (DEC-022 through DEC-025)
-- Stories are read-only derived views -- no create/edit/delete UI for stories
-- `GET /api/v1/stories` returns `StoryGroupResponse[]` grouped by member
-- One icon per member in horizontal scroll row (StoryArea pattern)
-- Tap icon opens sequential diary viewer for that member's stories
-- 24h expiry: backend filters by createdAt + 24h; frontend trusts the response (no client-side expiry check needed)
-- Private diary or deleted diary = story disappears (backend handles filtering)
+### Diary create/edit form
+- **UI**: Modal (opened from '+' button in profile HISTORY tab)
+- **Fields**: title, content (max 300 chars), photos (max 5장, presigned URL upload), walkDate, isPublic toggle, threadId dropdown
+- **isPublic toggle**: Toggle switch + label at form bottom. Default ON (공개). "나만 보기" when toggled off (DEC-011)
+- **threadId**: Optional dropdown showing user's participated threads. Not required — diary can exist without thread link
+- **Edit**: Same modal pre-filled with existing data. Same field constraints
+- **Delete**: Confirmation dialog from diary detail view
 
-### Visibility toggle
+### Feed page composition
+- **Layout**: Instagram pattern — top story icon row + below post feed (existing structure)
+- **Phase 7 scope**: Rewire story area only (StoryArea → `api/community.ts` getStories)
+- **Following diaries in feed**: Accessible only through story viewer (click story icon → flipbook). No separate diary card listing in feed
+- **Post area (below stories)**: Keep current code as-is (old postService). Phase 9 will rewire post CRUD
+- **Story click flow**: StoryArea icon → DiaryBookModal opens with that member's diaries → auto-advance through members
+
+### Visibility toggle (DEC-011)
 - Diary create/edit form includes isPublic toggle (default: true / public)
 - When toggled to private: diary hidden from following feed and stories
 - UI reflects change immediately after successful API response
 
 ### 5-state coverage (PRD SS8.3)
-- Default: diary list loaded, stories visible in row
+- Default: diary list loaded in HISTORY tab, stories visible in feed icon row
 - Loading: skeleton/spinner while fetching diaries and stories
-- Empty: friendly message when no diaries exist or no following feed entries
+- Empty: friendly message when no diaries exist or no stories available
 - Error: fetch failed with retry button
 - Success: toast on create/edit/delete success
 
 ### Claude's Discretion
-- Diary create/edit form layout (modal vs page)
-- Story viewer UI design (flipbook, carousel, or fullscreen)
 - Exact skeleton/loading design
-- Diary card design in list view
-- Following feed page location (tab within existing page vs standalone)
+- Diary card design in HISTORY tab list view
 - Empty state illustration and CTA copy
+- Modal sizing and responsive breakpoints
+- Thread dropdown label and empty state text
 
 </decisions>
 
@@ -89,8 +98,9 @@ Rewire all walk diary and story screens to Phase 2 `api/diaries.ts` and `api/com
 - `api/community.ts`: getStories with StoryGroupResponse/StoryDiaryItemResponse types
 - `api/upload.ts`: Presigned URL image upload utility
 - `components/feed/StoryArea.tsx`: Horizontal story icon row component (needs rewire from old data shape to StoryGroupResponse)
-- `components/profile/DiaryBookModal.tsx` + DiaryModal engines (Desktop/Mobile): Flipbook-style diary viewer (needs rewire from old data to WalkDiaryResponse)
+- `components/profile/DiaryBookModal.tsx` + DiaryModal engines (Desktop/Mobile): Flipbook-style diary viewer (needs rewire from old data to WalkDiaryResponse + StoryGroupResponse)
 - `components/profile/ProfileTabs.tsx`: "산책일기" (HISTORY) tab already in profile
+- `components/profile/ProfileHistory.tsx`: Diary list component in profile (needs rewire)
 - `hooks/useWalkDiaries.ts`: Diary fetching hook (needs rewire from threadService to api/diaries.ts)
 - `hooks/forms/useDiaryForm.ts`: Diary form state hook (needs rewire from threadService to api/diaries.ts)
 - `components/common/UserAvatar.tsx`: Avatar with hasRecentDiary ring indicator
@@ -102,14 +112,15 @@ Rewire all walk diary and story screens to Phase 2 `api/diaries.ts` and `api/com
 - Optimistic UI with failure rollback (Phase 4/5 pattern)
 - Phase 2 API modules: inline types, `apiClient` envelope unwrap
 - SliceResponse load-more pagination (Phase 6 pattern)
+- Modal pattern: CreatePostModal, ProfileEditModal for reference
 
 ### Integration Points
-- `src/app/feed/page.tsx`: Feed page already imports StoryArea + DiaryBookModal; currently uses old postService/threadService -- needs rewire
-- `src/components/profile/MyProfileView.tsx`: Profile page with HISTORY tab for diary list
+- `src/app/feed/page.tsx`: Feed page — rewire story area only; keep post area as-is for Phase 9
+- `src/components/profile/MyProfileView.tsx`: Profile page with HISTORY tab for diary list + create button
 - `src/components/profile/ProfileHistory.tsx`: Diary list component in profile
-- `services/api/threadService.ts`: OLD module with diary functions -- all calls should migrate to `api/diaries.ts`
-- `services/api/postService.ts`: OLD module with story functions -- story calls should migrate to `api/community.ts`
-- `types/index.ts` WalkDiaryType: Legacy type -- components should use WalkDiaryResponse from `api/diaries.ts`
+- `services/api/threadService.ts`: OLD module with diary functions — all diary calls migrate to `api/diaries.ts`
+- `services/api/postService.ts`: OLD module with story functions — story calls migrate to `api/community.ts`
+- `types/index.ts` WalkDiaryType: Legacy type — components should use WalkDiaryResponse from `api/diaries.ts`
 
 </code_context>
 
@@ -117,9 +128,12 @@ Rewire all walk diary and story screens to Phase 2 `api/diaries.ts` and `api/com
 ## Specific Ideas
 
 - User provided full FR/DEC/DoD specification as acceptance criteria
-- DEC-022: Stories have NO independent CRUD -- purely derived from public walk diaries within 24h window
-- DEC-025: Member icon grouping -- one avatar per member, tap to cycle through their diaries
-- Image upload must use Phase 2 presigned URL flow (not direct upload)
+- Instagram pattern: story icon row at top of feed, posts below (existing layout preserved)
+- Flipbook viewer reused for both profile diary detail and feed story viewing — unified UX
+- Auto-advance between members in story viewer (인스타 스토리 패턴)
+- Viewer header shows avatar + nickname + time, updates on member transition
+- Thread link is optional dropdown in create form — diary can exist standalone
+- Photo limit: max 5 images per diary entry
 - Private/deleted diary must immediately disappear from stories and following feed
 
 </specifics>
@@ -127,9 +141,9 @@ Rewire all walk diary and story screens to Phase 2 `api/diaries.ts` and `api/com
 <deferred>
 ## Deferred Ideas
 
-- Community feed posts (Phase 9) -- feed page also shows posts, but post CRUD is Phase 9 scope
-- Story creation UI -- stories are auto-derived from diaries (DEC-022), no separate creation flow needed
-- Notification on new story -- deferred to v2 (NOTF-01/02)
+- Community feed posts rewire (Phase 9) — feed page post area kept as-is, Phase 9 will rewire
+- Story creation UI — stories are auto-derived from diaries (DEC-022), no separate creation flow needed
+- Notification on new story — deferred to v2 (NOTF-01/02)
 
 </deferred>
 
