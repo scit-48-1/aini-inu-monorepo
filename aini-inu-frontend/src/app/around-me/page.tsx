@@ -13,12 +13,14 @@ import { Typography } from '@/components/ui/Typography';
 import DaumPostcode from 'react-daum-postcode';
 import { useRadarLogic } from '@/hooks/useRadarLogic';
 import { useConfigStore } from '@/store/useConfigStore';
+import { useUserStore } from '@/store/useUserStore';
 
 export default function AroundMePage() {
   const [mounted, setMounted] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
   const { currentLocation, setLocation } = useConfigStore();
+  const profile = useUserStore((s) => s.profile);
 
   const {
     activeTab, setActiveTab,
@@ -37,40 +39,7 @@ export default function AroundMePage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Temporary adapter: ThreadMapResponse → legacy ThreadType shape (Plan 03 will properly rewire)
-  const mapMarkersAsLegacy = mapMarkers.map(m => ({
-    id: String(m.threadId),
-    lat: m.latitude,
-    lng: m.longitude,
-    title: m.title,
-    name: m.title,
-    isEmergency: false,
-    chatType: m.chatType,
-    currentParticipants: m.currentParticipants,
-    maxParticipants: m.maxParticipants,
-    placeName: m.placeName,
-  })) as any;
-
-  // Temporary adapter: ThreadSummaryResponse → legacy ThreadType shape (Plan 03 will properly rewire)
-  const threadListAsLegacy = threadList.map(t => ({
-    id: String(t.id),
-    title: t.title,
-    description: t.description,
-    name: t.title,
-    lat: t.latitude,
-    lng: t.longitude,
-    startTime: t.startTime,
-    endTime: t.endTime,
-    status: t.status,
-    chatType: t.chatType,
-    currentParticipants: t.currentParticipants,
-    maxParticipants: t.maxParticipants,
-    placeName: t.placeName,
-    isEmergency: false,
-    applied: t.applied,
-    isApplied: t.isApplied,
-    distance: 0,
-  })) as any;
+  const currentUserId = profile ? Number(profile.id) : undefined;
 
   if (!mounted || gpsLoading || isLoading) {
     return <div className="flex items-center justify-center h-full"><p className="text-zinc-400">Loading...</p></div>;
@@ -90,31 +59,34 @@ export default function AroundMePage() {
       <div className="flex-1 flex flex-col lg:flex-row px-4 md:px-8 py-6 gap-8 overflow-hidden">
         {(activeTab === 'FIND' || activeTab === 'EMERGENCY') && (
           <RadarMapSection
-            mapCenter={coordinates}
-            visibleMarkers={mapMarkersAsLegacy}
-            selectedPin={null}
-            setSelectedPin={() => {}}
-            userNickname=""
-            getRemainingTime={() => ''}
-            onJoinThread={() => {}}
-            onContact={() => {}}
-            onDeleteThread={(id) => handleDeleteThread(Number(id))}
-            onEditThread={(t: any) => startEdit(Number(t.id))}
-            activeTab={activeTab}
+            coordinates={coordinates}
+            mapMarkers={mapMarkers}
+            hotspots={hotspots}
+            selectedThread={selectedThread}
+            myPets={myPets}
+            currentUserId={currentUserId}
+            isExpired={isExpired}
+            onMarkerClick={selectThread}
+            onClearSelection={clearSelection}
+            onDeleteThread={handleDeleteThread}
+            onEditThread={startEdit}
+            onRefreshDetail={handleRefresh}
           />
         )}
 
         {activeTab === 'FIND' && (
           <RadarSidebar
             isLoading={isLoading}
-            visibleMarkers={threadListAsLegacy}
-            sortBy="DISTANCE"
-            setSortBy={() => {}}
-            onCardClick={(t: any) => selectThread(Number(t.id))}
-            getRemainingTime={() => ''}
-            currentUserId={undefined}
-            onDeleteThread={(id) => handleDeleteThread(Number(id))}
-            onEditThread={(t: any) => startEdit(Number(t.id))}
+            threads={threadList}
+            hasNext={threadListHasNext}
+            coordinates={coordinates}
+            currentTime={currentTime}
+            isExpired={isExpired}
+            currentUserId={currentUserId}
+            onCardClick={selectThread}
+            onLoadMore={loadMore}
+            onDeleteThread={handleDeleteThread}
+            onEditThread={startEdit}
           />
         )}
 
