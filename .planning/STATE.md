@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-08-PLAN.md
-last_updated: "2026-03-06T15:12:55.237Z"
-last_activity: 2026-03-06 -- Completed plan 06-05 (frontend bug fixes + date range filter)
+stopped_at: Completed 06-09-PLAN.md
+last_updated: "2026-03-06T15:19:01.268Z"
+last_activity: 2026-03-07 -- Completed plan 06-07 (map date filter + loadMore location fix)
 progress:
   total_phases: 12
   completed_phases: 5
   total_plans: 28
-  completed_plans: 25
+  completed_plans: 27
   percent: 96
 ---
 
@@ -74,6 +74,7 @@ Progress: [██████████] 96%
 | Phase 06-walk-threads P06 | 2 | 2 tasks | 3 files |
 | Phase 06-walk-threads P07 | 3 | 2 tasks | 7 files |
 | Phase 06-walk-threads PP08 | 1 | 1 tasks | 2 files |
+| Phase 06-walk-threads PP09 | 2 | 1 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -148,6 +149,7 @@ Recent decisions affecting current work:
 - [Phase 06-07]: In-memory date filter on getMapThreads (not JPQL) since method already loads all RECRUITING threads for distance calc
 - [Phase 06-07]: loadMore passes latitude/longitude/radius from searchCoordinates or GPS coordinates to preserve location filter on pagination
 - [Phase 06-walk-threads]: Badge priority order: expired (red) > full (blue) > remaining time (amber) for walk thread status display
+- [Phase 06-09]: setLocation('현재 위치') in applyCoords resets GPS label on every fresh acquisition
 
 ### Pending Todos
 
@@ -159,6 +161,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T15:14:20Z
-Stopped at: Completed 06-07-PLAN.md
+Last session: 2026-03-06T15:19:01.265Z
+Stopped at: Completed 06-09-PLAN.md
 Resume file: None
