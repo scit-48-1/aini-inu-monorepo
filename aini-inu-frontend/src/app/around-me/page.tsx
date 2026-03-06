@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Siren, Users } from 'lucide-react';
 import { AroundMeHeader } from '@/components/around-me/AroundMeHeader';
 import { RadarMapSection } from '@/components/around-me/RadarMapSection';
@@ -59,6 +59,21 @@ export default function AroundMePage() {
 
   const currentUserId = profile ? Number(profile.id) : undefined;
 
+  const handleMapMoveEnd = useCallback(async (lat: number, lng: number) => {
+    setSearchCoordinates([lat, lng]);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ko&zoom=14`
+      );
+      const data = await res.json();
+      const addr = data.address;
+      const name = addr?.borough || addr?.suburb || addr?.city_district || addr?.city || addr?.town || addr?.village || '알 수 없는 위치';
+      setLocation(name);
+    } catch {
+      setLocation(`${lat.toFixed(3)}, ${lng.toFixed(3)}`);
+    }
+  }, [setSearchCoordinates, setLocation]);
+
   if (!mounted || gpsLoading || isLoading) {
     return <div className="flex items-center justify-center h-full"><p className="text-zinc-400">Loading...</p></div>;
   }
@@ -96,6 +111,7 @@ export default function AroundMePage() {
             onEditThread={startEdit}
             onRefreshDetail={handleRefresh}
             radius={radius}
+            onMoveEnd={handleMapMoveEnd}
           />
         )}
 
@@ -195,7 +211,7 @@ export default function AroundMePage() {
                   setLocation(data.address);
                   setIsLocationModalOpen(false);
                   // Try to resolve district coordinates for search
-                  const sigungu = (data as Record<string, string>).sigungu || '';
+                  const sigungu = (data as unknown as Record<string, string>).sigungu || '';
                   const district = Object.keys(DISTRICT_COORDS).find((d) => sigungu.includes(d));
                   if (district) {
                     setSearchCoordinates(DISTRICT_COORDS[district]);

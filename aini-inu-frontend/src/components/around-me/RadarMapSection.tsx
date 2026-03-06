@@ -84,6 +84,7 @@ interface RadarMapSectionProps {
   onEditThread: (threadId: number) => void;
   onRefreshDetail: () => void;
   radius?: number;
+  onMoveEnd?: (lat: number, lng: number) => void;
 }
 
 export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
@@ -100,6 +101,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
   onEditThread,
   onRefreshDetail,
   radius,
+  onMoveEnd,
 }) => {
   const router = useRouter();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -240,6 +242,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
           markers={allMarkers}
           onMarkerClick={handleMapMarkerClick}
           radiusKm={radius}
+          onMoveEnd={onMoveEnd}
         />
       </div>
 
