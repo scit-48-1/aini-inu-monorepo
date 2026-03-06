@@ -28,11 +28,11 @@ export interface TokenRevokeRequest {
 // --- Functions ---
 
 export async function login(data: LoginRequest): Promise<LoginResponse> {
-  return apiClient.post<LoginResponse>('/auth/login', data);
+  return apiClient.post<LoginResponse>('/auth/login', data, { skipAuth: true });
 }
 
 export async function logout(data: TokenRevokeRequest): Promise<void> {
-  return apiClient.post<void>('/auth/logout', data);
+  return apiClient.post<void>('/auth/logout', data, { skipAuth: true });
 }
 
 export async function refreshToken(data: TokenRefreshRequest): Promise<LoginResponse> {
