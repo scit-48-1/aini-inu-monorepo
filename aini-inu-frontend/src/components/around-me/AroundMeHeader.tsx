@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { MapPin, Edit2, Footprints, PlusCircle, Siren, RefreshCw } from 'lucide-react';
+import { MapPin, Edit2, Footprints, PlusCircle, Siren, RefreshCw, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Typography } from '@/components/ui/Typography';
 
@@ -14,6 +14,10 @@ interface AroundMeHeaderProps {
   onTabChange: (tab: SubView) => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+  onDateFromChange?: (val: string) => void;
+  onDateToChange?: (val: string) => void;
 }
 
 export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
@@ -23,6 +27,10 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
   onTabChange,
   onRefresh,
   isRefreshing = false,
+  dateFrom,
+  dateTo,
+  onDateFromChange,
+  onDateToChange,
 }) => {
   return (
     <div className="p-6 md:px-10 md:py-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 border-b border-card-border bg-white sticky top-0 z-20 shadow-sm transition-all">
@@ -48,6 +56,24 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
               <RefreshCw size={14} className={cn('text-amber-500', isRefreshing && 'animate-spin')} />
               <span>재탐색</span>
             </button>
+          )}
+          {onDateFromChange && (
+            <div className="flex items-center gap-1.5 bg-zinc-50/50 px-3 py-1.5 rounded-full border border-zinc-100 text-xs font-black text-zinc-500">
+              <CalendarDays size={12} className="text-amber-500" />
+              <input
+                type="date"
+                value={dateFrom ?? ''}
+                onChange={(e) => onDateFromChange(e.target.value)}
+                className="bg-transparent border-none outline-none text-xs font-black text-zinc-600 w-[110px]"
+              />
+              <span className="text-zinc-300">~</span>
+              <input
+                type="date"
+                value={dateTo ?? ''}
+                onChange={(e) => onDateToChange?.(e.target.value)}
+                className="bg-transparent border-none outline-none text-xs font-black text-zinc-600 w-[110px]"
+              />
+            </div>
           )}
         </div>
       </div>

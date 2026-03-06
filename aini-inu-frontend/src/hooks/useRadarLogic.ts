@@ -68,14 +68,18 @@ export function useRadarLogic() {
   // My active thread
   const [myActiveThread, setMyActiveThread] = useState<ThreadSummaryResponse | null>(null);
 
+  // Date filter
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+
   // ---------------------------------------------------------------
   // Fetch thread data (list + map + hotspots)
   // ---------------------------------------------------------------
-  const fetchThreadData = useCallback(async (coords: [number, number]) => {
+  const fetchThreadData = useCallback(async (coords: [number, number], filterDateFrom?: string, filterDateTo?: string) => {
     const [latitude, longitude] = coords;
     try {
       const [listResult, markerResult, hotspotResult] = await Promise.all([
-        getThreads({ page: 0, size: 20 }),
+        getThreads({ page: 0, size: 20, startDate: filterDateFrom || undefined, endDate: filterDateTo || undefined }),
         getThreadMap({ latitude, longitude, radius: 5 }),
         getHotspots(),
       ]);
@@ -145,6 +149,16 @@ export function useRadarLogic() {
   }, [gpsLoading]);
 
   // ---------------------------------------------------------------
+  // Re-fetch when date filters change
+  // ---------------------------------------------------------------
+  useEffect(() => {
+    if (!gpsLoading && coordinates) {
+      fetchThreadData(coordinates, dateFrom, dateTo);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateFrom, dateTo]);
+
+  // ---------------------------------------------------------------
   // Local expiry timer — updates display clock every 60 seconds
   // NO data fetching here
   // ---------------------------------------------------------------
@@ -160,23 +174,23 @@ export function useRadarLogic() {
     if (!threadListHasNext) return;
     try {
       const nextPage = threadListPage + 1;
-      const result = await getThreads({ page: nextPage, size: 20 });
+      const result = await getThreads({ page: nextPage, size: 20, startDate: dateFrom || undefined, endDate: dateTo || undefined });
       setThreadList((prev) => [...prev, ...result.content]);
       setThreadListPage(nextPage);
       setThreadListHasNext(result.hasNext);
     } catch {
       toast.error('더 불러오는데 실패했습니다.');
     }
-  }, [threadListPage, threadListHasNext]);
+  }, [threadListPage, threadListHasNext, dateFrom, dateTo]);
 
   // ---------------------------------------------------------------
   // Manual re-search (DEC-029: only way to refetch)
   // ---------------------------------------------------------------
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await fetchThreadData(coordinates);
+    await fetchThreadData(coordinates, dateFrom, dateTo);
     setIsRefreshing(false);
-  }, [fetchThreadData, coordinates]);
+  }, [fetchThreadData, coordinates, dateFrom, dateTo]);
 
   // ---------------------------------------------------------------
   // Thread selection
@@ -245,6 +259,11 @@ export function useRadarLogic() {
     startEdit,
     // My active thread
     myActiveThread,
+    // Date filter
+    dateFrom,
+    dateTo,
+    setDateFrom,
+    setDateTo,
     // Actions
     handleDeleteThread,
     handleRefresh,

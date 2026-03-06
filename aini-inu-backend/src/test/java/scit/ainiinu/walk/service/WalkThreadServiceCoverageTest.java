@@ -85,7 +85,7 @@ class WalkThreadServiceCoverageTest {
                 .willReturn(Optional.of(WalkThreadApplication.joined(101L, 1L, 9001L)));
 
         // when
-        SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(1L, pageable);
+        SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(1L, pageable, null, null);
 
         // then
         assertThat(response.getContent()).hasSize(1);

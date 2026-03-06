@@ -38,6 +38,7 @@ import scit.ainiinu.walk.repository.WalkThreadFilterRepository;
 import scit.ainiinu.walk.repository.WalkThreadPetRepository;
 import scit.ainiinu.walk.repository.WalkThreadRepository;
 
+import java.time.LocalDate;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -98,12 +99,16 @@ public class WalkThreadService {
         return toThreadResponse(savedThread, memberId);
     }
 
-    public SliceResponse<ThreadSummaryResponse> getThreads(Long memberId, Pageable pageable) {
+    public SliceResponse<ThreadSummaryResponse> getThreads(Long memberId, Pageable pageable, LocalDate startDate, LocalDate endDate) {
         Pageable safePageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
-        Slice<WalkThread> slice = walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(
-                WalkThreadStatus.RECRUITING,
-                safePageable
-        );
+        Slice<WalkThread> slice;
+        if (startDate != null || endDate != null) {
+            slice = walkThreadRepository.findByStatusAndWalkDateBetween(
+                    WalkThreadStatus.RECRUITING, startDate, endDate, safePageable);
+        } else {
+            slice = walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(
+                    WalkThreadStatus.RECRUITING, safePageable);
+        }
 
         LocalDateTime now = LocalDateTime.now();
         List<ThreadSummaryResponse> content = slice.getContent().stream()

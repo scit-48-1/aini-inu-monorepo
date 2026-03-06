@@ -36,6 +36,9 @@ import scit.ainiinu.walk.dto.response.ThreadResponse;
 import scit.ainiinu.walk.dto.response.ThreadSummaryResponse;
 import scit.ainiinu.walk.service.WalkThreadService;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -83,9 +86,11 @@ public class WalkThreadController {
     public ResponseEntity<ApiResponse<SliceResponse<ThreadSummaryResponse>>> getThreads(
             @CurrentMember Long memberId,
             @Parameter(hidden = true)
-            @PageableDefault(size = 20, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 20, sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
-        SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable);
+        SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, startDate, endDate);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

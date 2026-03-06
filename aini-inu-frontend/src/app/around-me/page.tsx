@@ -33,6 +33,7 @@ export default function AroundMePage() {
     editingThreadId, startEdit,
     handleDeleteThread, handleRefresh,
     myActiveThread,
+    dateFrom, dateTo, setDateFrom, setDateTo,
   } = useRadarLogic();
 
   useEffect(() => {
@@ -55,6 +56,10 @@ export default function AroundMePage() {
         onTabChange={(tab) => { setActiveTab(tab); clearSelection(); }}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={setDateFrom}
+        onDateToChange={setDateTo}
       />
 
       <div className="flex-1 flex flex-col lg:flex-row px-4 md:px-8 py-6 gap-8 overflow-hidden">
