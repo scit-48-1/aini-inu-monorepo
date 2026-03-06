@@ -245,18 +245,30 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
           <ProfileEditModal
             isOpen={isEditProfileOpen}
             onClose={() => setIsEditProfileOpen(false)}
-            user={profile}
-            onSave={async (d) => {
-              try {
-                await memberService.updateMe(d);
-                await fetchData();
-                fetchMyProfile();
-                toast.success('프로필이 수정되었습니다.');
-                return true;
-              } catch {
-                toast.error('프로필 수정에 실패했습니다.');
-                return false;
-              }
+            member={profile ? {
+              id: Number(profile.id) || 0,
+              email: profile.email || '',
+              nickname: profile.nickname || '',
+              memberType: profile.isOwner ? 'OWNER' : 'NON_OWNER',
+              profileImageUrl: profile.avatar || '',
+              linkedNickname: profile.handle || '',
+              phone: profile.phone || '',
+              age: profile.age || 0,
+              gender: profile.gender || '',
+              mbti: profile.mbti || '',
+              personality: '',
+              selfIntroduction: profile.about || '',
+              personalityTypes: (profile.tendencies || []).map((name, i) => ({ id: i, name, code: name })),
+              mannerTemperature: profile.mannerScore || 0,
+              status: 'ACTIVE',
+              createdAt: '',
+              nicknameChangedAt: profile.nicknameChangedAt || '',
+              verified: false,
+              isVerified: false,
+            } as MemberResponse : ({} as MemberResponse)}
+            onSaved={async () => {
+              await fetchData();
+              fetchMyProfile();
             }}
             optimizeImage={optimizeImage}
           />
