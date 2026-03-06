@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Critical Bugs** - Runtime error audit, classification, and fix for page crashes, infinite loops, and network errors
 - [ ] **Phase 2: Common Infrastructure** - Centralized API layer, ApiResponse envelope, error handling, pagination, image upload, auth interceptor, state patterns
 - [x] **Phase 3: Authentication** - 3-step signup flow (Account/Profile/Pet), login, token refresh, logout (completed 2026-03-05)
-- [ ] **Phase 4: Member Profile/Relations** - Profile view/edit, other member profiles, follow/unfollow, search, walk stats, personality types
+- [x] **Phase 4: Member Profile/Relations** - Profile view/edit, other member profiles, follow/unfollow, search, walk stats, personality types (completed 2026-03-06)
 - [ ] **Phase 5: Pet Management** - Pet CRUD, main pet selection, breed/personality/walk-style master data
 - [ ] **Phase 6: Walk Threads** - Thread CRUD, apply/cancel, map exploration, hotspots, GPS, chat-type selection
 - [ ] **Phase 7: Walk Diary + Story** - Diary CRUD, following feed, story list with 24h expiry
@@ -230,7 +230,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 1. Critical Bugs | 2/2 | Complete | 2026-03-06 |
 | 2. Common Infrastructure | 1/3 | In progress | - |
 | 3. Authentication | 3/3 | Complete   | 2026-03-06 |
-| 4. Member Profile/Relations | 2/3 | In Progress|  |
+| 4. Member Profile/Relations | 4/4 | Complete   | 2026-03-06 |
 | 5. Pet Management | 0/2 | Not started | - |
 | 6. Walk Threads | 0/3 | Not started | - |
 | 7. Walk Diary + Story | 0/2 | Not started | - |
