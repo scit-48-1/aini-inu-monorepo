@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { ProfileView } from '@/components/profile/ProfileView';
 
 interface ProfileExplorerProps {
-  partnerId: string;
+  partnerId: number;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -38,7 +38,7 @@ export const ProfileExplorer: React.FC<ProfileExplorerProps> = ({ partnerId, isO
 
       {/* 프로필 컨텐츠 */}
       <div className="flex-1 overflow-y-auto no-scrollbar">
-        <ProfileView memberId={partnerId} compact={true} />
+        <ProfileView memberId={String(partnerId)} compact={true} />
       </div>
     </aside>
   );

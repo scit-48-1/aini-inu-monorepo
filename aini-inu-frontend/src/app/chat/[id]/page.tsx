@@ -11,7 +11,12 @@ import {
   getMessages,
   sendMessage,
   markMessagesRead,
+  getWalkConfirm,
+  confirmWalk,
+  cancelWalkConfirm,
+  leaveRoom,
   type ChatRoomDetailResponse,
+  type WalkConfirmResponse,
 } from '@/api/chat';
 import { useChatStore } from '@/store/useChatStore';
 import { useChatWebSocket } from '@/hooks/useChatWebSocket';
@@ -33,6 +38,7 @@ export default function ChatRoomPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [walkConfirm, setWalkConfirm] = useState<WalkConfirmResponse | null>(null);
 
   // Cursor pagination state
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -66,9 +72,10 @@ export default function ChatRoomPage() {
 
     async function fetchInitial() {
       try {
-        const [roomData, msgData] = await Promise.all([
+        const [roomData, msgData, walkConfirmData] = await Promise.all([
           getRoom(roomId),
           getMessages(roomId, { size: 20 }),
+          getWalkConfirm(roomId).catch(() => null),
         ]);
 
         if (cancelled) return;
@@ -77,6 +84,7 @@ export default function ChatRoomPage() {
         setMessages(msgData.content);
         setNextCursor(msgData.nextCursor);
         setHasMore(msgData.hasMore);
+        setWalkConfirm(walkConfirmData);
       } catch (e) {
         console.error(e);
         if (!cancelled) {
@@ -208,6 +216,40 @@ export default function ChatRoomPage() {
     [roomId, pendingMessages],
   );
 
+  // Walk confirm handler
+  const handleConfirmWalk = useCallback(async () => {
+    try {
+      const result = await confirmWalk(roomId, { action: 'CONFIRM' });
+      setWalkConfirm(result);
+    } catch {
+      toast.error('산책 확인에 실패했습니다.');
+    }
+  }, [roomId]);
+
+  // Cancel walk confirm handler
+  const handleCancelConfirm = useCallback(async () => {
+    try {
+      await cancelWalkConfirm(roomId);
+      const refreshed = await getWalkConfirm(roomId).catch(() => null);
+      setWalkConfirm(refreshed);
+    } catch {
+      toast.error('산책 확인 취소에 실패했습니다.');
+    }
+  }, [roomId]);
+
+  // Leave room handler
+  const handleLeave = useCallback(async () => {
+    const confirmed = window.confirm('채팅방을 나가시겠습니까?');
+    if (!confirmed) return;
+
+    try {
+      await leaveRoom(roomId);
+      router.push('/chat');
+    } catch {
+      toast.error('채팅방 나가기에 실패했습니다.');
+    }
+  }, [roomId, router]);
+
   // Derive partnerId for ProfileExplorer
   const partnerId =
     room?.participants.find((p) => p.memberId !== currentMemberId)?.memberId ??
@@ -250,6 +292,10 @@ export default function ChatRoomPage() {
           onShowInfoToggle={() => setIsProfileOpen(!isProfileOpen)}
           onBack={() => router.push('/chat')}
           connectionMode={connectionMode}
+          walkConfirmState={walkConfirm}
+          onConfirmWalk={handleConfirmWalk}
+          onCancelConfirm={handleCancelConfirm}
+          onLeave={handleLeave}
         />
 
         <MessageList
@@ -272,7 +318,7 @@ export default function ChatRoomPage() {
 
       {/* Profile Explorer */}
       <ProfileExplorer
-        partnerId={String(partnerId)}
+        partnerId={partnerId}
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
       />

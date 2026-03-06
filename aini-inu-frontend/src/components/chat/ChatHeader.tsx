@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
-import { ChevronLeft, Zap, UserCircle, MoreVertical } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ChevronLeft, Zap, UserCircle, MoreVertical, CheckCircle, LogOut } from 'lucide-react';
 import { Typography } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
-import type { ChatRoomDetailResponse } from '@/api/chat';
+import type { ChatRoomDetailResponse, WalkConfirmResponse } from '@/api/chat';
 
 interface ChatHeaderProps {
   room: ChatRoomDetailResponse;
@@ -14,9 +14,10 @@ interface ChatHeaderProps {
   onShowInfoToggle: () => void;
   showInfo: boolean;
   connectionMode: 'ws' | 'polling' | 'disconnected';
-  // Walk confirm and leave actions added in Plan 03
-  onLeave?: () => void;
-  onWalkConfirm?: () => void;
+  walkConfirmState: WalkConfirmResponse | null;
+  onConfirmWalk: () => void;
+  onCancelConfirm: () => void;
+  onLeave: () => void;
 }
 
 function getPartnerDisplay(
@@ -58,8 +59,31 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onShowInfoToggle,
   showInfo,
   connectionMode,
+  walkConfirmState,
+  onConfirmWalk,
+  onCancelConfirm,
+  onLeave,
 }) => {
   const { label, petNames } = getPartnerDisplay(room, currentMemberId);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
+
+  const isConfirmed = walkConfirmState?.myState === 'CONFIRMED';
+  const allConfirmed = walkConfirmState?.allConfirmed === true;
+  const confirmedCount = walkConfirmState?.confirmedMemberIds?.length ?? 0;
+  const totalCount = room.participants.filter((p) => !p.left).length;
 
   return (
     <header className="p-4 md:p-6 bg-white/80 backdrop-blur-xl border-b border-zinc-100 flex items-center justify-between z-20 sticky top-0">
@@ -100,14 +124,21 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               >
                 {label}
               </Typography>
-              {room.walkConfirmed && (
+              {allConfirmed ? (
+                <Badge
+                  variant="emerald"
+                  className="bg-emerald-50 text-emerald-600 border-none text-[7px] px-1 py-0 shrink-0"
+                >
+                  산책 확정!
+                </Badge>
+              ) : room.walkConfirmed ? (
                 <Badge
                   variant="emerald"
                   className="bg-emerald-50 text-emerald-600 border-none text-[7px] px-1 py-0 shrink-0"
                 >
                   MATCHED
                 </Badge>
-              )}
+              ) : null}
             </div>
             <div className="flex items-center gap-1.5 text-zinc-400 font-bold text-[9px] uppercase tracking-widest truncate">
               {petNames[0] ? (
@@ -127,6 +158,29 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Walk confirm button */}
+        <button
+          onClick={() => {
+            if (isConfirmed) {
+              onCancelConfirm();
+            } else {
+              onConfirmWalk();
+            }
+          }}
+          className={cn(
+            'p-2.5 rounded-xl transition-all flex items-center gap-1.5',
+            isConfirmed
+              ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+              : 'bg-zinc-50 text-zinc-400 hover:bg-zinc-100 hover:text-emerald-600',
+          )}
+          title={isConfirmed ? '산책 확인 취소' : '산책 확인'}
+        >
+          <CheckCircle size={20} />
+          <span className="text-[10px] font-black">
+            {confirmedCount}/{totalCount}
+          </span>
+        </button>
+
         <button
           onClick={onShowInfoToggle}
           className={cn(
@@ -140,9 +194,30 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           <UserCircle size={20} />
         </button>
 
-        <button className="p-2.5 bg-zinc-50 rounded-xl text-zinc-400 hover:bg-zinc-100 hover:text-navy-900 transition-all">
-          <MoreVertical size={20} />
-        </button>
+        {/* More menu with leave action */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-2.5 bg-zinc-50 rounded-xl text-zinc-400 hover:bg-zinc-100 hover:text-navy-900 transition-all"
+          >
+            <MoreVertical size={20} />
+          </button>
+
+          {menuOpen ? (
+            <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl shadow-2xl border border-zinc-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  onLeave();
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors"
+              >
+                <LogOut size={16} />
+                채팅방 나가기
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </header>
   );
