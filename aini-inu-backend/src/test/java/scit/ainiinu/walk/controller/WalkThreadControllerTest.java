@@ -168,7 +168,7 @@ class WalkThreadControllerTest {
                     .title("한강 산책 모집")
                     .build();
             Slice<ThreadSummaryResponse> slice = new SliceImpl<>(List.of(summary), PageRequest.of(0, 20), false);
-            given(walkThreadService.getThreads(anyLong(), any(), any(), any())).willReturn(SliceResponse.of(slice));
+            given(walkThreadService.getThreads(anyLong(), any(), any(), any(), any(), any(), any())).willReturn(SliceResponse.of(slice));
 
             // when & then
             mockMvc.perform(get("/api/v1/threads")
