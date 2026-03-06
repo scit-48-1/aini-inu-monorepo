@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { X, Clock, MapPin, Users, Loader2, Footprints, Pencil, Trash2, Flame, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn, formatRemainingTime } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
@@ -207,11 +207,8 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
     try {
       const start = new Date(startTime);
       const expiry = new Date(start.getTime() + 60 * 60 * 1000);
-      const now = new Date();
-      const diff = expiry.getTime() - now.getTime();
-      if (diff <= 0) return '만료됨';
-      const mins = Math.floor(diff / 60000);
-      return `${mins}분 남음`;
+      const diff = expiry.getTime() - new Date().getTime();
+      return formatRemainingTime(diff);
     } catch {
       return '알 수 없음';
     }

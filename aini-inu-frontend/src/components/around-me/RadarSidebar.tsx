@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import { MapPin, Zap, Footprints, ArrowRight, Users, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { calculateDistance } from '@/lib/utils';
+import { cn, calculateDistance, formatRemainingTime } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
@@ -29,8 +28,7 @@ function getRemainingBadge(startTime: string, currentTime: Date): { label: strin
     const expiry = new Date(start.getTime() + 60 * 60 * 1000);
     const diff = expiry.getTime() - currentTime.getTime();
     if (diff <= 0) return { label: '만료됨', expired: true };
-    const mins = Math.floor(diff / 60000);
-    return { label: `${mins}분 남음`, expired: false };
+    return { label: formatRemainingTime(diff), expired: false };
   } catch {
     return { label: '알 수 없음', expired: false };
   }

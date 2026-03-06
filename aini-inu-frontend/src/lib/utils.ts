@@ -43,3 +43,26 @@ export function getRemainingTimeStr(startTime?: string, currentTime: Date = new 
   return '만료됨';
 }
 
+/**
+ * Formats a time difference (in milliseconds) as a human-readable remaining time.
+ * Returns '만료됨' for non-positive values.
+ * Decomposed parts:
+ *   - If >= 1 day: 'X일 X시간 X분 남음'
+ *   - If >= 1 hour: 'X시간 X분 남음'
+ *   - If >= 1 min: 'X분 남음'
+ *   - Less than 1 min: '1분 미만 남음'
+ */
+export function formatRemainingTime(diffMs: number): string {
+  if (diffMs <= 0) return '만료됨';
+  const totalMinutes = Math.floor(diffMs / 60000);
+  if (totalMinutes < 1) return '1분 미만 남음';
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const mins = totalMinutes % 60;
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days}일`);
+  if (hours > 0) parts.push(`${hours}시간`);
+  if (mins > 0) parts.push(`${mins}분`);
+  return parts.join(' ') + ' 남음';
+}
+
