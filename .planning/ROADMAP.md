@@ -123,9 +123,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
-- [ ] 06-03: TBD
+- [ ] 06-01-PLAN.md — Core hook rewrite (useRadarLogic): GPS acquisition, dual data fetch, manual refresh, expiry timer, EMERGENCY tab disabled
+- [ ] 06-02-PLAN.md — RecruitForm rewrite: thread create/edit with chatType toggle, pet selection, location, validation, pet-owner block
+- [ ] 06-03-PLAN.md — Map + sidebar rewire: ThreadMapResponse markers, hotspot overlay, thread detail popup with apply/cancel, paginated sidebar
 
 ### Phase 7: Walk Diary + Story
 **Goal**: Users can write walk diaries (with content limits and default public visibility), browse following feed, and view time-limited stories
