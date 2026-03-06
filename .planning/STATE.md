@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-03-06T09:34:28.951Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-03-06T09:38:15.107Z"
 last_activity: "2026-03-06 -- Completed plan 03-02 (3-step signup flow: Account->Profile->Pet->Complete)"
 progress:
   total_phases: 12
   completed_phases: 5
   total_plans: 21
-  completed_plans: 19
+  completed_plans: 20
   percent: 100
 ---
 
@@ -67,6 +67,7 @@ Progress: [██████████] 100%
 | Phase 05-pet-management PP03 | 1 | 1 tasks | 1 files |
 | Phase 05-pet-management P04 | 1 | 1 tasks | 2 files |
 | Phase 06-walk-threads P01 | 3 | 2 tasks | 3 files |
+| Phase 06-walk-threads P02 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -128,6 +129,8 @@ Recent decisions affecting current work:
 - [Phase 06-01]: useRadarLogic rewritten to import exclusively from @/api/threads and @/api/pets -- all old service imports removed
 - [Phase 06-01]: isExpired() exported as standalone utility function using ISO 8601 Date.parse() not HH:mm split
 - [Phase 06-01]: Temporary adapters in page.tsx preserve existing RadarMapSection/RadarSidebar compatibility until Plan 03 rewire
+- [Phase 06-walk-threads]: RecruitForm owns DaumPostcode internally rather than delegating to page.tsx modal
+- [Phase 06-walk-threads]: Non-pet-owner block is early return before form state -- simpler control flow (RecruitForm)
 
 ### Pending Todos
 
@@ -139,6 +142,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T09:34:28.949Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-03-06T09:38:15.105Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None

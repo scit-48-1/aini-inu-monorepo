@@ -61,20 +61,20 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 
 ### Walk Threads (Phase 6) — FR-WALK (모집/탐색)
 
-- [ ] **WALK-01**: 스레드 생성 — 비애견인 생성 불가 (FR-WALK-001/DEC-008, `THR-CREATE`)
-- [ ] **WALK-02**: 스레드 수정 (FR-WALK-001, `THR-PATCH`)
-- [ ] **WALK-03**: 스레드 삭제 (FR-WALK-001, `THR-DELETE`)
-- [ ] **WALK-04**: 스레드 목록 조회 (FR-WALK-001, `THR-LIST`)
+- [x] **WALK-01**: 스레드 생성 — 비애견인 생성 불가 (FR-WALK-001/DEC-008, `THR-CREATE`)
+- [x] **WALK-02**: 스레드 수정 (FR-WALK-001, `THR-PATCH`)
+- [x] **WALK-03**: 스레드 삭제 (FR-WALK-001, `THR-DELETE`)
+- [x] **WALK-04**: 스레드 목록 조회 (FR-WALK-001, `THR-LIST`)
 - [ ] **WALK-05**: 스레드 상세 조회 (FR-WALK-001, `THR-DETAIL`)
 - [ ] **WALK-06**: 스레드 신청 — 즉시 입장, 정원 초과 즉시 실패, 중복 멱등 (FR-WALK-002/DEC-012/013/014, `THR-APPLY-POST`)
 - [ ] **WALK-07**: 스레드 신청 취소 (FR-WALK-002, `THR-APPLY-DELETE`)
-- [ ] **WALK-08**: 지도 탐색 (FR-WALK-003, `THR-MAP-GET`)
-- [ ] **WALK-09**: 핫스팟 조회 (FR-WALK-003, `THR-HOTSPOT-GET`)
-- [ ] **WALK-10**: 스레드 생성 시 채팅 타입 필수 선택 — INDIVIDUAL/GROUP (FR-WALK-005/DEC-009)
-- [ ] **WALK-11**: `/around-me` 진입 시 GPS 1회 자동 획득, 실패 시 서울시청 fallback (FR-WALK-007/DEC-026/027/030)
-- [ ] **WALK-12**: 사용자 수동 재탐색만 허용, 자동 주기 갱신 없음 (FR-WALK-008/DEC-029)
-- [ ] **WALK-13**: 스레드 제목 최대 30자, 소개 최대 500자, 자동 만료 60분 (PRD §8.1/DEC-020)
-- [ ] **WALK-14**: 모집 작성 시 제목/시간/참여 반려견 필수 (PRD §9.2)
+- [x] **WALK-08**: 지도 탐색 (FR-WALK-003, `THR-MAP-GET`)
+- [x] **WALK-09**: 핫스팟 조회 (FR-WALK-003, `THR-HOTSPOT-GET`)
+- [x] **WALK-10**: 스레드 생성 시 채팅 타입 필수 선택 — INDIVIDUAL/GROUP (FR-WALK-005/DEC-009)
+- [x] **WALK-11**: `/around-me` 진입 시 GPS 1회 자동 획득, 실패 시 서울시청 fallback (FR-WALK-007/DEC-026/027/030)
+- [x] **WALK-12**: 사용자 수동 재탐색만 허용, 자동 주기 갱신 없음 (FR-WALK-008/DEC-029)
+- [x] **WALK-13**: 스레드 제목 최대 30자, 소개 최대 500자, 자동 만료 60분 (PRD §8.1/DEC-020)
+- [x] **WALK-14**: 모집 작성 시 제목/시간/참여 반려견 필수 (PRD §9.2)
 
 ### Walk Diary + Story (Phase 7) — FR-WALK (일기) + FR-COMMUNITY (스토리)
 
@@ -210,20 +210,20 @@ Deferred to future release. Tracked but not in current roadmap.
 | PET-06 | Phase 5 | Complete |
 | PET-07 | Phase 5 | Complete |
 | PET-08 | Phase 5 | Complete |
-| WALK-01 | Phase 6 | Pending |
-| WALK-02 | Phase 6 | Pending |
-| WALK-03 | Phase 6 | Pending |
-| WALK-04 | Phase 6 | Pending |
+| WALK-01 | Phase 6 | Complete |
+| WALK-02 | Phase 6 | Complete |
+| WALK-03 | Phase 6 | Complete |
+| WALK-04 | Phase 6 | Complete |
 | WALK-05 | Phase 6 | Pending |
 | WALK-06 | Phase 6 | Pending |
 | WALK-07 | Phase 6 | Pending |
-| WALK-08 | Phase 6 | Pending |
-| WALK-09 | Phase 6 | Pending |
-| WALK-10 | Phase 6 | Pending |
-| WALK-11 | Phase 6 | Pending |
-| WALK-12 | Phase 6 | Pending |
-| WALK-13 | Phase 6 | Pending |
-| WALK-14 | Phase 6 | Pending |
+| WALK-08 | Phase 6 | Complete |
+| WALK-09 | Phase 6 | Complete |
+| WALK-10 | Phase 6 | Complete |
+| WALK-11 | Phase 6 | Complete |
+| WALK-12 | Phase 6 | Complete |
+| WALK-13 | Phase 6 | Complete |
+| WALK-14 | Phase 6 | Complete |
 | DIARY-01 | Phase 7 | Pending |
 | DIARY-02 | Phase 7 | Pending |
 | DIARY-03 | Phase 7 | Pending |

@@ -234,7 +234,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 3. Authentication | 3/3 | Complete   | 2026-03-06 |
 | 4. Member Profile/Relations | 6/6 | Complete   | 2026-03-06 |
 | 5. Pet Management | 3/4 | In progress | - |
-| 6. Walk Threads | 1/3 | In Progress|  |
+| 6. Walk Threads | 2/3 | In Progress|  |
 | 7. Walk Diary + Story | 0/2 | Not started | - |
 | 8. Chat System | 0/3 | Not started | - |
 | 9. Community Feed | 0/2 | Not started | - |
