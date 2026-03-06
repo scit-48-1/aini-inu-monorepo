@@ -41,6 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class WalkThreadServiceCoverageTest {
@@ -147,6 +148,7 @@ class WalkThreadServiceCoverageTest {
         request.setDescription("수정된 설명");
 
         given(walkThreadRepository.findByIdAndStatusNot(1L, WalkThreadStatus.DELETED)).willReturn(Optional.of(thread));
+        given(walkThreadRepository.saveAndFlush(any(WalkThread.class))).willAnswer(inv -> inv.getArgument(0));
         given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED)).willReturn(0L);
         given(walkThreadPetRepository.findAllByThreadId(1L)).willReturn(List.of());
         given(walkThreadApplicationRepository.findAllByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED))
@@ -158,6 +160,45 @@ class WalkThreadServiceCoverageTest {
         // then
         assertThat(response.getTitle()).isEqualTo("수정된 제목");
         assertThat(response.getDescription()).isEqualTo("수정된 설명");
+        then(walkThreadRepository).should().saveAndFlush(any(WalkThread.class));
+    }
+
+    @Test
+    @DisplayName("petIds와 함께 제목/날짜/채팅유형을 수정하면 saveAndFlush 이후 pet을 교체한다")
+    void updateThread_withPetIds_flushesBeforePetDelete() {
+        // given
+        WalkThread thread = recruitingThread(1L, 1L, "서울숲", 37.5459, 127.0405, LocalDateTime.now().plusHours(2));
+        ThreadPatchRequest request = new ThreadPatchRequest();
+        request.setTitle("변경된 제목");
+        request.setDescription("변경된 설명");
+        request.setWalkDate(LocalDate.now().plusDays(3));
+        request.setStartTime(LocalDateTime.now().plusDays(3));
+        request.setEndTime(LocalDateTime.now().plusDays(3).plusHours(1));
+        request.setChatType("INDIVIDUAL");
+        request.setMaxParticipants(2);
+        request.setPetIds(List.of(201L, 202L));
+
+        given(walkThreadRepository.findByIdAndStatusNot(1L, WalkThreadStatus.DELETED)).willReturn(Optional.of(thread));
+        given(walkThreadRepository.saveAndFlush(any(WalkThread.class))).willAnswer(inv -> inv.getArgument(0));
+        given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED)).willReturn(0L);
+        given(walkThreadPetRepository.findAllByThreadId(1L)).willReturn(
+                List.of(WalkThreadPet.of(1L, 201L), WalkThreadPet.of(1L, 202L)));
+        given(walkThreadApplicationRepository.findAllByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED))
+                .willReturn(List.of());
+
+        // when
+        ThreadResponse response = walkThreadService.updateThread(1L, 1L, request);
+
+        // then — field changes reflected in response
+        assertThat(response.getTitle()).isEqualTo("변경된 제목");
+        assertThat(response.getDescription()).isEqualTo("변경된 설명");
+        assertThat(response.getChatType()).isEqualTo("INDIVIDUAL");
+        assertThat(response.getWalkDate()).isEqualTo(LocalDate.now().plusDays(3));
+
+        // then — saveAndFlush called BEFORE pet delete
+        var inOrder = org.mockito.Mockito.inOrder(walkThreadRepository, walkThreadPetRepository);
+        inOrder.verify(walkThreadRepository).saveAndFlush(any(WalkThread.class));
+        inOrder.verify(walkThreadPetRepository).deleteAllByThreadId(1L);
     }
 
     @Test

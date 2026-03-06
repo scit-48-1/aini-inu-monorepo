@@ -18,6 +18,7 @@ import scit.ainiinu.member.repository.MemberRepository;
 import scit.ainiinu.testsupport.IntegrationTestProfile;
 import scit.ainiinu.walk.dto.request.ThreadApplyRequest;
 import scit.ainiinu.walk.dto.request.ThreadCreateRequest;
+import scit.ainiinu.walk.dto.request.ThreadPatchRequest;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -194,5 +196,137 @@ class WalkThreadIntegrationTest {
                 .collect(Collectors.toSet());
         assertThat(activeMemberIds)
                 .containsExactlyInAnyOrder(author.getId(), applicant.getId());
+    }
+
+    @Test
+    @DisplayName("스레드 수정 시 제목/날짜/채팅유형과 petIds를 함께 변경하면 모든 필드가 DB에 반영된다")
+    void updateThread_fieldsAndPets_allPersistedAfterClear() throws Exception {
+        // given — create a thread first
+        Member member = memberRepository.save(Member.builder()
+                .email("patch-owner@test.com")
+                .nickname("patchowner")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+
+        String token = jwtTokenProvider.generateAccessToken(member.getId());
+
+        ThreadCreateRequest createReq = new ThreadCreateRequest();
+        createReq.setTitle("원래 제목");
+        createReq.setDescription("원래 설명");
+        createReq.setWalkDate(LocalDate.now().plusDays(1));
+        createReq.setStartTime(LocalDateTime.now().plusDays(1));
+        createReq.setEndTime(LocalDateTime.now().plusDays(1).plusHours(1));
+        createReq.setChatType("GROUP");
+        createReq.setMaxParticipants(5);
+        createReq.setAllowNonPetOwner(true);
+        createReq.setIsVisibleAlways(true);
+        ThreadCreateRequest.LocationRequest location = new ThreadCreateRequest.LocationRequest();
+        location.setPlaceName("서울숲");
+        location.setLatitude(37.54);
+        location.setLongitude(127.04);
+        location.setAddress("성동구");
+        createReq.setLocation(location);
+        createReq.setPetIds(List.of(1L));
+
+        String createBody = mockMvc.perform(post("/api/v1/threads")
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createReq)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        Long threadId = objectMapper.readTree(createBody).path("data").path("id").asLong();
+
+        // when — PATCH with title, walkDate, chatType AND petIds changed
+        ThreadPatchRequest patchReq = new ThreadPatchRequest();
+        patchReq.setTitle("수정된 제목");
+        patchReq.setDescription("수정된 설명");
+        patchReq.setWalkDate(LocalDate.now().plusDays(3));
+        patchReq.setStartTime(LocalDateTime.now().plusDays(3));
+        patchReq.setEndTime(LocalDateTime.now().plusDays(3).plusHours(2));
+        patchReq.setChatType("INDIVIDUAL");
+        patchReq.setMaxParticipants(2);
+        patchReq.setPetIds(List.of(2L));
+
+        mockMvc.perform(patch("/api/v1/threads/{threadId}", threadId)
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patchReq)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.title").value("수정된 제목"));
+
+        // then — re-GET must reflect ALL changes (not just pet changes)
+        mockMvc.perform(get("/api/v1/threads/{threadId}", threadId)
+                        .header("Authorization", "Bearer " + token))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.title").value("수정된 제목"))
+                .andExpect(jsonPath("$.data.description").value("수정된 설명"))
+                .andExpect(jsonPath("$.data.chatType").value("INDIVIDUAL"))
+                .andExpect(jsonPath("$.data.maxParticipants").value(2))
+                .andExpect(jsonPath("$.data.walkDate").value(LocalDate.now().plusDays(3).toString()))
+                .andExpect(jsonPath("$.data.petIds[0]").value(2));
+    }
+
+    @Test
+    @DisplayName("스레드 수정 시 petIds 없이 제목만 변경해도 DB에 반영된다")
+    void updateThread_fieldsOnlyWithoutPets_persisted() throws Exception {
+        // given
+        Member member = memberRepository.save(Member.builder()
+                .email("patch-nopet@test.com")
+                .nickname("patchnopet")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+
+        String token = jwtTokenProvider.generateAccessToken(member.getId());
+
+        ThreadCreateRequest createReq = new ThreadCreateRequest();
+        createReq.setTitle("기존 제목");
+        createReq.setDescription("기존 설명");
+        createReq.setWalkDate(LocalDate.now().plusDays(1));
+        createReq.setStartTime(LocalDateTime.now().plusDays(1));
+        createReq.setEndTime(LocalDateTime.now().plusDays(1).plusHours(1));
+        createReq.setChatType("GROUP");
+        createReq.setMaxParticipants(5);
+        createReq.setAllowNonPetOwner(true);
+        createReq.setIsVisibleAlways(true);
+        ThreadCreateRequest.LocationRequest location = new ThreadCreateRequest.LocationRequest();
+        location.setPlaceName("올림픽공원");
+        location.setLatitude(37.52);
+        location.setLongitude(127.12);
+        location.setAddress("송파구");
+        createReq.setLocation(location);
+        createReq.setPetIds(List.of(1L));
+
+        String createBody = mockMvc.perform(post("/api/v1/threads")
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createReq)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        Long threadId = objectMapper.readTree(createBody).path("data").path("id").asLong();
+
+        // when — PATCH only title (no petIds)
+        ThreadPatchRequest patchReq = new ThreadPatchRequest();
+        patchReq.setTitle("제목만 변경");
+
+        mockMvc.perform(patch("/api/v1/threads/{threadId}", threadId)
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patchReq)))
+                .andExpect(status().isOk());
+
+        // then — re-GET must reflect title change
+        mockMvc.perform(get("/api/v1/threads/{threadId}", threadId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.title").value("제목만 변경"))
+                .andExpect(jsonPath("$.data.description").value("기존 설명"));
     }
 }

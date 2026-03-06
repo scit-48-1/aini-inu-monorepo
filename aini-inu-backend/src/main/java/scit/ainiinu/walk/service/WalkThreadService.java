@@ -209,6 +209,12 @@ public class WalkThreadService {
                 request.getIsVisibleAlways()
         );
 
+        // Must flush before pet delete: deleteAllByThreadId uses @Modifying(clearAutomatically = true)
+        // which clears the persistence context. Hibernate AUTO-flush only flushes entities
+        // overlapping the query's table (WalkThreadPet), not WalkThread — so dirty field
+        // changes (title, date, chatType, etc.) would be lost without an explicit flush here.
+        thread = walkThreadRepository.saveAndFlush(thread);
+
         if (request.getPetIds() != null) {
             walkThreadPetRepository.deleteAllByThreadId(threadId);
             walkThreadPetRepository.flush();
