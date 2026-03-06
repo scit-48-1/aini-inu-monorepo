@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-04-PLAN.md
-last_updated: "2026-03-06T09:43:18.956Z"
-last_activity: "2026-03-06 -- Completed plan 03-02 (3-step signup flow: Account->Profile->Pet->Complete)"
+stopped_at: Completed 06-05-PLAN.md
+last_updated: "2026-03-06T11:35:36.580Z"
+last_activity: "2026-03-06 -- Completed plan 06-04 (backend blockers: duplicate key fix, applied field, expired filter, my/active endpoint)"
 progress:
   total_phases: 12
-  completed_phases: 6
-  total_plans: 21
-  completed_plans: 21
+  completed_phases: 5
+  total_plans: 24
+  completed_plans: 23
   percent: 100
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 6 of 12 (Walk Threads)
-Plan: 4 of 6 in current phase (06-04 complete)
+Plan: 5 of 6 in current phase (06-05 complete)
 Status: Executing
-Last activity: 2026-03-06 -- Completed plan 06-04 (backend blockers: duplicate key fix, applied field, expired filter, my/active endpoint)
+Last activity: 2026-03-06 -- Completed plan 06-05 (frontend bug fixes + date range filter)
 
-Progress: [██████████] 100%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -70,6 +70,7 @@ Progress: [██████████] 100%
 | Phase 06-walk-threads P02 | 2 | 2 tasks | 2 files |
 | Phase 06-walk-threads P03 | 186 | 2 tasks | 3 files |
 | Phase 06-walk-threads P04 | 4 | 2 tasks | 6 files |
+| Phase 06-walk-threads PP05 | 5 | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -138,6 +139,8 @@ Recent decisions affecting current work:
 - [Phase 06-walk-threads]: Owner actions (edit/delete) only in map popup (full ThreadResponse with authorId); removed from sidebar cards
 - [Phase 06-04]: SliceImpl used to reconstruct Slice after in-memory expired filter since SliceResponse.of() only accepts Slice<T>
 - [Phase 06-04]: applied field added to ThreadResponse as Boolean (not primitive) for null semantics in from() factory
+- [Phase 06-walk-threads]: isApplied reads selectedThread.applied directly instead of scanning applicants array
+- [Phase 06-walk-threads]: Date filter auto-refetches via useEffect watching dateFrom/dateTo; JPQL IS NULL OR pattern for optional date params
 
 ### Pending Todos
 
@@ -149,6 +152,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T09:43:18.953Z
-Stopped at: Completed 06-04-PLAN.md
+Last session: 2026-03-06T11:35:36.577Z
+Stopped at: Completed 06-05-PLAN.md
 Resume file: None

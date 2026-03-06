@@ -65,9 +65,9 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 - [x] **WALK-02**: 스레드 수정 (FR-WALK-001, `THR-PATCH`)
 - [x] **WALK-03**: 스레드 삭제 (FR-WALK-001, `THR-DELETE`)
 - [x] **WALK-04**: 스레드 목록 조회 (FR-WALK-001, `THR-LIST`)
-- [ ] **WALK-05**: 스레드 상세 조회 (FR-WALK-001, `THR-DETAIL`)
-- [ ] **WALK-06**: 스레드 신청 — 즉시 입장, 정원 초과 즉시 실패, 중복 멱등 (FR-WALK-002/DEC-012/013/014, `THR-APPLY-POST`)
-- [ ] **WALK-07**: 스레드 신청 취소 (FR-WALK-002, `THR-APPLY-DELETE`)
+- [x] **WALK-05**: 스레드 상세 조회 (FR-WALK-001, `THR-DETAIL`)
+- [x] **WALK-06**: 스레드 신청 — 즉시 입장, 정원 초과 즉시 실패, 중복 멱등 (FR-WALK-002/DEC-012/013/014, `THR-APPLY-POST`)
+- [x] **WALK-07**: 스레드 신청 취소 (FR-WALK-002, `THR-APPLY-DELETE`)
 - [x] **WALK-08**: 지도 탐색 (FR-WALK-003, `THR-MAP-GET`)
 - [x] **WALK-09**: 핫스팟 조회 (FR-WALK-003, `THR-HOTSPOT-GET`)
 - [x] **WALK-10**: 스레드 생성 시 채팅 타입 필수 선택 — INDIVIDUAL/GROUP (FR-WALK-005/DEC-009)
@@ -214,9 +214,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | WALK-02 | Phase 6 | Complete |
 | WALK-03 | Phase 6 | Complete |
 | WALK-04 | Phase 6 | Complete |
-| WALK-05 | Phase 6 | Pending |
-| WALK-06 | Phase 6 | Pending |
-| WALK-07 | Phase 6 | Pending |
+| WALK-05 | Phase 6 | Complete |
+| WALK-06 | Phase 6 | Complete |
+| WALK-07 | Phase 6 | Complete |
 | WALK-08 | Phase 6 | Complete |
 | WALK-09 | Phase 6 | Complete |
 | WALK-10 | Phase 6 | Complete |
