@@ -1,9 +1,9 @@
 ---
-status: diagnosed
+status: resolved
 phase: 05-pet-management
 source: [05-01-SUMMARY.md, 05-02-SUMMARY.md, 05-03-SUMMARY.md]
 started: 2026-03-06T00:00:00Z
-updated: 2026-03-06T06:30:00Z
+updated: 2026-03-06T09:00:00Z
 ---
 
 ## Current Test
@@ -68,7 +68,7 @@ skipped: 0
 ## Gaps
 
 - truth: "Pet image upload works during pet registration"
-  status: failed
+  status: resolved
   reason: "User reported: 펫 등록 폼의 항목은 모두 뜨지만... 펫 이미지 등록에 실패하네.. 백엔드 문제일까?"
   severity: major
   test: 4
@@ -83,7 +83,7 @@ skipped: 0
   debug_session: ".planning/debug/pet-image-upload-fails.md"
 
 - truth: "Edit modal pre-fills birthDate with the pet's existing value"
-  status: failed
+  status: resolved
   reason: "User reported: 다른것은 모두 잘 되는데, 수정하기를 누른 순간 birthDate만 빈값으로 되어 있어. 그래서 수정을 원한다면 반드시 birthDate을 지정해줘야하네"
   severity: major
   test: 7
