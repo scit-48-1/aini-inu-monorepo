@@ -16,12 +16,14 @@ interface NeighborsModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialType: 'FOLLOWERS' | 'FOLLOWING';
+  memberId?: number;  // optional — undefined means current logged-in user (/members/me/...)
 }
 
 export const NeighborsModal: React.FC<NeighborsModalProps> = ({
   isOpen,
   onClose,
   initialType,
+  memberId,
 }) => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'FOLLOWERS' | 'FOLLOWING'>(initialType);
@@ -44,8 +46,8 @@ export const NeighborsModal: React.FC<NeighborsModalProps> = ({
     setIsLoading(true);
     try {
       const res = type === 'FOLLOWERS'
-        ? await getFollowers({ page: pageNum, size: 20 })
-        : await getFollowing({ page: pageNum, size: 20 });
+        ? await getFollowers({ memberId, page: pageNum, size: 20 })
+        : await getFollowing({ memberId, page: pageNum, size: 20 });
       setUsers(prev => reset ? res.content : [...prev, ...res.content]);
       setHasMore(res.hasNext);
     } catch (e) {

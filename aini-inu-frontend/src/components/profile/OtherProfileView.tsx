@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { getMember, getMemberPets, getFollowing } from '@/api/members';
+import { getMember, getMemberPets, getFollowStatus, getFollowers } from '@/api/members';
 import type { MemberResponse, PetResponse } from '@/api/members';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileTabs } from '@/components/profile/ProfileTabs';
@@ -26,7 +26,7 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
   const [error, setError] = useState<string | null>(null);
 
   const [followerCount, setFollowerCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
+  const [followingCount] = useState(0);
   const [initialIsFollowing, setInitialIsFollowing] = useState(false);
   const [followStateLoaded, setFollowStateLoaded] = useState(false);
 
@@ -44,6 +44,10 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
       ]);
       setMember(memberData);
       setPets(petsData);
+      // Get accurate follower count for this member
+      getFollowers({ memberId, size: 1000 }).then(res => {
+        setFollowerCount(res.content.length);
+      }).catch(() => {});
     } catch {
       setError('프로필을 불러오는데 실패했습니다.');
     } finally {
@@ -51,12 +55,11 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
     }
   }, [memberId]);
 
-  // Determine follow state by checking if memberId is in the current user's following list
+  // Determine follow state using dedicated follow-status endpoint
   const fetchFollowState = useCallback(async () => {
     try {
-      const res = await getFollowing({ size: 100 });
-      const isFollowing = res.content.some((f) => f.id === memberId);
-      setInitialIsFollowing(isFollowing);
+      const res = await getFollowStatus(memberId);
+      setInitialIsFollowing(res.following || res.isFollowing);
     } catch {
       // Non-critical: default to not following
       setInitialIsFollowing(false);
@@ -153,6 +156,7 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
         isOpen={neighborsModalOpen}
         onClose={() => setNeighborsModalOpen(false)}
         initialType={neighborsModalType}
+        memberId={memberId}
       />
     </div>
   );
