@@ -63,12 +63,24 @@ Rewire all member profile and relations screens to the Phase 2 `api/members.ts` 
 ### Walk activity stats (FR-MEMBER-005)
 - Displayed on own profile
 - Uses `GET /members/me/stats/walk` returning WalkStatsResponse with daily walk counts
-- Visual representation: activity heatmap or simple stat cards
+- Visual representation: GitHub-style activity heatmap (matches existing dashboard implementation)
 
 ### Member search (FR-MEMBER-006)
-- Search UI needed (no existing search page/component)
+- Sidebar에 회원 검색 전용 버튼 추가 (Search 아이콘)
+- 클릭 시 검색 모달 오픈 — search-as-you-type with debounce
 - Search via `GET /members/search?q={query}` with pagination
 - Results show member avatar, nickname, manner temperature
+- 결과 클릭 시 해당 회원 프로필 페이지로 이동 (`/profile/{memberId}`)
+
+### Profile edit form (FR-MEMBER-001)
+- 모든 편집 가능 필드를 단일 폼에 배치 (섹션/탭 분리 없음)
+- Fields: nickname, profileImageUrl, linkedNickname, phone, age, gender, mbti, personality, selfIntroduction, personalityTypeIds
+
+### Type mapping strategy
+- 기존 `UserType` (MSW 시대 타입)을 `MemberResponse` (백엔드 Swagger 기반)에 맞춰 정리
+- `UserType`의 MSW 전용 필드 제거/매핑: `avatar` → `profileImageUrl`, `about` → `selfIntroduction`, `mannerScore` → `mannerTemperature`, `handle` → 제거, `location` → 제거
+- `id: string` → `id: number`로 전환 (백엔드 기준)
+- 컴포넌트들이 `MemberResponse`를 직접 사용하도록 전환 (어댑터 레이어 없이)
 
 ### PRD SS8.3 UI/UX 5-state coverage
 - Default: profile loaded with all sections visible
@@ -78,11 +90,10 @@ Rewire all member profile and relations screens to the Phase 2 `api/members.ts` 
 - Success: toast on profile edit save, follow/unfollow actions
 
 ### Claude's Discretion
-- Exact field layout in ProfileEditModal (form grouping, order)
-- Walk stats visualization (heatmap vs cards vs chart)
-- Member search placement (dedicated page vs modal vs sidebar section)
 - Loading skeleton design
-- Exact type mapping strategy (adapt UserType or create new MemberProfile type)
+- Search modal 내부 레이아웃 및 debounce 간격
+- ProfileEditModal 내 필드 순서 및 간격
+- Sidebar 검색 버튼 위치 (nav 영역 vs 하단 액션 영역)
 
 </decisions>
 
