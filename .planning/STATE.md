@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 07-03-PLAN.md
-last_updated: "2026-03-06T18:26:31.299Z"
+stopped_at: "Completed 07-04-PLAN.md (checkpoint:human-verify at Task 3)"
+last_updated: "2026-03-06T19:19:34.065Z"
 last_activity: 2026-03-07 -- Completed plan 07-02 (diary viewer & story feed)
 progress:
   total_phases: 12
   completed_phases: 7
-  total_plans: 31
-  completed_plans: 31
+  total_plans: 32
+  completed_plans: 32
   percent: 100
 ---
 
@@ -79,6 +79,7 @@ Progress: [██████████] 100%
 | Phase 07 P01 | 4 | 2 tasks | 7 files |
 | Phase 07 P02 | 5 | 2 tasks | 9 files |
 | Phase 07-walk-diary-story P03 | 3 | 1 tasks | 1 files |
+| Phase 07-walk-diary-story P04 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -162,6 +163,9 @@ Recent decisions affecting current work:
 - [Phase 07-02]: Member boundary tracking via start-index array for O(1) auto-advance between members in story mode
 - [Phase 07-02]: StoryArea diary count badge (amber) when group has >1 diary, bookmark icon otherwise
 - [Phase 07-walk-diary-story]: window.confirm Korean dialog wraps handleDelete in DiaryBookModal onDelete prop; setSelectedHistory(null) closes modal on success
+- [Phase 07-walk-diary-story]: onToggleVisibility prop added to DiaryPageRenderer -- allows visibility badge click outside edit mode to call updateDiary directly
+- [Phase 07-walk-diary-story]: DesktopBookEngine editMode prop removed -- no longer needed since pageflip props are now always-off constants
+- [Phase 07-walk-diary-story]: Nav arrows changed from fixed to absolute positioning to prevent overlap with RIGHT page edit content
 
 ### Pending Todos
 
@@ -173,6 +177,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T18:22:24.781Z
-Stopped at: Completed 07-03-PLAN.md
+Last session: 2026-03-06T19:19:34.062Z
+Stopped at: Completed 07-04-PLAN.md (checkpoint:human-verify at Task 3)
 Resume file: None
