@@ -67,10 +67,10 @@ export default function AroundMePage() {
 
   // Refresh using map's current visual center
   const handleRefreshFromMap = useCallback(() => {
-    const [lat, lng] = mapCenterRef.current;
-    setSearchCoordinates([lat, lng]);
+    const coords: [number, number] = [mapCenterRef.current[0], mapCenterRef.current[1]];
+    setSearchCoordinates(coords);
     setLocation('현재 위치');
-    handleRefresh();
+    handleRefresh(coords);
   }, [setSearchCoordinates, setLocation, handleRefresh]);
 
   if (!mounted || gpsLoading || isLoading) {
@@ -111,6 +111,7 @@ export default function AroundMePage() {
             onRefreshDetail={handleRefresh}
             radius={radius}
             onMoveEnd={handleMapMoveEnd}
+            myActiveThread={myActiveThread}
           />
         )}
 
@@ -127,6 +128,7 @@ export default function AroundMePage() {
             onLoadMore={loadMore}
             onDeleteThread={handleDeleteThread}
             onEditThread={startEdit}
+            myActiveThread={myActiveThread}
           />
         )}
 

@@ -15,6 +15,7 @@ import type {
   ThreadMapResponse,
   ThreadHotspotResponse,
   ThreadResponse,
+  ThreadSummaryResponse,
 } from '@/api/threads';
 import type { PetResponse } from '@/api/pets';
 import { applyToThread, cancelApplication } from '@/api/threads';
@@ -85,6 +86,7 @@ interface RadarMapSectionProps {
   onRefreshDetail: () => void;
   radius?: number;
   onMoveEnd?: (lat: number, lng: number) => void;
+  myActiveThread?: ThreadSummaryResponse | null;
 }
 
 export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
@@ -102,6 +104,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
   onRefreshDetail,
   radius,
   onMoveEnd,
+  myActiveThread,
 }) => {
   const router = useRouter();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -126,6 +129,15 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
     lat: m.latitude,
     lng: m.longitude,
   }));
+
+  // Always include my active thread marker on the map (even if outside search area)
+  if (myActiveThread && !threadMarkers.some((m) => m.id === String(myActiveThread.id))) {
+    threadMarkers.push({
+      id: String(myActiveThread.id),
+      lat: myActiveThread.latitude,
+      lng: myActiveThread.longitude,
+    });
+  }
 
   // Convert hotspots to map markers using Seoul district coordinate lookup
   const mappedHotspots = hotspots.filter((h) => SEOUL_DISTRICT_COORDS[h.region]);
@@ -245,6 +257,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
           onMarkerClick={handleMapMarkerClick}
           radiusKm={radius}
           onMoveEnd={onMoveEnd}
+          selectedMarkerId={selectedThread ? String(selectedThread.id) : null}
         />
       </div>
 

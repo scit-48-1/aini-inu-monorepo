@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MapPin, Zap, Footprints, ArrowRight, Users, Loader2 } from 'lucide-react';
+import { MapPin, Zap, Footprints, ArrowRight, Users, Loader2, Crown } from 'lucide-react';
 import { cn, calculateDistance, formatRemainingTime } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
@@ -20,6 +20,7 @@ interface RadarSidebarProps {
   onLoadMore: () => void;
   onDeleteThread: (threadId: number) => void;
   onEditThread: (threadId: number) => void;
+  myActiveThread?: ThreadSummaryResponse | null;
 }
 
 function getRemainingBadge(startTime: string, currentTime: Date): { label: string; expired: boolean } {
@@ -51,11 +52,17 @@ export const RadarSidebar: React.FC<RadarSidebarProps> = ({
   onLoadMore,
   onDeleteThread: _onDeleteThread,
   onEditThread: _onEditThread,
+  myActiveThread,
 }) => {
   const [sortBy, setSortBy] = useState<'DISTANCE' | 'TIME'>('DISTANCE');
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const sortedThreads = [...threads].sort((a, b) => {
+  // Exclude my active thread from main list (it's pinned at top separately)
+  const filteredThreads = myActiveThread
+    ? threads.filter((t) => t.id !== myActiveThread.id)
+    : threads;
+
+  const sortedThreads = [...filteredThreads].sort((a, b) => {
     if (sortBy === 'DISTANCE') {
       const da = calculateDistance(coordinates[0], coordinates[1], a.latitude, a.longitude);
       const db = calculateDistance(coordinates[0], coordinates[1], b.latitude, b.longitude);
@@ -107,6 +114,50 @@ export const RadarSidebar: React.FC<RadarSidebarProps> = ({
           </button>
         </div>
       </div>
+
+      {/* My active thread — pinned at top */}
+      {myActiveThread && (
+        <div className="px-1">
+          <Card
+            interactive
+            className="relative p-6 bg-gradient-to-br from-amber-50 to-white border-2 border-amber-300 shadow-xl rounded-[48px] ring-2 ring-amber-200/50"
+            onClick={() => onCardClick(myActiveThread.id)}
+          >
+            {/* Pinned badge */}
+            <div className="absolute top-4 right-4 flex items-center gap-1 bg-amber-500 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-md">
+              <Crown size={10} /> 내 모집글
+            </div>
+
+            {/* Content */}
+            <div className="flex gap-5">
+              <div className="relative shrink-0">
+                <div className="w-20 h-20 rounded-[32px] bg-amber-100 flex items-center justify-center border-4 border-white shadow-xl overflow-hidden">
+                  <Footprints size={28} className="text-amber-400" />
+                </div>
+              </div>
+              <div className="flex-1 space-y-2 pt-1 pr-16">
+                <Typography variant="h3" className="text-lg font-black text-navy-900 line-clamp-1">
+                  {myActiveThread.title}
+                </Typography>
+                <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-bold">
+                  <MapPin size={10} className="text-amber-500 shrink-0" />
+                  <span className="truncate max-w-[140px]">{myActiveThread.placeName}</span>
+                  <span className="text-amber-500/40 mx-1">|</span>
+                  <span className="text-amber-600 font-black">
+                    {formatDistance(calculateDistance(coordinates[0], coordinates[1], myActiveThread.latitude, myActiveThread.longitude))}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-xs font-black text-zinc-300 uppercase tracking-widest">
+                  <Users size={13} /> {myActiveThread.currentParticipants}/{myActiveThread.maxParticipants}
+                  <Badge variant="amber" className="bg-zinc-50 text-zinc-500 border-none text-[10px] px-2">
+                    {myActiveThread.chatType === 'INDIVIDUAL' ? '1:1' : '그룹'}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Thread list */}
       <div className="space-y-6 pb-24 px-1">

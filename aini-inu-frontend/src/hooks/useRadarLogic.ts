@@ -192,9 +192,9 @@ export function useRadarLogic() {
   // ---------------------------------------------------------------
   // Manual re-search (DEC-029: only way to refetch)
   // ---------------------------------------------------------------
-  const handleRefresh = useCallback(async () => {
+  const handleRefresh = useCallback(async (overrideCoords?: [number, number]) => {
     setIsRefreshing(true);
-    const coords = searchCoordinates ?? coordinates;
+    const coords = overrideCoords ?? searchCoordinates ?? coordinates;
     await fetchThreadData(coords, dateFrom, dateTo, radius);
     getMyActiveThread()
       .then(list => setMyActiveThread(list.length > 0 ? list[0] : null))
