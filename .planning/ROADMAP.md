@@ -102,11 +102,11 @@ Plans:
   2. User can edit and delete existing pets, with the pet list reflecting changes immediately
   3. User can designate a main pet and the selection persists across page loads
   4. Registration is blocked when the user already has 10 pets, with a clear message explaining the limit
-**Plans**: 3 plans
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md — Fix PetResponse type, create useMasterData hook + PetForm, rewire ProfileDogs from DogType to PetResponse
+- [ ] 05-02-PLAN.md — Rewrite pet modals (register/detail) for PetResponse, add delete confirmation + main-switch, wire mutations in MyProfileView
 
 ### Phase 6: Walk Threads
 **Goal**: Users can create, browse, join, and manage walk threads with map-based exploration and proper GPS/chat-type/validation enforcement
