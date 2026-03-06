@@ -9,11 +9,13 @@ import { Typography } from '@/components/ui/Typography';
 import { useTheme } from 'next-themes';
 import { CreatePostModal } from './CreatePostModal';
 import { useProfile } from '@/hooks/useProfile';
+import { useAuth } from '@/providers/AuthProvider';
 
 const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const { theme } = useTheme();
   const { profile: userProfile } = useProfile();
+  const { logout } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -80,9 +82,12 @@ const Sidebar: React.FC = () => {
           >
             <Plus size={20} />
           </button>
-          <Link href="/" className="p-4 text-zinc-300 hover:text-error transition-colors">
+          <button
+            onClick={() => logout()}
+            className="p-4 text-zinc-300 hover:text-error transition-colors"
+          >
             <LogOut size={20} />
-          </Link>
+          </button>
         </div>
       </aside>
 
