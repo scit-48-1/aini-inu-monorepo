@@ -306,6 +306,9 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
             <div className="grid grid-cols-2 gap-4 py-5 border-y border-zinc-50">
               <div className="flex items-center gap-3 text-sm font-black text-zinc-600">
                 <Clock size={16} className="text-amber-500" />
+                {selectedThread.walkDate && (
+                  <span className="text-zinc-400 font-bold mr-1">{selectedThread.walkDate}</span>
+                )}
                 {formatTime(selectedThread.startTime)} - {formatTime(selectedThread.endTime)}
               </div>
               <div className="flex items-center gap-3 text-sm font-black text-zinc-600">
@@ -335,25 +338,34 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
                     </Typography>
                   </div>
                   {isConfirmingDelete ? (
-                    <div className="flex gap-2 animate-in fade-in duration-200">
-                      <Button
-                        variant="outline"
-                        fullWidth
-                        size="lg"
-                        className="h-12 rounded-[20px] border-zinc-200 text-zinc-500"
-                        onClick={() => setIsConfirmingDelete(false)}
-                      >
-                        취소
-                      </Button>
-                      <Button
-                        variant="outline"
-                        fullWidth
-                        size="lg"
-                        className="h-12 rounded-[20px] bg-red-500 border-red-500 text-white hover:bg-red-600"
-                        onClick={() => { onDeleteThread(selectedThread.id); setIsConfirmingDelete(false); }}
-                      >
-                        <Trash2 size={16} className="mr-2" /> 삭제 확인
-                      </Button>
+                    <div className="space-y-3 animate-in fade-in duration-200">
+                      <div className="bg-red-50 border border-red-200 rounded-[20px] px-4 py-3 flex items-start gap-2">
+                        <span className="text-red-500 text-lg leading-none mt-0.5">&#9888;</span>
+                        <div>
+                          <p className="text-sm font-black text-red-700">정말 삭제하시겠습니까?</p>
+                          <p className="text-xs text-red-400 mt-0.5">삭제하면 되돌릴 수 없습니다.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          fullWidth
+                          size="lg"
+                          className="h-12 rounded-[20px] border-zinc-200 text-zinc-500"
+                          onClick={() => setIsConfirmingDelete(false)}
+                        >
+                          취소
+                        </Button>
+                        <Button
+                          variant="outline"
+                          fullWidth
+                          size="lg"
+                          className="h-12 rounded-[20px] bg-red-500 border-red-500 text-white hover:bg-red-600"
+                          onClick={() => { onDeleteThread(selectedThread.id); setIsConfirmingDelete(false); }}
+                        >
+                          <Trash2 size={16} className="mr-2" /> 삭제 확인
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <div className="flex gap-2">
