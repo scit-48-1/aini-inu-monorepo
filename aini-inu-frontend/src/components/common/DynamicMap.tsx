@@ -14,16 +14,14 @@ interface DynamicMapProps {
   hideCircle?: boolean; // 레이다 원 숨김 옵션 추가
   interactive?: boolean; // 지도 상호작용 여부 추가
   radiusKm?: number; // 반경 (km), 기본 2.5
+  onMoveEnd?: (lat: number, lng: number) => void; // 드래그 후 좌표 콜백
 }
 
-function MapController({ center, zoom }: { center: [number, number]; zoom: number }) {
+function MapController({ center, zoom, onMoveEnd }: { center: [number, number]; zoom: number; onMoveEnd?: (lat: number, lng: number) => void }) {
   const map = useMap();
   useEffect(() => {
     map.setView(center, zoom, { animate: true });
-    // 2.5km 반경 가두기
-    const bounds = L.latLng(center).toBounds(5000); 
-    map.setMaxBounds(bounds);
-    
+
     // 레이아웃 변경 시 지도 크기 재계산 (애니메이션 대응)
     const timer = setTimeout(() => {
       map.invalidateSize();
@@ -33,7 +31,7 @@ function MapController({ center, zoom }: { center: [number, number]; zoom: numbe
     const resizeObserver = new ResizeObserver(() => {
       map.invalidateSize();
     });
-    
+
     const container = map.getContainer();
     resizeObserver.observe(container);
 
@@ -42,10 +40,22 @@ function MapController({ center, zoom }: { center: [number, number]; zoom: numbe
       resizeObserver.unobserve(container);
     };
   }, [center, zoom, map]);
+
+  // moveend 이벤트: 드래그 후 중심 좌표 콜백
+  useEffect(() => {
+    if (!onMoveEnd) return;
+    const handler = () => {
+      const c = map.getCenter();
+      onMoveEnd(Number(c.lat.toFixed(6)), Number(c.lng.toFixed(6)));
+    };
+    map.on('moveend', handler);
+    return () => { map.off('moveend', handler); };
+  }, [map, onMoveEnd]);
+
   return null;
 }
 
-export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideCircle, interactive = true, radiusKm }: DynamicMapProps) {
+export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideCircle, interactive = true, radiusKm, onMoveEnd }: DynamicMapProps) {
   
   const createCustomIcon = (imageUrl: string, isEmergency: boolean) => {
     return L.divIcon({
@@ -89,10 +99,9 @@ export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideC
         touchZoom={interactive}
         boxZoom={interactive}
         keyboard={interactive}
-        maxBoundsViscosity={1.0}
         preferCanvas={true}
       >
-        <MapController center={center} zoom={zoom} />
+        <MapController center={center} zoom={zoom} onMoveEnd={onMoveEnd} />
         
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
