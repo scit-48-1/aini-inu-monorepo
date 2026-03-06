@@ -39,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Bootstrap: on mount, restore session from persisted refreshToken
   useEffect(() => {
     async function bootstrap() {
+      await useAuthStore.persist.rehydrate();
       const storedRefreshToken = getRefreshToken();
       const storedAccessToken = getAccessToken();
 

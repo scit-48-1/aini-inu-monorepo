@@ -30,6 +30,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'aini-inu-auth',
       partialize: (state) => ({ refreshToken: state.refreshToken }),
+      skipHydration: true,
     }
   )
 );
