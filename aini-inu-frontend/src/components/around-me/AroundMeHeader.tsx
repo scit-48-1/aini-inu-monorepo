@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { MapPin, Edit2, Footprints, PlusCircle, Siren } from 'lucide-react';
+import { MapPin, Edit2, Footprints, PlusCircle, Siren, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Typography } from '@/components/ui/Typography';
 
@@ -12,13 +12,17 @@ interface AroundMeHeaderProps {
   onLocationClick: () => void;
   activeTab: SubView;
   onTabChange: (tab: SubView) => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
   currentLocation,
   onLocationClick,
   activeTab,
-  onTabChange
+  onTabChange,
+  onRefresh,
+  isRefreshing = false,
 }) => {
   return (
     <div className="p-6 md:px-10 md:py-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 border-b border-card-border bg-white sticky top-0 z-20 shadow-sm transition-all">
@@ -30,22 +34,36 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
           </h2>
         </div>
         <div className="h-4 w-px bg-zinc-100 hidden sm:block mx-2" />
-        <button onClick={onLocationClick} className="text-black font-black text-xs flex items-center gap-2 bg-zinc-50/50 px-4 py-2 rounded-full border border-zinc-100 hover:bg-white hover:border-amber-500 hover:shadow-sm transition-all active:scale-95 group">
-          <MapPin size={14} className="text-amber-500" /> {currentLocation} <Edit2 size={10} className="text-zinc-300 group-hover:text-amber-500 ml-1" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={onLocationClick} className="text-black font-black text-xs flex items-center gap-2 bg-zinc-50/50 px-4 py-2 rounded-full border border-zinc-100 hover:bg-white hover:border-amber-500 hover:shadow-sm transition-all active:scale-95 group">
+            <MapPin size={14} className="text-amber-500" /> {currentLocation} <Edit2 size={10} className="text-zinc-300 group-hover:text-amber-500 ml-1" />
+          </button>
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              title="재탐색"
+              className="flex items-center gap-1.5 text-black font-black text-xs bg-zinc-50/50 px-3 py-2 rounded-full border border-zinc-100 hover:bg-white hover:border-amber-500 hover:shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={14} className={cn('text-amber-500', isRefreshing && 'animate-spin')} />
+              <span>재탐색</span>
+            </button>
+          )}
+        </div>
       </div>
       <nav className="flex bg-zinc-50/50 p-1 rounded-xl border border-zinc-100">
-        {[ 
-          { id: 'FIND', label: '산책', icon: Footprints }, 
-          { id: 'RECRUIT', label: '모집', icon: PlusCircle }, 
-          { id: 'EMERGENCY', label: '제보', icon: Siren } 
+        {[
+          { id: 'FIND', label: '산책', icon: Footprints },
+          { id: 'RECRUIT', label: '모집', icon: PlusCircle },
+          { id: 'EMERGENCY', label: '제보', icon: Siren },
         ].map(tab => (
-          <button 
-            key={tab.id} 
-            onClick={() => onTabChange(tab.id as SubView)} 
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id as SubView)}
             className={cn(
-              "px-6 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-2", 
-              activeTab === tab.id ? 'bg-amber-500 text-black shadow-md' : 'text-black hover:bg-zinc-50'
+              'px-6 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-2',
+              activeTab === tab.id ? 'bg-amber-500 text-black shadow-md' : 'text-black hover:bg-zinc-50',
+              tab.id === 'EMERGENCY' && 'opacity-50',
             )}
           >
             <tab.icon size={16} /> {tab.label}
