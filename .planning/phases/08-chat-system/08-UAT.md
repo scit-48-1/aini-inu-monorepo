@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 08-chat-system
 source: [08-01-SUMMARY.md, 08-02-SUMMARY.md, 08-03-SUMMARY.md]
 started: 2026-03-07T00:00:00Z
@@ -82,34 +82,70 @@ skipped: 2
   reason: "User reported: 메시지가 계속 보였다 안보였다하고 있어. 서버에 기록을 보니 계속 호출하고 있는 로그가 보이고, 심지어 나의 메시지는 전송이 안되고 있어."
   severity: blocker
   test: 3
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Polling fallback replaces entire messages array every 5s via naive setMessages, triggering cascading re-renders in mark-read useEffect (infinite API calls) and MessageList scroll effect (visual flicker)"
+  artifacts:
+    - path: "aini-inu-frontend/src/hooks/useChatWebSocket.ts"
+      issue: "Polling calls setMessages(result.content) doing wholesale replacement instead of merging/diffing"
+    - path: "aini-inu-frontend/src/store/useChatStore.ts"
+      issue: "setMessages is naive setter with no shallow-equality check, always creates new array reference"
+    - path: "aini-inu-frontend/src/app/chat/[id]/page.tsx"
+      issue: "Mark-read useEffect depends on messages array reference, fires every poll cycle"
+    - path: "aini-inu-frontend/src/components/chat/MessageList.tsx"
+      issue: "Auto-scroll useEffect depends on messages array, fires every poll cycle causing scroll jumps"
+  missing:
+    - "Polling should merge not replace — use addMessage with dedup instead of setMessages"
+    - "setMessages needs shallow equality check before updating state"
+    - "Mark-read effect should depend on latestMessageId (primitive) not messages array"
+    - "Auto-scroll effect should depend on messages.length or latest ID not full array"
+  debug_session: ".planning/debug/chat-flickering-infinite-loop.md"
 - truth: "Leave room redirects cleanly without persistent errors, and room is removed from list"
   status: failed
   reason: "User reported: 채팅방은 나가지는데, 나가겠냐는 모달/dialog 디자인이 서비스 디자인과 안 맞음. 나간 이후 어느 페이지를 가든 채팅방 접속 권한이 없다는 알림이 계속 나타나고, 챗룸 목록에서 해당 채팅방이 여전히 존재함."
   severity: blocker
   test: 9
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "handleLeave only calls leaveRoom API and navigates — does not disconnect WebSocket, clear store state, or remove room from cached list. window.confirm used instead of existing ConfirmModal component."
+  artifacts:
+    - path: "aini-inu-frontend/src/app/chat/[id]/page.tsx"
+      issue: "handleLeave does not disconnect WS, does not clear store, uses window.confirm"
+    - path: "aini-inu-frontend/src/hooks/useChatWebSocket.ts"
+      issue: "No exposed disconnect() method for imperative teardown; cleanup only via React effect unmount"
+    - path: "aini-inu-frontend/src/store/useChatStore.ts"
+      issue: "Missing removeRoom(roomId) action to evict room from cached rooms array"
+    - path: "aini-inu-frontend/src/components/chat/ChatList.tsx"
+      issue: "No re-fetch trigger when navigating back to /chat; relies on stale mount-time data"
+  missing:
+    - "Expose disconnect() from useChatWebSocket or set enabled flag to false before navigating"
+    - "Add removeRoom(roomId) action to useChatStore and call it in handleLeave"
+    - "ChatList should re-fetch rooms on navigation or invalidate cache on leave"
+    - "Replace window.confirm with existing ConfirmModal component (variant=danger)"
+  debug_session: ".planning/debug/chat-leave-room-bugs.md"
 - truth: "Dashboard recent chat rooms display correctly at any count and navigate properly on click"
   status: failed
   reason: "User reported: 최근 산책한 친구들 목록이 1개일 때 엄청 크게 보임 (5개 이상일 때는 적절). 클릭하면 '프로필을 불러오는데 실패했습니다' 에러 표시됨."
   severity: major
   test: 11
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Flex cards lack flex-shrink-0 so single item stretches to fill container. Dashboard maps chatRoomId as friend id instead of partner memberId, causing profile page to request non-existent member."
+  artifacts:
+    - path: "aini-inu-frontend/src/components/dashboard/RecentFriends.tsx"
+      issue: "Cards have min-w-[160px] but no max-w or flex-shrink-0, single item stretches"
+    - path: "aini-inu-frontend/src/app/dashboard/page.tsx"
+      issue: "Maps id: String(r.chatRoomId) instead of partner memberId"
+  missing:
+    - "Add flex-shrink-0 and max-w constraint to card elements in RecentFriends"
+    - "Use partner memberId instead of chatRoomId for friend id (may need getRoom per room or backend change)"
+  debug_session: ".planning/debug/dashboard-recent-friends.md"
 - truth: "Message sends successfully and appears in chat"
   status: failed
   reason: "User reported: retry bubble은 보여. 그렇지만 계속 메시지 전송이 실패하고 있어."
   severity: blocker
   test: 4
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Related to Test 3 root cause — polling wholesale replacement causes state thrashing that interferes with optimistic send flow. Send failure itself may be auth/environment issue (endpoint and payload shape match backend correctly)."
+  artifacts:
+    - path: "aini-inu-frontend/src/hooks/useChatWebSocket.ts"
+      issue: "Polling overwrites messages including pending/optimistic ones"
+    - path: "aini-inu-frontend/src/app/chat/[id]/page.tsx"
+      issue: "Optimistic send flow disrupted by polling-triggered re-renders"
+  missing:
+    - "Fix polling merge logic (same as Test 3) to preserve pending messages"
+    - "Verify auth token is present in send request headers"
+  debug_session: ".planning/debug/chat-flickering-infinite-loop.md"
