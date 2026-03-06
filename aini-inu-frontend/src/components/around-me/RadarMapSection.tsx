@@ -217,10 +217,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
     }
   };
 
-  const isApplied =
-    selectedThread
-      ? selectedThread.applicants?.some((a) => a.memberId === currentUserId)
-      : false;
+  const isApplied = selectedThread?.applied ?? false;
 
   const isOwner = selectedThread ? selectedThread.authorId === currentUserId : false;
 
@@ -231,7 +228,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
       )}
     >
       {/* Map */}
-      <div className="absolute inset-0 z-0" onClick={() => { onClearSelection(); setHotspotPopup(null); }}>
+      <div className="absolute inset-0 z-0" onClick={(e) => { if (e.target === e.currentTarget) { onClearSelection(); setHotspotPopup(null); } }}>
         <DynamicMap
           center={coordinates}
           zoom={14}

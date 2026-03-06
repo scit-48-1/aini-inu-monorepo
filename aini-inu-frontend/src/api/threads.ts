@@ -130,9 +130,16 @@ function buildQuery(params: Record<string, unknown>): string {
   return '?' + entries.map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&');
 }
 
+// --- Params ---
+
+export interface ThreadListParams extends PaginationParams {
+  startDate?: string;
+  endDate?: string;
+}
+
 // --- Functions ---
 
-export async function getThreads(params?: PaginationParams): Promise<SliceResponse<ThreadSummaryResponse>> {
+export async function getThreads(params?: ThreadListParams): Promise<SliceResponse<ThreadSummaryResponse>> {
   const query = buildQuery({ ...params });
   return apiClient.get<SliceResponse<ThreadSummaryResponse>>(`/threads${query}`);
 }

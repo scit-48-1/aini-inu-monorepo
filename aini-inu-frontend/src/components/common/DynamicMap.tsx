@@ -78,9 +78,9 @@ export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideC
       <MapContainer 
         center={center} 
         zoom={zoom} 
-        minZoom={14} /* 최소 줌을 여기서 설정 */
+        minZoom={12}
         style={{ height: '100%', width: '100%', position: 'absolute', top: 0, left: 0 }}
-        zoomControl={false}
+        zoomControl={true}
         attributionControl={false}
         dragging={interactive}
         scrollWheelZoom={interactive}

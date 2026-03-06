@@ -52,7 +52,7 @@ export const RecruitForm: React.FC<RecruitFormProps> = ({
     endTime: '',
     description: '',
     chatType: 'INDIVIDUAL' as 'INDIVIDUAL' | 'GROUP',
-    maxParticipants: 5,
+    maxParticipants: 2,
     placeName: '',
     latitude: coordinates[0],
     longitude: coordinates[1],
@@ -402,7 +402,7 @@ export const RecruitForm: React.FC<RecruitFormProps> = ({
                 <div key={type} className="relative">
                   <button
                     type="button"
-                    onClick={() => setForm({ ...form, chatType: type })}
+                    onClick={() => setForm({ ...form, chatType: type, maxParticipants: type === 'INDIVIDUAL' ? 2 : 5 })}
                     onMouseEnter={() => setShowTooltip(type)}
                     onMouseLeave={() => setShowTooltip(null)}
                     className={cn(
