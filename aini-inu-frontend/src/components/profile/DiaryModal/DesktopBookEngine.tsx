@@ -3,14 +3,14 @@
 import React from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import { cn } from '@/lib/utils';
-import { WalkDiaryType } from '@/types';
+import type { WalkDiaryResponse } from '@/api/diaries';
 
 interface DesktopBookEngineProps {
   dimensions: { width: number; height: number };
   instanceKey: number;
-  walkHistoryDetails: WalkDiaryType[];
+  walkHistoryDetails: WalkDiaryResponse[];
   onFlip: (e: { data: number }) => void;
-  renderContent: (data: WalkDiaryType, side: 'LEFT' | 'RIGHT') => React.ReactNode;
+  renderContent: (data: WalkDiaryResponse, side: 'LEFT' | 'RIGHT') => React.ReactNode;
   bookRef: React.RefObject<unknown>;
   initialPage: number;
   editMode: 'NONE' | 'CONTENT' | 'PHOTOS';

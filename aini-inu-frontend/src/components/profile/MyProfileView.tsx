@@ -406,8 +406,9 @@ export const MyProfileView: React.FC = () => {
       <DiaryBookModal
         isOpen={!!selectedHistory}
         onClose={() => setSelectedHistory(null)}
-        selectedDiaryId={String(selectedHistory?.id || '')}
-        diaries={diaries as any}
+        mode="profile"
+        selectedDiaryId={selectedHistory?.id}
+        diaries={diaries}
         onSaveSuccess={fetchData}
       />
 

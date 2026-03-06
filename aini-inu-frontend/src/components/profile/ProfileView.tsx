@@ -312,8 +312,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
       <DiaryBookModal
         isOpen={!!selectedHistory}
         onClose={() => setSelectedHistory(null)}
-        selectedDiaryId={String(selectedHistory?.id || '')}
-        diaries={diaries as any}
+        mode="profile"
+        selectedDiaryId={selectedHistory?.id}
+        diaries={diaries}
         onSaveSuccess={fetchData}
       />
 

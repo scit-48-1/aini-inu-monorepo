@@ -3,13 +3,13 @@
 import React from 'react';
 import { BookFlipContainer } from '@/components/common/BookFlip/BookFlipContainer';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import { WalkDiaryType } from '@/types';
+import type { WalkDiaryResponse } from '@/api/diaries';
 
 interface MobileBookEngineProps {
   pageDirection: 'next' | 'prev' | null;
-  renderContent: (data: WalkDiaryType, side: 'LEFT' | 'RIGHT') => React.ReactNode;
-  currentData: WalkDiaryType;
-  tempNextData: WalkDiaryType | null;
+  renderContent: (data: WalkDiaryResponse, side: 'LEFT' | 'RIGHT') => React.ReactNode;
+  currentData: WalkDiaryResponse;
+  tempNextData: WalkDiaryResponse | null;
   onNavigate: (dir: 'next' | 'prev') => void;
   editMode: 'NONE' | 'CONTENT' | 'PHOTOS';
   isSingle?: boolean;

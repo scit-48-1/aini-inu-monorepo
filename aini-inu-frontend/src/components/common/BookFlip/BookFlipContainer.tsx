@@ -2,14 +2,14 @@
 
 import React, { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { WalkDiaryType } from '@/types';
+import type { WalkDiaryResponse } from '@/api/diaries';
 
 interface BookFlipContainerProps {
   children: ReactNode;
   pageDirection: 'next' | 'prev' | null;
-  renderPageSide: (data: WalkDiaryType, side: 'LEFT' | 'RIGHT') => ReactNode;
-  currentData: WalkDiaryType;
-  tempNextData: WalkDiaryType | null;
+  renderPageSide: (data: WalkDiaryResponse, side: 'LEFT' | 'RIGHT') => ReactNode;
+  currentData: WalkDiaryResponse;
+  tempNextData: WalkDiaryResponse | null;
   className?: string;
 }
 
