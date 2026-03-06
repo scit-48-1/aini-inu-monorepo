@@ -273,21 +273,24 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
             }}
             optimizeImage={optimizeImage}
           />
+          {/* TODO: ProfileView uses legacy DogType — rewire in future phase */}
           <DogRegisterModal
             isOpen={isRegisterDogOpen}
             onClose={() => { setIsRegisterDogOpen(false); setEditingDog(null); }}
-            editingDog={editingDog}
-            onSave={async () => { await fetchData(); return true; }}
-            optimizeImage={optimizeImage}
+            editingPet={editingDog as any}
+            onSaved={async () => { await fetchData(); }}
           />
         </>
       )}
 
+      {/* TODO: ProfileView uses legacy DogType — rewire in future phase */}
       <DogDetailModal
         isOpen={!!selectedDog}
         onClose={() => setSelectedDog(null)}
-        dog={selectedDog}
+        pet={selectedDog as any}
         onEdit={() => { if (isMe) { setEditingDog(selectedDog); setIsRegisterDogOpen(true); setSelectedDog(null); } }}
+        onDeleted={() => { setSelectedDog(null); fetchData(); }}
+        onMainChanged={() => { setSelectedDog(null); fetchData(); }}
         onZoom={setZoomedPhoto}
       />
 
