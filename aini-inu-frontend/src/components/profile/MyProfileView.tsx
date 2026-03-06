@@ -331,20 +331,30 @@ export const MyProfileView: React.FC = () => {
         optimizeImage={optimizeImage}
       />
 
-      {/* TODO: Rewire in Plan 02 — DogRegisterModal/DogDetailModal still expect DogType */}
       <DogRegisterModal
         isOpen={isRegisterDogOpen}
         onClose={() => { setIsRegisterDogOpen(false); setEditingPet(null); }}
-        editingDog={editingPet as any}
-        onSave={async () => { await fetchData(); return true; }}
-        optimizeImage={optimizeImage}
+        editingPet={editingPet ?? undefined}
+        onSaved={async () => { await fetchData(); }}
       />
 
       <DogDetailModal
         isOpen={!!selectedPet}
         onClose={() => setSelectedPet(null)}
-        dog={selectedPet as any}
-        onEdit={() => { setEditingPet(selectedPet); setIsRegisterDogOpen(true); setSelectedPet(null); }}
+        pet={selectedPet}
+        onEdit={() => {
+          setEditingPet(selectedPet);
+          setIsRegisterDogOpen(true);
+          setSelectedPet(null);
+        }}
+        onDeleted={async () => {
+          setSelectedPet(null);
+          await fetchData();
+        }}
+        onMainChanged={async () => {
+          setSelectedPet(null);
+          await fetchData();
+        }}
         onZoom={setZoomedPhoto}
       />
 
