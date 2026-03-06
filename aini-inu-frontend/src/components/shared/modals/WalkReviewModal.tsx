@@ -1,31 +1,30 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Star, X, Check, ThumbsUp, ThumbsDown, MessageCircle, Heart, Loader2 } from 'lucide-react';
+import { Star, X, Check, Heart, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { createReview } from '@/api/chat';
 
 interface WalkReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  partner: {
-    id: string;
-    nickname: string;
-    avatar: string;
-    dogs: { name: string; breed: string }[];
-  };
-  onReviewSubmit: (review: any) => Promise<void>;
+  revieweeId: number;
+  revieweeName: string;
+  chatRoomId: number;
+  onReviewSubmitted: () => void;
 }
 
 export const WalkReviewModal: React.FC<WalkReviewModalProps> = ({
   isOpen,
   onClose,
-  partner,
-  onReviewSubmit
+  revieweeId,
+  revieweeName,
+  chatRoomId,
+  onReviewSubmitted,
 }) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -48,13 +47,20 @@ export const WalkReviewModal: React.FC<WalkReviewModalProps> = ({
     }
     setIsSubmitting(true);
     try {
-      await onReviewSubmit({ rating, selectedTags, comment });
+      // Concatenate tags into comment string (backend has no tags field)
+      const fullComment = [...selectedTags, comment].filter(Boolean).join('; ');
+      await createReview(chatRoomId, {
+        revieweeId,
+        score: rating,
+        comment: fullComment,
+      });
       setIsSuccess(true);
+      onReviewSubmitted();
       setTimeout(() => {
         setIsSuccess(false);
         onClose();
       }, 2000);
-    } catch (e) {
+    } catch {
       toast.error('리뷰 등록 중 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
@@ -85,11 +91,14 @@ export const WalkReviewModal: React.FC<WalkReviewModalProps> = ({
                 <Typography variant="label" className="text-amber-500 font-black tracking-[0.3em] uppercase text-[10px]">Walk Review</Typography>
                 <div className="flex flex-col items-center gap-4">
                   <div className="w-24 h-24 rounded-full border-4 border-zinc-50 shadow-xl overflow-hidden">
-                    <img src={partner.avatar} className="w-full h-full object-cover" alt="Partner" />
+                    <img
+                      src="/AINIINU_ROGO_B.png"
+                      className="w-full h-full object-cover"
+                      alt={revieweeName}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <Typography variant="h2" className="text-2xl font-black text-navy-900">@{partner.nickname}</Typography>
-                    <Typography variant="body" className="text-zinc-400 text-sm font-medium italic">with {partner.dogs[0]?.name}</Typography>
+                    <Typography variant="h2" className="text-2xl font-black text-navy-900">@{revieweeName}</Typography>
                   </div>
                 </div>
                 <Typography variant="serif" className="text-3xl md:text-4xl italic">오늘 산책은 <span className="text-amber-500">어떠셨나요?</span></Typography>
@@ -99,16 +108,16 @@ export const WalkReviewModal: React.FC<WalkReviewModalProps> = ({
               <div className="flex flex-col items-center gap-4 py-4">
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((s) => (
-                    <button 
+                    <button
                       key={s}
                       onMouseEnter={() => setHoverRating(s)}
                       onMouseLeave={() => setHoverRating(0)}
                       onClick={() => setRating(s)}
                       className="transition-transform active:scale-90 hover:scale-110"
                     >
-                      <Star 
-                        size={48} 
-                        fill={(hoverRating || rating) >= s ? '#F59E0B' : 'transparent'} 
+                      <Star
+                        size={48}
+                        fill={(hoverRating || rating) >= s ? '#F59E0B' : 'transparent'}
                         className={cn(
                           "transition-colors duration-300",
                           (hoverRating || rating) >= s ? 'text-amber-500' : 'text-zinc-100'
@@ -131,8 +140,8 @@ export const WalkReviewModal: React.FC<WalkReviewModalProps> = ({
                       onClick={() => toggleTag(tag)}
                       className={cn(
                         "px-5 py-2.5 rounded-full text-xs font-bold transition-all border-2",
-                        selectedTags.includes(tag) 
-                          ? "bg-navy-900 border-navy-900 text-white shadow-lg" 
+                        selectedTags.includes(tag)
+                          ? "bg-navy-900 border-navy-900 text-white shadow-lg"
                           : "bg-white border-zinc-50 text-zinc-400 hover:border-amber-100 hover:text-amber-600"
                       )}
                     >
@@ -145,7 +154,7 @@ export const WalkReviewModal: React.FC<WalkReviewModalProps> = ({
               {/* Comment Area */}
               <div className="space-y-3">
                 <Typography variant="label" className="text-navy-900 font-black text-[10px] uppercase tracking-widest ml-1">Special Thanks</Typography>
-                <textarea 
+                <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="이웃에게 남기고 싶은 따뜻한 한마디를 적어주세요."
@@ -153,10 +162,10 @@ export const WalkReviewModal: React.FC<WalkReviewModalProps> = ({
                 />
               </div>
 
-              <Button 
-                variant="primary" 
-                size="xl" 
-                fullWidth 
+              <Button
+                variant="primary"
+                size="xl"
+                fullWidth
                 className="py-8 text-xl shadow-2xl shadow-navy-900/20"
                 onClick={handleSubmit}
                 disabled={isSubmitting || rating === 0}

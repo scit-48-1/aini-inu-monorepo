@@ -4,14 +4,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useProfile } from '@/hooks/useProfile';
 import { threadService } from '@/services/api/threadService';
 import { memberService } from '@/services/api/memberService';
-import { chatService } from '@/services/api/chatService';
+import { getRooms } from '@/api/chat';
 import { AIBanner } from '@/components/dashboard/AIBanner';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { RecentFriends } from '@/components/dashboard/RecentFriends';
 import { LocalFeedPreview } from '@/components/dashboard/LocalFeedPreview';
 import { DraftNotification } from '@/components/dashboard/DraftNotification';
-import { WalkReviewModal } from '@/components/shared/modals/WalkReviewModal';
-import { toast } from 'sonner';
 import { ThreadType } from '@/types';
 
 export default function DashboardPage() {
@@ -26,24 +24,18 @@ export default function DashboardPage() {
   const [hotspot, setHotspot] = useState({ region: '성수동 서울숲', count: 12 });
   const [threads, setThreads] = useState<ThreadType[]>([]);
   const [draftCount, setDraftCount] = useState(0);
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [recentFriends, setRecentFriends] = useState<{ id: string; roomId: string; name: string; img: string; score: number }[]>([]);
   const [grassData, setGrassData] = useState<number[]>(new Array(126).fill(0));
-
-  // 최근 채팅 상대 중 첫 번째를 리뷰 대상으로 사용
-  const reviewPartner = recentFriends[0]
-    ? { id: recentFriends[0].id, nickname: recentFriends[0].name, avatar: recentFriends[0].img || '/AINIINU_ROGO_B.png', dogs: [] as { name: string; breed: string }[] }
-    : null;
 
   const totalWalks = useMemo(() => grassData.reduce((a, b) => a + (b > 0 ? 1 : 0), 0), [grassData]);
 
   const fetchData = async () => {
     try {
-      const [threadData, diaryRes, hotspotRes, rooms, walkStats] = await Promise.allSettled([
+      const [threadData, diaryRes, hotspotRes, roomsRes, walkStats] = await Promise.allSettled([
         threadService.getThreads(),
         threadService.getWalkDiaries(),
         threadService.getHotspots(),
-        chatService.getRooms(),
+        getRooms({ page: 0, size: 5 }),
         memberService.getWalkStats()
       ]);
 
@@ -64,17 +56,16 @@ export default function DashboardPage() {
         setGrassData(walkStats.value);
       }
 
-      // Recent Friends from Chat History
-      if (rooms.status === 'fulfilled' && Array.isArray(rooms.value)) {
-        const friends = rooms.value.slice(0, 5)
-          .filter(r => r?.partner)
-          .map(r => ({
-            id: r.partner.id,
-            roomId: r.id,
-            name: r.partner.nickname,
-            img: r.partner.avatar,
-            score: r.partner.mannerScore ?? 7.0,
-          }));
+      // Recent Friends from Chat History -- ChatRoomSummaryResponse lacks partner details,
+      // so we show room IDs as placeholder friends for now
+      if (roomsRes.status === 'fulfilled' && roomsRes.value?.content) {
+        const friends = roomsRes.value.content.slice(0, 5).map((r) => ({
+          id: String(r.chatRoomId),
+          roomId: String(r.chatRoomId),
+          name: `Chat ${r.chatRoomId}`,
+          img: '/AINIINU_ROGO_B.png',
+          score: 7.0,
+        }));
         setRecentFriends(friends);
       }
     } catch (e) {
@@ -89,17 +80,6 @@ export default function DashboardPage() {
     };
     init();
   }, []); // fetchData를 의존성에서 제거하거나 useCallback 처리 필요 (현재는 빈 배열로 초기 1회 보장)
-
-  const handleReviewSubmit = async (review: any) => {
-    if (!reviewPartner) return;
-    try {
-      await memberService.submitReview(reviewPartner.id, review);
-      toast.success(`${reviewPartner.nickname}님에 대한 리뷰가 전달되었습니다.`);
-    } catch (e) {
-      toast.error('리뷰 등록 중 오류가 발생했습니다.');
-      throw e;
-    }
-  };
 
   if (!userProfile) return <div className="flex items-center justify-center h-full"><p className="text-zinc-400">Loading...</p></div>;
 
@@ -121,15 +101,6 @@ export default function DashboardPage() {
 
         <LocalFeedPreview threads={threads} />
       </div>
-
-      {reviewPartner && (
-        <WalkReviewModal
-          isOpen={isReviewModalOpen}
-          onClose={() => setIsReviewModalOpen(false)}
-          partner={reviewPartner}
-          onReviewSubmit={handleReviewSubmit}
-        />
-      )}
     </div>
   );
 }

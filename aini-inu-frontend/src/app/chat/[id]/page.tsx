@@ -15,13 +15,16 @@ import {
   confirmWalk,
   cancelWalkConfirm,
   leaveRoom,
+  getMyReview,
   type ChatRoomDetailResponse,
   type WalkConfirmResponse,
+  type MyChatReviewResponse,
 } from '@/api/chat';
 import { useChatStore } from '@/store/useChatStore';
 import { useChatWebSocket } from '@/hooks/useChatWebSocket';
 import { useUserStore } from '@/store/useUserStore';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { WalkReviewModal } from '@/components/shared/modals/WalkReviewModal';
+import { Loader2, ArrowLeft, PenLine } from 'lucide-react';
 import { toast } from 'sonner';
 import { Typography } from '@/components/ui/Typography';
 
@@ -39,6 +42,10 @@ export default function ChatRoomPage() {
   const [error, setError] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [walkConfirm, setWalkConfirm] = useState<WalkConfirmResponse | null>(null);
+  const [myReview, setMyReview] = useState<MyChatReviewResponse | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewTargetId, setReviewTargetId] = useState<number>(0);
+  const [reviewTargetName, setReviewTargetName] = useState('');
 
   // Cursor pagination state
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -72,10 +79,11 @@ export default function ChatRoomPage() {
 
     async function fetchInitial() {
       try {
-        const [roomData, msgData, walkConfirmData] = await Promise.all([
+        const [roomData, msgData, walkConfirmData, myReviewData] = await Promise.all([
           getRoom(roomId),
           getMessages(roomId, { size: 20 }),
           getWalkConfirm(roomId).catch(() => null),
+          getMyReview(roomId).catch(() => null),
         ]);
 
         if (cancelled) return;
@@ -85,6 +93,7 @@ export default function ChatRoomPage() {
         setNextCursor(msgData.nextCursor);
         setHasMore(msgData.hasMore);
         setWalkConfirm(walkConfirmData);
+        setMyReview(myReviewData);
       } catch (e) {
         console.error(e);
         if (!cancelled) {
@@ -250,6 +259,29 @@ export default function ChatRoomPage() {
     }
   }, [roomId, router]);
 
+  // Open review modal
+  const handleOpenReview = useCallback(() => {
+    if (!room) return;
+    const others = room.participants.filter(
+      (p) => p.memberId !== currentMemberId && !p.left,
+    );
+    if (others.length === 0) return;
+
+    // For INDIVIDUAL rooms: auto-select the other participant
+    // For GROUP rooms: select first other (future: picker)
+    const target = others[0];
+    setReviewTargetId(target.memberId);
+    const petNames = target.pets?.map((p) => p.name).join(', ');
+    setReviewTargetName(petNames || `Member ${target.memberId}`);
+    setIsReviewModalOpen(true);
+  }, [room, currentMemberId]);
+
+  // Review submitted callback
+  const handleReviewSubmitted = useCallback(async () => {
+    const refreshed = await getMyReview(roomId).catch(() => null);
+    setMyReview(refreshed);
+  }, [roomId]);
+
   // Derive partnerId for ProfileExplorer
   const partnerId =
     room?.participants.find((p) => p.memberId !== currentMemberId)?.memberId ??
@@ -298,6 +330,19 @@ export default function ChatRoomPage() {
           onLeave={handleLeave}
         />
 
+        {/* Review button -- only visible when allConfirmed and no existing review */}
+        {walkConfirm?.allConfirmed === true && !myReview?.exists ? (
+          <div className="px-4 py-2 bg-white/60 border-b border-zinc-50">
+            <button
+              onClick={handleOpenReview}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-xl text-sm font-bold hover:bg-amber-100 transition-colors"
+            >
+              <PenLine size={16} />
+              리뷰 작성
+            </button>
+          </div>
+        ) : null}
+
         <MessageList
           messages={messages}
           pendingMessages={pendingMessages}
@@ -321,6 +366,16 @@ export default function ChatRoomPage() {
         partnerId={partnerId}
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
+      />
+
+      {/* Walk Review Modal */}
+      <WalkReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        revieweeId={reviewTargetId}
+        revieweeName={reviewTargetName}
+        chatRoomId={roomId}
+        onReviewSubmitted={handleReviewSubmitted}
       />
     </div>
   );
