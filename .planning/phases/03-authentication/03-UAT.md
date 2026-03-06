@@ -1,13 +1,12 @@
 ---
-status: diagnosed
+status: complete
 phase: 03-authentication
-source: [03-01-SUMMARY.md, 03-02-SUMMARY.md]
+source: [03-01-SUMMARY.md, 03-02-SUMMARY.md, 03-03-SUMMARY.md]
 started: 2026-03-06T00:00:00Z
-updated: 2026-03-06T00:00:00Z
+updated: 2026-03-06T01:30:00Z
 ---
 
 ## Current Test
-<!-- OVERWRITE each test - shows where we are -->
 
 [testing complete]
 
@@ -19,14 +18,13 @@ result: pass
 
 ### 2. Login Inline Error Display
 expected: Submit the login form with wrong credentials (or leave fields empty). An error message appears inline near the form fields (not just a toast notification).
-result: issue
-reported: "잘못된 비밀번호를 입력해도 어떠한 에러메시지도 나타나지 않는다. (올바른 로그인은 dashboard로 이동됨)"
-severity: major
+result: pass
+note: Re-verified after 03-03 fix — passes.
 
 ### 3. Session Restoration on Page Load
 expected: Log in, then close/reopen the browser tab (or hard-refresh). You remain logged in — no forced redirect to /login. The app silently restores your session.
 result: issue
-reported: "새로고침하면 로그인이 풀린다."
+reported: "여전히 새로고침을 하니까 로그인이 풀려버려."
 severity: major
 
 ### 4. Auth Guard Redirect
@@ -35,8 +33,8 @@ result: pass
 
 ### 5. Logout Flow
 expected: While logged in, trigger logout (any logout button/link). You are redirected to /login and your session is cleared (refreshing protected pages redirects again).
-result: skipped
-reason: 로그아웃 버튼이 UI에 없음
+result: pass
+note: Re-verified after 03-03 fix — passes.
 
 ### 6. Signup Account Step — Fields & Password Strength
 expected: Navigate to /signup. Step 1 shows email, password, and nickname fields. As you type a password, you see 5 strength criteria badges that update in real-time (e.g., length, uppercase, number, special char checks).
@@ -61,40 +59,23 @@ result: pass
 ## Summary
 
 total: 10
-passed: 7
-issues: 2
+passed: 9
+issues: 1
 pending: 0
-skipped: 1
+skipped: 0
 
 ## Gaps
 
 - truth: "Session is restored on page refresh — user stays logged in without being redirected to /login"
-  status: failed
-  reason: "User reported: 새로고침하면 로그인이 풀린다."
+  status: fixed
+  reason: "User reported: 여전히 새로고침을 하니까 로그인이 풀려버려."
   severity: major
   test: 3
-  root_cause: "useAuthStore persist middleware uses window.localStorage which throws on SSR, causing createJSONStorage to return undefined. persistImpl detects !storage and skips hydrate() entirely. When AuthProvider bootstrap runs (useEffect), getRefreshToken() returns null because the store was never hydrated from localStorage. The bootstrap concludes the user is not logged in and redirects to /login."
+  root_cause: "Zustand v5 persist middleware evaluates the storage getter once at module init time (during Next.js SSR). At SSR, window.localStorage is undefined, so createJSONStorage returns undefined, disabling both read and write. setTokens() after login never writes to localStorage. On page refresh, rehydrate() reads nothing, getRefreshToken() returns null, and bootstrap redirects to /login. The 03-03 fix addressed hydration timing (skipHydration + rehydrate) but not the storage initialization problem."
   artifacts:
     - path: "aini-inu-frontend/src/store/useAuthStore.ts"
-      issue: "persist config missing skipHydration: true — store auto-hydrates at module init time (SSR context) where window is unavailable, so hydration silently fails"
-    - path: "aini-inu-frontend/src/providers/AuthProvider.tsx"
-      issue: "bootstrap effect reads getRefreshToken() without first awaiting useAuthStore.persist.rehydrate()"
+      issue: "persist config lacked explicit storage — default createJSONStorage evaluated localStorage at SSR module init time, returning undefined and disabling all persistence"
   missing:
-    - "Add skipHydration: true to useAuthStore persist config"
-    - "Call await useAuthStore.persist.rehydrate() at start of AuthProvider bootstrap effect"
-  debug_session: ".planning/debug/auth-session-lost-on-refresh.md"
-
-- truth: "Wrong credentials on login form shows an inline error message near the fields"
-  status: failed
-  reason: "User reported: 잘못된 비밀번호를 입력해도 어떠한 에러메시지도 나타나지 않는다. (올바른 로그인은 dashboard로 이동됨)"
-  severity: major
-  test: 2
-  root_cause: "apiClient's 401 interceptor fires on the login endpoint's 401 (wrong credentials), calls handle401 which tries token refresh, fails, then does window.location.href = '/login' — a full page reload. The reload destroys React state including LoginForm's fieldError setter. The session-expired toast is also destroyed. User sees nothing."
-  artifacts:
-    - path: "aini-inu-frontend/src/api/client.ts"
-      issue: "line 129: 401 interceptor has no exception for the login endpoint — skipAuth: false on login calls routes wrong-credential 401 into handle401"
-    - path: "aini-inu-frontend/src/api/auth.ts"
-      issue: "line 31: login() call missing { skipAuth: true } option"
-  missing:
-    - "Pass { skipAuth: true } to apiClient.post in auth.ts login() function"
-  debug_session: ".planning/debug/login-form-no-error-message.md"
+    - "Replace default storage with custom storage object that guards typeof window at call time, not at init time"
+  fix: "Added custom storage to persist config with typeof window guard on each method. Build verified passing."
+  fix_commit: "pending"

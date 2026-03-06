@@ -31,6 +31,23 @@ export const useAuthStore = create<AuthState>()(
       name: 'aini-inu-auth',
       partialize: (state) => ({ refreshToken: state.refreshToken }),
       skipHydration: true,
+      // Custom storage: typeof window checked at call time (not at module init/SSR time)
+      storage: {
+        getItem: (name: string) => {
+          if (typeof window === 'undefined') return null;
+          const str = window.localStorage.getItem(name);
+          if (!str) return null;
+          try { return JSON.parse(str); } catch { return null; }
+        },
+        setItem: (name: string, value: unknown) => {
+          if (typeof window === 'undefined') return;
+          window.localStorage.setItem(name, JSON.stringify(value));
+        },
+        removeItem: (name: string) => {
+          if (typeof window === 'undefined') return;
+          window.localStorage.removeItem(name);
+        },
+      },
     }
   )
 );
