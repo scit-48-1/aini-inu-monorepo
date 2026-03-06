@@ -50,17 +50,9 @@ export const StoryArea: React.FC<StoryAreaProps> = ({ storyGroups, onStoryClick,
                 size="md"
                 className="group-hover:scale-110 transition-transform duration-500"
               />
-              {group.diaries.length > 1 ? (
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-500 text-white rounded-full flex items-center justify-center border-2 border-white shadow-sm text-[9px] font-bold">
-                  {group.diaries.length}
-                </div>
-              ) : (
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-navy-900 text-white rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z"/>
-                  </svg>
-                </div>
-              )}
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-500 text-white rounded-full flex items-center justify-center border-2 border-white shadow-sm text-[9px] font-bold">
+                {group.diaries.length}
+              </div>
             </div>
             <Typography variant="label" className="text-[9px] font-black text-navy-900 uppercase tracking-widest group-hover:text-amber-600 transition-colors">
               {group.nickname}
