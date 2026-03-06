@@ -159,12 +159,14 @@ Plans:
   3. User can send messages (max 500 chars) and see them appear in real-time via WebSocket STOMP, with created/delivered/read status indicators
   4. Failed message sends show a retry bubble, and WebSocket disconnect falls back to 5-second polling
   5. User can confirm a walk, leave a chat room, write a one-time non-editable review per room/target, and view their own review history
-**Plans**: 3 plans
+**Plans**: 5 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Chat infrastructure: @stomp/stompjs install, useChatStore + useChatWebSocket hook, rewire ChatList + ChatStartModal to api/chat.ts
-- [ ] 08-02-PLAN.md — Chat room detail: rewire ChatHeader/ChatInput/MessageList, cursor pagination, optimistic send with retry, WebSocket real-time, 500-char limit
-- [ ] 08-03-PLAN.md — Walk confirm + leave room + review: walk confirm toggle, leave with dialog, WalkReviewModal rewire, old chatService cleanup
+- [x] 08-01-PLAN.md — Chat infrastructure: @stomp/stompjs install, useChatStore + useChatWebSocket hook, rewire ChatList + ChatStartModal to api/chat.ts
+- [x] 08-02-PLAN.md — Chat room detail: rewire ChatHeader/ChatInput/MessageList, cursor pagination, optimistic send with retry, WebSocket real-time, 500-char limit
+- [x] 08-03-PLAN.md — Walk confirm + leave room + review: walk confirm toggle, leave with dialog, WalkReviewModal rewire, old chatService cleanup
+- [ ] 08-04-PLAN.md — UAT gap closure: fix polling message flickering/infinite loop via mergeMessages and effect dependency fixes
+- [ ] 08-05-PLAN.md — UAT gap closure: fix leave-room WS disconnect/store cleanup/ConfirmModal + dashboard friend card layout/navigation
 
 ### Phase 9: Community Feed
 **Goal**: Users can create, browse, and interact with community posts including comments, likes, and image uploads
@@ -243,7 +245,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 5. Pet Management | 3/4 | In progress | - |
 | 6. Walk Threads | 6/8 | In Progress|  |
 | 7. Walk Diary + Story | 4/4 | Complete   | 2026-03-06 |
-| 8. Chat System | 1/3 | In Progress|  |
+| 8. Chat System | 3/5 | In Progress|  |
 | 9. Community Feed | 0/2 | Not started | - |
 | 10. Lost Pet | 0/2 | Not started | - |
 | 11. Dashboard | 0/2 | Not started | - |
