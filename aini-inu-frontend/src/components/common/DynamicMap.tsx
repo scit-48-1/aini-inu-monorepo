@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -17,17 +17,15 @@ interface DynamicMapProps {
   onMoveEnd?: (lat: number, lng: number) => void; // 드래그 후 좌표 콜백
 }
 
-function MapController({ center, zoom, onMoveEnd }: { center: [number, number]; zoom: number; onMoveEnd?: (lat: number, lng: number) => void }) {
+function MapController({ center, zoom, onVisualCenterChange }: { center: [number, number]; zoom: number; onVisualCenterChange?: (c: [number, number]) => void }) {
   const map = useMap();
   useEffect(() => {
     map.setView(center, zoom, { animate: true });
 
-    // 레이아웃 변경 시 지도 크기 재계산 (애니메이션 대응)
     const timer = setTimeout(() => {
       map.invalidateSize();
     }, 800);
 
-    // ResizeObserver를 통한 동적 크기 변화 대응
     const resizeObserver = new ResizeObserver(() => {
       map.invalidateSize();
     });
@@ -41,22 +39,23 @@ function MapController({ center, zoom, onMoveEnd }: { center: [number, number]; 
     };
   }, [center, zoom, map]);
 
-  // moveend 이벤트: 드래그 후 중심 좌표 콜백
+  // Track visual center on move (drag/zoom)
   useEffect(() => {
-    if (!onMoveEnd) return;
+    if (!onVisualCenterChange) return;
     const handler = () => {
       const c = map.getCenter();
-      onMoveEnd(Number(c.lat.toFixed(6)), Number(c.lng.toFixed(6)));
+      onVisualCenterChange([c.lat, c.lng]);
     };
-    map.on('moveend', handler);
-    return () => { map.off('moveend', handler); };
-  }, [map, onMoveEnd]);
+    map.on('move', handler);
+    return () => { map.off('move', handler); };
+  }, [map, onVisualCenterChange]);
 
   return null;
 }
 
 export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideCircle, interactive = true, radiusKm, onMoveEnd }: DynamicMapProps) {
-  
+  const [visualCenter, setVisualCenter] = useState<[number, number]>(center);
+
   const createCustomIcon = (imageUrl: string, isEmergency: boolean) => {
     return L.divIcon({
       className: 'custom-dog-marker',
@@ -101,7 +100,7 @@ export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideC
         keyboard={interactive}
         preferCanvas={true}
       >
-        <MapController center={center} zoom={zoom} onMoveEnd={onMoveEnd} />
+        <MapController center={center} zoom={zoom} onVisualCenterChange={setVisualCenter} />
         
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
@@ -109,8 +108,7 @@ export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideC
         
         {!hideCircle && (
           <Circle
-            key={`circle-${center[0]}-${center[1]}-${radiusKm}`}
-            center={center}
+            center={visualCenter}
             radius={(radiusKm ?? 2.5) * 1000}
             pathOptions={{ 
               fillColor: '#FF9F0A', 
