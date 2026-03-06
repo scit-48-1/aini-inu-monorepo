@@ -38,11 +38,14 @@ created: 2026-03-06
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 06-01-XX | 01 | 1 | WALK-01..05 | build+lint | `npm run build` | ✅ | ⬜ pending |
-| 06-02-XX | 02 | 1 | WALK-06..10 | build+lint | `npm run build` | ✅ | ⬜ pending |
-| 06-03-XX | 03 | 2 | WALK-11..14 | build+lint | `npm run build` | ✅ | ⬜ pending |
+| 06-01-T1 | 01 | 1 | WALK-04, WALK-08, WALK-09, WALK-11, WALK-12 | build+lint | `npm run build` | N/A | pending |
+| 06-01-T2 | 01 | 1 | WALK-04, WALK-08, WALK-09, WALK-11, WALK-12 | build+lint | `npm run build` | N/A | pending |
+| 06-02-T1 | 02 | 2 | WALK-01, WALK-02, WALK-03, WALK-10, WALK-13, WALK-14 | build+lint | `npm run build` | N/A | pending |
+| 06-02-T2 | 02 | 2 | WALK-01, WALK-02, WALK-03, WALK-10, WALK-13, WALK-14 | build+lint | `npm run build` | N/A | pending |
+| 06-03-T1 | 03 | 3 | WALK-05, WALK-06, WALK-07, WALK-08, WALK-09, WALK-13 | build+lint | `npm run build` | N/A | pending |
+| 06-03-T2 | 03 | 3 | WALK-05, WALK-06, WALK-07, WALK-08, WALK-09, WALK-13 | build+lint | `npm run build` | N/A | pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: pending / green / red / flaky*
 
 ---
 
@@ -61,7 +64,7 @@ Frontend has no test runner; validation relies on TypeScript compilation, ESLint
 | GPS acquisition on page entry | WALK-06 | Browser Geolocation API requires user permission | Navigate to /around-me, verify GPS prompt appears, coordinates update map center |
 | Seoul City Hall fallback | WALK-07 | Requires simulating GPS failure | Deny GPS permission, verify map centers on 37.566295, 126.977945 |
 | Map marker display | WALK-08 | Visual verification on Leaflet map | Browse threads in map view, verify markers appear at correct positions |
-| Hotspot markers | WALK-10 | Visual verification on Leaflet map | Verify hotspot markers visible with region name + count popup |
+| Hotspot markers on map | WALK-10 | Visual verification on Leaflet map | Verify hotspot markers visible at Seoul district positions with region name + count popup |
 | Thread expiry hiding | WALK-11 | Time-dependent behavior | Create thread, wait or mock time, verify expired threads hidden |
 | Non-pet-owner block | WALK-01 | Requires user state variation | Login without pets, navigate to RECRUIT tab, verify block message |
 | Apply flow toast + navigation | WALK-12 | User interaction flow | Apply to thread, verify toast with chat navigation button |
