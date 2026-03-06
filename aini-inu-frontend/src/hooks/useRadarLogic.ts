@@ -1,276 +1,242 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { threadService } from '@/services/api/threadService';
-import { memberService } from '@/services/api/memberService';
-import { locationService } from '@/services/api/locationService';
+import {
+  getThreads,
+  getThreadMap,
+  getHotspots,
+  getThread,
+  deleteThread,
+} from '@/api/threads';
+import type {
+  ThreadSummaryResponse,
+  ThreadMapResponse,
+  ThreadHotspotResponse,
+  ThreadResponse,
+} from '@/api/threads';
+import { getMyPets } from '@/api/pets';
+import type { PetResponse } from '@/api/pets';
 import { useConfigStore } from '@/store/useConfigStore';
-import { calculateDistance, getRemainingTimeStr } from '@/lib/utils';
-import { ThreadType, UserType, DogType } from '@/types';
 
 type SubView = 'FIND' | 'RECRUIT' | 'EMERGENCY';
 
+const SEOUL_CITY_HALL: [number, number] = [37.566295, 126.977945];
+
+export function isExpired(startTime: string): boolean {
+  return Date.now() - Date.parse(startTime) >= 60 * 60 * 1000;
+}
+
 export function useRadarLogic() {
-  // 1. 상태 관리 (State Management)
+  const { setCoordinates } = useConfigStore();
+
+  // Tab state
   const [activeTab, setActiveTab] = useState<SubView>('FIND');
-  const [userProfile, setUserProfile] = useState<UserType | null>(null);
-  const [myDogs, setMyDogs] = useState<DogType[]>([]);
-  const [allThreads, setAllThreads] = useState<ThreadType[]>([]);
-  const [selectedPin, setSelectedPin] = useState<ThreadType | null>(null);
-  const [editingThread, setEditingThread] = useState<ThreadType | null>(null);
-  const [sortBy, setSortBy] = useState<'DISTANCE' | 'TIME'>('DISTANCE');
-  
+
+  // GPS / coordinates
+  const [coordinates, setCoordinates_] = useState<[number, number]>(SEOUL_CITY_HALL);
+  const [gpsLoading, setGpsLoading] = useState(true);
+
+  // Thread list (sidebar, paginated)
+  const [threadList, setThreadList] = useState<ThreadSummaryResponse[]>([]);
+  const [threadListPage, setThreadListPage] = useState(0);
+  const [threadListHasNext, setThreadListHasNext] = useState(false);
+
+  // Map markers
+  const [mapMarkers, setMapMarkers] = useState<ThreadMapResponse[]>([]);
+
+  // Hotspots
+  const [hotspots, setHotspots] = useState<ThreadHotspotResponse[]>([]);
+
+  // Selected thread detail
+  const [selectedThread, setSelectedThread] = useState<ThreadResponse | null>(null);
+
+  // My pets
+  const [myPets, setMyPets] = useState<PetResponse[]>([]);
+
+  // Loading states
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Local clock for expiry display (NOT a data fetch trigger)
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Zustand Global State
-  const {
-    currentLocation,
-    setLocation,
-    lastCoordinates: mapCenter,
-    setCoordinates: setMapCenter
-  } = useConfigStore();
+  // Edit state
+  const [editingThreadId, setEditingThreadId] = useState<number | null>(null);
 
-  // Consecutive failure counter for polling auto-stop
-  const failCountRef = useRef(0);
-  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // 2. 데이터 페칭 (Data Fetching)
-  const fetchData = useCallback(async () => {
+  // ---------------------------------------------------------------
+  // Fetch thread data (list + map + hotspots)
+  // ---------------------------------------------------------------
+  const fetchThreadData = useCallback(async (coords: [number, number]) => {
+    const [latitude, longitude] = coords;
     try {
-      const [threads, profile, dogs] = await Promise.all([
-        threadService.getThreads(mapCenter[0], mapCenter[1]),
-        memberService.getMe(),
-        memberService.getMyDogs()
+      const [listResult, markerResult, hotspotResult] = await Promise.all([
+        getThreads({ page: 0, size: 20 }),
+        getThreadMap({ latitude, longitude, radius: 5 }),
+        getHotspots(),
       ]);
-      failCountRef.current = 0; // reset on success
-      setAllThreads(threads || []);
-      setUserProfile(profile);
-      setMyDogs(dogs || []);
-
-      // 초기 1회 프로필 위치 연동
-      if (profile?.location && !currentLocation) {
-        setLocation(profile.location);
-      }
-    } catch (e) {
-      console.error('Failed to fetch radar data:', e);
-      failCountRef.current += 1;
-      if (failCountRef.current >= 3) {
-        if (pollingIntervalRef.current !== null) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
-        console.warn('[useRadarLogic] Polling stopped after 3 consecutive failures');
-      }
+      setThreadList(listResult.content);
+      setThreadListPage(0);
+      setThreadListHasNext(listResult.hasNext);
+      setMapMarkers(markerResult);
+      setHotspots(hotspotResult);
+    } catch {
+      toast.error('스레드를 불러오는데 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
-  }, [mapCenter, currentLocation, setLocation]);
+  }, []);
 
-  // 3. 위치 동기화 (DIP: locationService)
+  // ---------------------------------------------------------------
+  // GPS acquisition on mount (once)
+  // ---------------------------------------------------------------
   useEffect(() => {
-    if (!currentLocation) return;
-    locationService.getCoordinates(currentLocation).then(coords => {
-      if (coords?.length === 2) setMapCenter(coords);
-    }).catch(console.error);
-  }, [currentLocation, setMapCenter]);
-
-  // 4. 주기적 갱신 (Polling)
-  useEffect(() => {
-    failCountRef.current = 0;
-    fetchData();
-    pollingIntervalRef.current = setInterval(fetchData, 10000);
-    const clockInterval = setInterval(() => setCurrentTime(new Date()), 10000);
-    return () => {
-      if (pollingIntervalRef.current !== null) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-      clearInterval(clockInterval);
-    };
-  }, [fetchData]);
-
-  // 5. 필터링 로직 (Memoized)
-  const checkExpired = (startTime?: string) => {
-    if (!startTime) return false;
-    const [h, m] = startTime.split(':').map(Number);
-    const target = new Date(currentTime);
-    target.setHours(h, m, 0, 0);
-    return (currentTime.getTime() - target.getTime()) / (1000 * 60) >= 60;
-  };
-
-  // 현재 유저의 활성 모집 스레드 (중복 등록 방지용)
-  const myActiveThread = useMemo(() => {
-    if (!userProfile) return null;
-    return allThreads.find(t =>
-      !t.isEmergency &&
-      t.author?.id === userProfile.id &&
-      !checkExpired(t.time || t.startTime)
-    ) || null;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allThreads, userProfile, currentTime]);
-
-  const visibleMarkers = useMemo(() => {
-    const isExpired = (startTime?: string) => {
-      if (!startTime) return false;
-      const [h, m] = startTime.split(':').map(Number);
-      const target = new Date(currentTime);
-      target.setHours(h, m, 0, 0);
-      // 시작 1시간 후면 만료 처리
-      return (currentTime.getTime() - target.getTime()) / (1000 * 60) >= 60;
+    const applyCoords = (coords: [number, number]) => {
+      setCoordinates_(coords);
+      setCoordinates(coords); // sync to config store
+      setGpsLoading(false);
     };
 
-    let filtered = allThreads.filter(t => {
-      if (activeTab === 'FIND') return !t.isEmergency && !isExpired(t.time || t.startTime);
-      if (activeTab === 'EMERGENCY') return t.isEmergency;
-      return false;
-    });
-
-    // 거리 계산 및 정렬
-    const withDistance = filtered.map(t => ({
-      ...t,
-      distance: calculateDistance(mapCenter[0], mapCenter[1], t.lat ?? mapCenter[0], t.lng ?? mapCenter[1])
-    })).filter(t => t.distance <= 5); // 5km 이내만 표시
-
-    return withDistance.sort((a, b) => {
-      if (sortBy === 'TIME') {
-        const [ah, am] = (a.time || a.startTime || "00:00").split(':').map(Number);
-        const [bh, bm] = (b.time || b.startTime || "00:00").split(':').map(Number);
-        return (ah * 60 + am) - (bh * 60 + bm);
-      }
-      return a.distance - b.distance;
-    });
-  }, [activeTab, allThreads, currentTime, mapCenter, sortBy]);
-
-  // 6. 액션 핸들러 (Action Handlers)
-  const handleJoinThread = async (id: string | number) => {
-    try {
-      await threadService.joinThread(id);
-      await fetchData();
-      if (selectedPin?.id === id) {
-        setSelectedPin({ ...selectedPin, isJoined: true });
-      }
-      toast.success('산책 신청이 완료되었습니다!');
-    } catch (e) {
-      toast.error('참여 신청에 실패했습니다.');
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = Number(pos.coords.latitude.toFixed(6));
+          const lng = Number(pos.coords.longitude.toFixed(6));
+          applyCoords([lat, lng]);
+        },
+        () => {
+          // Permission denied, timeout, or unavailable — use Seoul City Hall fallback
+          applyCoords(SEOUL_CITY_HALL);
+        },
+        { timeout: 10000, enableHighAccuracy: false },
+      );
+    } else {
+      applyCoords(SEOUL_CITY_HALL);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleDeleteThread = async (id: string | number) => {
+  // ---------------------------------------------------------------
+  // Fetch my pets on mount
+  // ---------------------------------------------------------------
+  useEffect(() => {
+    getMyPets()
+      .then(setMyPets)
+      .catch(() => {
+        // Non-critical — silently ignore
+      });
+  }, []);
+
+  // ---------------------------------------------------------------
+  // Fetch thread data once GPS is ready
+  // ---------------------------------------------------------------
+  useEffect(() => {
+    if (!gpsLoading) {
+      fetchThreadData(coordinates);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gpsLoading]);
+
+  // ---------------------------------------------------------------
+  // Local expiry timer — updates display clock every 60 seconds
+  // NO data fetching here
+  // ---------------------------------------------------------------
+  useEffect(() => {
+    const clockInterval = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(clockInterval);
+  }, []);
+
+  // ---------------------------------------------------------------
+  // Load more (sidebar pagination)
+  // ---------------------------------------------------------------
+  const loadMore = useCallback(async () => {
+    if (!threadListHasNext) return;
     try {
-      await threadService.deleteThread(id);
-      setSelectedPin(null);
-      await fetchData();
+      const nextPage = threadListPage + 1;
+      const result = await getThreads({ page: nextPage, size: 20 });
+      setThreadList((prev) => [...prev, ...result.content]);
+      setThreadListPage(nextPage);
+      setThreadListHasNext(result.hasNext);
+    } catch {
+      toast.error('더 불러오는데 실패했습니다.');
+    }
+  }, [threadListPage, threadListHasNext]);
+
+  // ---------------------------------------------------------------
+  // Manual re-search (DEC-029: only way to refetch)
+  // ---------------------------------------------------------------
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchThreadData(coordinates);
+    setIsRefreshing(false);
+  }, [fetchThreadData, coordinates]);
+
+  // ---------------------------------------------------------------
+  // Thread selection
+  // ---------------------------------------------------------------
+  const selectThread = useCallback(async (threadId: number) => {
+    try {
+      const detail = await getThread(threadId);
+      setSelectedThread(detail);
+    } catch {
+      toast.error('스레드 상세를 불러오는데 실패했습니다.');
+    }
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelectedThread(null);
+  }, []);
+
+  // ---------------------------------------------------------------
+  // Action handlers
+  // ---------------------------------------------------------------
+  const handleDeleteThread = useCallback(async (threadId: number) => {
+    try {
+      await deleteThread(threadId);
       toast.success('모집글이 삭제되었습니다.');
+      clearSelection();
+      await fetchThreadData(coordinates);
     } catch {
       toast.error('삭제에 실패했습니다.');
     }
-  };
+  }, [clearSelection, fetchThreadData, coordinates]);
 
-  const handleEditThread = (thread: ThreadType) => {
-    setEditingThread(thread);
-    setSelectedPin(null);
+  const startEdit = useCallback((threadId: number) => {
+    setEditingThreadId(threadId);
     setActiveTab('RECRUIT');
-  };
-
-  const handleRecruitSubmit = async (formData: any, selectedDogsIds: string[]) => {
-    setIsSubmitting(true);
-    try {
-      const dogs = myDogs.filter(d => selectedDogsIds.includes(d.id));
-
-      if (editingThread) {
-        // 수정 모드
-        const updatedData = {
-          ...formData,
-          participatingDogs: dogs,
-          name: dogs[0]?.name || editingThread.name || '강아지',
-          image: dogs[0]?.image || editingThread.image,
-        };
-        await threadService.updateThread(editingThread.id, updatedData);
-        setEditingThread(null);
-        toast.success('모집글이 수정되었습니다.');
-      } else {
-        // 신규 등록 모드
-        const newThread = {
-          ...formData,
-          lat: mapCenter[0],
-          lng: mapCenter[1],
-          name: dogs[0]?.name || '강아지',
-          image: dogs[0]?.image,
-          owner: userProfile?.nickname || '익명',
-          author: userProfile ?? undefined,
-          participatingDogs: dogs
-        };
-        await threadService.createThread(newThread);
-      }
-
-      await fetchData();
-      setIsSuccess(true);
-      setTimeout(() => {
-        setIsSuccess(false);
-        setActiveTab('FIND');
-      }, 2000);
-    } catch {
-      toast.error(editingThread ? '모집글 수정에 실패했습니다.' : '모집글 등록에 실패했습니다.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleEmergencySubmit = async (image: string, analysis: any, memo: string, mode: string) => {
-    setIsSubmitting(true);
-    try {
-      const newPin = {
-        name: mode === 'FOUND' ? '제보됨' : '실종됨',
-        breed: analysis?.breed?.ko || '알 수 없음',
-        lat: mapCenter[0] + (Math.random() - 0.5) * 0.005,
-        lng: mapCenter[1] + (Math.random() - 0.5) * 0.005,
-        image,
-        isEmergency: true,
-        owner: '나의 제보',
-        author: userProfile ?? undefined, // 제보자 정보 추가
-        content: memo || '방금 등록된 긴급 정보입니다.'
-      };
-      
-      await threadService.createThread(newPin);
-      await fetchData();
-      setIsSuccess(true);
-      setTimeout(() => {
-        setIsSuccess(false);
-        setActiveTab('FIND');
-      }, 3000);
-    } catch (e) {
-      toast.error('긴급 제보 등록에 실패했습니다.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const getRemainingTime = useCallback((startTime?: string) => {
-    return getRemainingTimeStr(startTime, currentTime);
-  }, [currentTime]);
+  }, []);
 
   return {
-    activeTab, setActiveTab,
-    currentLocation, setCurrentLocation: setLocation,
-    userProfile, myDogs,
-    mapCenter, setMapCenter,
-    isSubmitting, isSuccess,
-    selectedPin, setSelectedPin,
-    editingThread,
-    myActiveThread,
-    visibleMarkers,
+    // Tab
+    activeTab,
+    setActiveTab,
+    // GPS
+    coordinates,
+    gpsLoading,
+    // Thread list
+    threadList,
+    threadListHasNext,
+    loadMore,
+    // Map & hotspots
+    mapMarkers,
+    hotspots,
+    // Thread detail
+    selectedThread,
+    selectThread,
+    clearSelection,
+    // Pets
+    myPets,
+    // Loading
     isLoading,
-    sortBy, setSortBy,
-    getRemainingTime,
-    handleJoinThread,
+    isRefreshing,
+    // Display clock (no data fetch)
+    currentTime,
+    isExpired,
+    // Edit
+    editingThreadId,
+    startEdit,
+    // Actions
     handleDeleteThread,
-    handleEditThread,
-    handleRecruitSubmit,
-    handleEmergencySubmit,
-    fetchData
+    handleRefresh,
   };
 }
