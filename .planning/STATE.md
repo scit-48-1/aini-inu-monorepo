@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-05-PLAN.md (remove postService.getPosts from MyProfileView)
-last_updated: "2026-03-06T02:29:50.768Z"
+stopped_at: Completed 04-06-PLAN.md (fix follow state persistence and NeighborsModal member routing)
+last_updated: "2026-03-06T02:30:51.668Z"
 last_activity: "2026-03-06 -- Completed plan 03-02 (3-step signup flow: Account->Profile->Pet->Complete)"
 progress:
   total_phases: 12
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 14
-  completed_plans: 13
+  completed_plans: 14
   percent: 100
 ---
 
@@ -61,6 +61,7 @@ Progress: [██████████] 100%
 | Phase 04-member-profile-relations P02 | 4 | 2 tasks | 4 files |
 | Phase 04-member-profile-relations P04 | 1 | 1 tasks | 1 files |
 | Phase 04-member-profile-relations P05 | 2 | 1 tasks | 1 files |
+| Phase 04-member-profile-relations P06 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -106,6 +107,9 @@ Recent decisions affecting current work:
 - [Phase 04-02]: NeighborsModal: SliceResponse.content accessed directly; load-more appends pages when hasNext is true; resets on tab change
 - [Phase 04-member-profile-relations]: [Phase 04-04]: getMyPets import added alongside PetResponse type import from @/api/pets; getMemberPets fully removed from MyProfileView
 - [Phase 04-member-profile-relations]: postService.getPosts() removed from Promise.all in MyProfileView — unauthenticated call blocked entire profile load with 401; posts state kept for future Phase 9 wiring
+- [Phase 04-member-profile-relations]: getFollowStatus uses dedicated GET /members/me/follows/{targetId} instead of list scan for O(1) follow state check
+- [Phase 04-member-profile-relations]: getFollowers/getFollowing accept optional memberId; routes to /members/{id}/... when set, /members/me/... when absent (backward compatible)
+- [Phase 04-member-profile-relations]: NeighborsModal memberId prop optional - MyProfileView passes none, OtherProfileView passes memberId for correct member list routing
 
 ### Pending Todos
 
@@ -117,6 +121,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T02:29:50.765Z
-Stopped at: Completed 04-05-PLAN.md (remove postService.getPosts from MyProfileView)
+Last session: 2026-03-06T02:30:51.666Z
+Stopped at: Completed 04-06-PLAN.md (fix follow state persistence and NeighborsModal member routing)
 Resume file: None
