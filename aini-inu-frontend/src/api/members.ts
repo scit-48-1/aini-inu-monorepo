@@ -73,7 +73,6 @@ export interface MemberFollowResponse {
 }
 
 export interface FollowStatusResponse {
-  following: boolean;
   isFollowing: boolean;
 }
 

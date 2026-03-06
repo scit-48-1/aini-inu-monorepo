@@ -154,6 +154,54 @@ public class MemberController {
         return ResponseEntity.ok(ApiResponse.success(petService.getUserPets(memberId)));
     }
 
+    @GetMapping("/{memberId}/followers")
+    @Operation(summary = "특정 회원 팔로워 목록 조회", description = "memberId 회원의 팔로워 목록을 조회합니다.")
+    @Parameters({
+            @Parameter(
+                    name = "page",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 번호(0부터 시작)",
+                    schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")
+            ),
+            @Parameter(
+                    name = "size",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 크기",
+                    schema = @Schema(type = "integer", defaultValue = "20", minimum = "1")
+            )
+    })
+    public ResponseEntity<ApiResponse<SliceResponse<MemberFollowResponse>>> getMemberFollowers(
+            @PathVariable("memberId") Long memberId,
+            @Parameter(hidden = true)
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(memberService.getFollowers(memberId, pageable)));
+    }
+
+    @GetMapping("/{memberId}/following")
+    @Operation(summary = "특정 회원 팔로잉 목록 조회", description = "memberId 회원이 팔로우 중인 목록을 조회합니다.")
+    @Parameters({
+            @Parameter(
+                    name = "page",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 번호(0부터 시작)",
+                    schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")
+            ),
+            @Parameter(
+                    name = "size",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 크기",
+                    schema = @Schema(type = "integer", defaultValue = "20", minimum = "1")
+            )
+    })
+    public ResponseEntity<ApiResponse<SliceResponse<MemberFollowResponse>>> getMemberFollowing(
+            @PathVariable("memberId") Long memberId,
+            @Parameter(hidden = true)
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(memberService.getFollowing(memberId, pageable)));
+    }
+
     @GetMapping("/me/followers")
     @Operation(summary = "내 팔로워 목록 조회", description = "현재 로그인한 회원의 팔로워 목록을 조회합니다.")
     @Parameters({
@@ -214,6 +262,15 @@ public class MemberController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return ResponseEntity.ok(ApiResponse.success(memberService.getFollowing(memberId, pageable)));
+    }
+
+    @GetMapping("/me/follows/{targetId}")
+    @Operation(summary = "팔로우 상태 조회", description = "targetId 회원에 대한 팔로우 상태를 확인합니다.")
+    public ResponseEntity<ApiResponse<FollowStatusResponse>> getFollowStatus(
+            @CurrentMember Long memberId,
+            @PathVariable("targetId") Long targetId
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(memberService.getFollowStatus(memberId, targetId)));
     }
 
     @PostMapping("/me/follows/{targetId}")

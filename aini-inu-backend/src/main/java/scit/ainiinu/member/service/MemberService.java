@@ -139,13 +139,20 @@ public class MemberService {
     }
 
     public SliceResponse<MemberFollowResponse> getFollowers(Long memberId, Pageable pageable) {
+        findMember(memberId);
         Slice<MemberFollow> follows = memberFollowRepository.findAllByFollowingIdOrderByCreatedAtDesc(memberId, pageable);
         return mapFollowSlice(follows, MemberFollow::getFollowerId);
     }
 
     public SliceResponse<MemberFollowResponse> getFollowing(Long memberId, Pageable pageable) {
+        findMember(memberId);
         Slice<MemberFollow> follows = memberFollowRepository.findAllByFollowerIdOrderByCreatedAtDesc(memberId, pageable);
         return mapFollowSlice(follows, MemberFollow::getFollowingId);
+    }
+
+    public FollowStatusResponse getFollowStatus(Long memberId, Long targetId) {
+        boolean isFollowing = memberFollowRepository.existsByFollowerIdAndFollowingId(memberId, targetId);
+        return new FollowStatusResponse(isFollowing);
     }
 
     @Transactional

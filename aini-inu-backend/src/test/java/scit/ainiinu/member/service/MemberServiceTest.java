@@ -301,6 +301,8 @@ class MemberServiceTest {
         @Test
         @DisplayName("팔로워 목록 조회에 성공한다")
         void getFollowers_success() {
+            Member me = Member.builder().email("me@test.com").nickname("나").build();
+            ReflectionTestUtils.setField(me, "id", 1L);
             Member follower = Member.builder().email("follower@test.com").nickname("팔로워").build();
             ReflectionTestUtils.setField(follower, "id", 2L);
 
@@ -312,6 +314,7 @@ class MemberServiceTest {
 
             PageRequest pageable = PageRequest.of(0, 20);
             Slice<MemberFollow> slice = new SliceImpl<>(List.of(follow), pageable, false);
+            given(memberRepository.findById(1L)).willReturn(Optional.of(me));
             given(memberFollowRepository.findAllByFollowingIdOrderByCreatedAtDesc(1L, pageable)).willReturn(slice);
             given(memberRepository.findAllById(List.of(2L))).willReturn(List.of(follower));
 
@@ -322,8 +325,25 @@ class MemberServiceTest {
         }
 
         @Test
+        @DisplayName("존재하지 않는 회원의 팔로워 목록을 조회하면 예외가 발생한다")
+        void getFollowers_memberNotFound_throwsException() {
+            given(memberRepository.findById(999L)).willReturn(Optional.empty());
+
+            PageRequest pageable = PageRequest.of(0, 20);
+
+            assertThatThrownBy(() -> memberService.getFollowers(999L, pageable))
+                    .isInstanceOf(MemberException.class)
+                    .satisfies(exception -> {
+                        MemberException memberException = (MemberException) exception;
+                        assertThat(memberException.getErrorCode()).isEqualTo(MemberErrorCode.MEMBER_NOT_FOUND);
+                    });
+        }
+
+        @Test
         @DisplayName("팔로잉 목록 조회에 성공한다")
         void getFollowing_success() {
+            Member me = Member.builder().email("me@test.com").nickname("나").build();
+            ReflectionTestUtils.setField(me, "id", 1L);
             Member following = Member.builder().email("following@test.com").nickname("팔로잉").build();
             ReflectionTestUtils.setField(following, "id", 3L);
 
@@ -335,6 +355,7 @@ class MemberServiceTest {
 
             PageRequest pageable = PageRequest.of(0, 20);
             Slice<MemberFollow> slice = new SliceImpl<>(List.of(follow), pageable, false);
+            given(memberRepository.findById(1L)).willReturn(Optional.of(me));
             given(memberFollowRepository.findAllByFollowerIdOrderByCreatedAtDesc(1L, pageable)).willReturn(slice);
             given(memberRepository.findAllById(List.of(3L))).willReturn(List.of(following));
 
@@ -342,6 +363,58 @@ class MemberServiceTest {
 
             assertThat(response.getContent()).hasSize(1);
             assertThat(response.getContent().get(0).getNickname()).isEqualTo("팔로잉");
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 회원의 팔로잉 목록을 조회하면 예외가 발생한다")
+        void getFollowing_memberNotFound_throwsException() {
+            given(memberRepository.findById(999L)).willReturn(Optional.empty());
+
+            PageRequest pageable = PageRequest.of(0, 20);
+
+            assertThatThrownBy(() -> memberService.getFollowing(999L, pageable))
+                    .isInstanceOf(MemberException.class)
+                    .satisfies(exception -> {
+                        MemberException memberException = (MemberException) exception;
+                        assertThat(memberException.getErrorCode()).isEqualTo(MemberErrorCode.MEMBER_NOT_FOUND);
+                    });
+        }
+
+        @Test
+        @DisplayName("팔로우 상태 조회 시 팔로우 중이면 true를 반환한다")
+        void getFollowStatus_following_returnsTrue() {
+            given(memberFollowRepository.existsByFollowerIdAndFollowingId(1L, 2L)).willReturn(true);
+
+            FollowStatusResponse response = memberService.getFollowStatus(1L, 2L);
+
+            assertThat(response.isFollowing()).isTrue();
+        }
+
+        @Test
+        @DisplayName("팔로우 상태 조회 시 팔로우 중이 아니면 false를 반환한다")
+        void getFollowStatus_notFollowing_returnsFalse() {
+            given(memberFollowRepository.existsByFollowerIdAndFollowingId(1L, 2L)).willReturn(false);
+
+            FollowStatusResponse response = memberService.getFollowStatus(1L, 2L);
+
+            assertThat(response.isFollowing()).isFalse();
+        }
+
+        @Test
+        @DisplayName("팔로워 목록이 비어있으면 빈 목록을 반환한다")
+        void getFollowers_empty_returnsEmptyList() {
+            Member me = Member.builder().email("me@test.com").nickname("나").build();
+            ReflectionTestUtils.setField(me, "id", 1L);
+
+            PageRequest pageable = PageRequest.of(0, 20);
+            Slice<MemberFollow> emptySlice = new SliceImpl<>(List.of(), pageable, false);
+            given(memberRepository.findById(1L)).willReturn(Optional.of(me));
+            given(memberFollowRepository.findAllByFollowingIdOrderByCreatedAtDesc(1L, pageable)).willReturn(emptySlice);
+            given(memberRepository.findAllById(List.of())).willReturn(List.of());
+
+            SliceResponse<MemberFollowResponse> response = memberService.getFollowers(1L, pageable);
+
+            assertThat(response.getContent()).isEmpty();
         }
     }
 

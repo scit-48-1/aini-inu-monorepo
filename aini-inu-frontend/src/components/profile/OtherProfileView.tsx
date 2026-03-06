@@ -59,7 +59,7 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
   const fetchFollowState = useCallback(async () => {
     try {
       const res = await getFollowStatus(memberId);
-      setInitialIsFollowing(res.following || res.isFollowing);
+      setInitialIsFollowing(res.isFollowing);
     } catch {
       // Non-critical: default to not following
       setInitialIsFollowing(false);

@@ -284,7 +284,7 @@ class  MemberControllerTest {
 
         @Test
         @WithMockUser
-        @DisplayName("팔로워 목록 조회 API를 호출하면 SliceResponse를 반환한다")
+        @DisplayName("내 팔로워 목록 조회 API를 호출하면 SliceResponse를 반환한다")
         void getFollowers_success() throws Exception {
             MemberFollowResponse follower = MemberFollowResponse.builder()
                     .id(2L)
@@ -305,7 +305,7 @@ class  MemberControllerTest {
 
         @Test
         @WithMockUser
-        @DisplayName("팔로잉 목록 조회 API를 호출하면 SliceResponse를 반환한다")
+        @DisplayName("내 팔로잉 목록 조회 API를 호출하면 SliceResponse를 반환한다")
         void getFollowing_success() throws Exception {
             MemberFollowResponse following = MemberFollowResponse.builder()
                     .id(3L)
@@ -322,6 +322,72 @@ class  MemberControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.content[0].id").value(3L))
                     .andExpect(jsonPath("$.data.content[0].nickname").value("팔로잉"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("특정 회원 팔로워 목록 조회 API를 호출하면 SliceResponse를 반환한다")
+        void getMemberFollowers_success() throws Exception {
+            MemberFollowResponse follower = MemberFollowResponse.builder()
+                    .id(3L)
+                    .nickname("팔로워A")
+                    .followedAt(LocalDateTime.now())
+                    .build();
+            given(memberService.getFollowers(eq(2L), any()))
+                    .willReturn(new scit.ainiinu.common.response.SliceResponse<>(List.of(follower), 0, 20, true, true, false));
+
+            mockMvc.perform(get("/api/v1/members/{memberId}/followers", 2L)
+                            .param("page", "0")
+                            .param("size", "20"))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.content[0].id").value(3L))
+                    .andExpect(jsonPath("$.data.content[0].nickname").value("팔로워A"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("특정 회원 팔로잉 목록 조회 API를 호출하면 SliceResponse를 반환한다")
+        void getMemberFollowing_success() throws Exception {
+            MemberFollowResponse following = MemberFollowResponse.builder()
+                    .id(4L)
+                    .nickname("팔로잉B")
+                    .followedAt(LocalDateTime.now())
+                    .build();
+            given(memberService.getFollowing(eq(2L), any()))
+                    .willReturn(new scit.ainiinu.common.response.SliceResponse<>(List.of(following), 0, 20, true, true, false));
+
+            mockMvc.perform(get("/api/v1/members/{memberId}/following", 2L)
+                            .param("page", "0")
+                            .param("size", "20"))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.content[0].id").value(4L))
+                    .andExpect(jsonPath("$.data.content[0].nickname").value("팔로잉B"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("팔로우 상태 조회 API를 호출하면 팔로우 상태를 반환한다")
+        void getFollowStatus_success() throws Exception {
+            given(memberService.getFollowStatus(1L, 2L)).willReturn(new FollowStatusResponse(true));
+
+            mockMvc.perform(get("/api/v1/members/me/follows/{targetId}", 2L))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.isFollowing").value(true));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("팔로우 상태 조회 API에서 팔로우하지 않은 경우 false를 반환한다")
+        void getFollowStatus_notFollowing() throws Exception {
+            given(memberService.getFollowStatus(1L, 3L)).willReturn(new FollowStatusResponse(false));
+
+            mockMvc.perform(get("/api/v1/members/me/follows/{targetId}", 3L))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.isFollowing").value(false));
         }
 
         @Test

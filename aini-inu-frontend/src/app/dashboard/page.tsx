@@ -17,12 +17,12 @@ import { ThreadType } from '@/types';
 export default function DashboardPage() {
   const { profile: userProfile } = useProfile();
   // Safe Access: 강아지가 없어도 앱이 죽지 않도록 방어
-  const mainDog = userProfile?.dogs?.[0] || { 
-    name: '댕댕이', 
+  const mainDog = userProfile?.dogs?.[0] || {
+    name: '댕댕이',
     image: '/images/dog-portraits/Mixed Breed.png',
-    breed: '믹스견' 
+    breed: '믹스견'
   };
-  
+
   const [hotspot, setHotspot] = useState({ region: '성수동 서울숲', count: 12 });
   const [threads, setThreads] = useState<ThreadType[]>([]);
   const [draftCount, setDraftCount] = useState(0);
@@ -97,7 +97,7 @@ export default function DashboardPage() {
       toast.success(`${reviewPartner.nickname}님에 대한 리뷰가 전달되었습니다.`);
     } catch (e) {
       toast.error('리뷰 등록 중 오류가 발생했습니다.');
-      throw e; 
+      throw e;
     }
   };
 
@@ -107,14 +107,14 @@ export default function DashboardPage() {
     <div className="p-6 md:p-10 space-y-10 animate-in fade-in duration-700 h-full overflow-y-auto no-scrollbar">
       <div className="max-w-7xl mx-auto space-y-10 pb-20">
         <DraftNotification draftCount={draftCount} />
-        
+
         <AIBanner hotspot={hotspot} dogName={mainDog.name} />
-        
-        <DashboardHero 
-          userProfile={userProfile} 
-          mainDog={mainDog} 
-          grassData={grassData} 
-          totalWalks={totalWalks} 
+
+        <DashboardHero
+          userProfile={userProfile}
+          mainDog={mainDog}
+          grassData={grassData}
+          totalWalks={totalWalks}
         />
 
         <RecentFriends friends={recentFriends} />

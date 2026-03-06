@@ -17,6 +17,8 @@ public interface MemberFollowRepository extends JpaRepository<MemberFollow, Long
 
     Optional<MemberFollow> findByFollowerIdAndFollowingId(Long followerId, Long followingId);
 
+    boolean existsByFollowerIdAndFollowingId(Long followerId, Long followingId);
+
     @Query("select mf.followingId from MemberFollow mf where mf.followerId = :followerId")
     List<Long> findFollowingIdsByFollowerId(@Param("followerId") Long followerId);
 }
