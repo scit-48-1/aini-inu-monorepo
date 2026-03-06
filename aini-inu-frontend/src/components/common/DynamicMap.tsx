@@ -13,6 +13,7 @@ interface DynamicMapProps {
   onMarkerClick: (marker: MapMarker) => void;
   hideCircle?: boolean; // 레이다 원 숨김 옵션 추가
   interactive?: boolean; // 지도 상호작용 여부 추가
+  radiusKm?: number; // 반경 (km), 기본 2.5
 }
 
 function MapController({ center, zoom }: { center: [number, number]; zoom: number }) {
@@ -44,7 +45,7 @@ function MapController({ center, zoom }: { center: [number, number]; zoom: numbe
   return null;
 }
 
-export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideCircle, interactive = true }: DynamicMapProps) {
+export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideCircle, interactive = true, radiusKm }: DynamicMapProps) {
   
   const createCustomIcon = (imageUrl: string, isEmergency: boolean) => {
     return L.divIcon({
@@ -98,10 +99,10 @@ export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideC
         />
         
         {!hideCircle && (
-          <Circle 
-            key={`circle-${center[0]}-${center[1]}`}
+          <Circle
+            key={`circle-${center[0]}-${center[1]}-${radiusKm}`}
             center={center}
-            radius={2500}
+            radius={(radiusKm ?? 2.5) * 1000}
             pathOptions={{ 
               fillColor: '#FF9F0A', 
               fillOpacity: 0.15, 

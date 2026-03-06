@@ -95,6 +95,7 @@ export default function AroundMePage() {
             onDeleteThread={handleDeleteThread}
             onEditThread={startEdit}
             onRefreshDetail={handleRefresh}
+            radius={radius}
           />
         )}
 
@@ -115,7 +116,7 @@ export default function AroundMePage() {
         )}
 
         {activeTab === 'RECRUIT' && (
-          myActiveThread ? (
+          (myActiveThread && !editingThreadId) ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
               <div className="w-full max-w-md bg-amber-50 border border-amber-200 rounded-[32px] p-6 space-y-3">
                 <div className="flex items-center gap-3">

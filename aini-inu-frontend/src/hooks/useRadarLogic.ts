@@ -29,7 +29,7 @@ export function isExpired(startTime: string): boolean {
 }
 
 export function useRadarLogic() {
-  const { setCoordinates } = useConfigStore();
+  const { setCoordinates, setLocation } = useConfigStore();
 
   // Tab state
   const [activeTab, setActiveTab] = useState<SubView>('FIND');
@@ -108,6 +108,7 @@ export function useRadarLogic() {
     const applyCoords = (coords: [number, number]) => {
       setCoordinates_(coords);
       setCoordinates(coords); // sync to config store
+      setLocation('현재 위치');
       setGpsLoading(false);
     };
 

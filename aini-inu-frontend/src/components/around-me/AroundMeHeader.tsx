@@ -50,17 +50,6 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
           <button onClick={onLocationClick} className="text-black font-black text-xs flex items-center gap-2 bg-zinc-50/50 px-4 py-2 rounded-full border border-zinc-100 hover:bg-white hover:border-amber-500 hover:shadow-sm transition-all active:scale-95 group">
             <MapPin size={14} className="text-amber-500" /> {currentLocation} <Edit2 size={10} className="text-zinc-300 group-hover:text-amber-500 ml-1" />
           </button>
-          {onRefresh && (
-            <button
-              onClick={onRefresh}
-              disabled={isRefreshing}
-              title="재탐색"
-              className="flex items-center gap-1.5 text-black font-black text-xs bg-zinc-50/50 px-3 py-2 rounded-full border border-zinc-100 hover:bg-white hover:border-amber-500 hover:shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCw size={14} className={cn('text-amber-500', isRefreshing && 'animate-spin')} />
-              <span>재탐색</span>
-            </button>
-          )}
           {onDateFromChange && (
             <div className="flex items-center gap-1.5 bg-zinc-50/50 px-3 py-1.5 rounded-full border border-zinc-100 text-xs font-black text-zinc-500">
               <CalendarDays size={12} className="text-amber-500" />
@@ -92,6 +81,17 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
                 ))}
               </select>
             </div>
+          )}
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              title="재탐색"
+              className="flex items-center gap-1.5 text-black font-black text-xs bg-zinc-50/50 px-3 py-2 rounded-full border border-zinc-100 hover:bg-white hover:border-amber-500 hover:shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={14} className={cn('text-amber-500', isRefreshing && 'animate-spin')} />
+              <span>재탐색</span>
+            </button>
           )}
         </div>
       </div>
