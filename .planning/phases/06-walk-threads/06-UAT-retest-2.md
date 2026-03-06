@@ -3,7 +3,7 @@ status: complete
 phase: 06-walk-threads
 source: 06-UAT-retest.md (retest-2 after 06-07, 06-08, 06-09, 06-10 fixes)
 started: 2026-03-07T10:00:00Z
-updated: 2026-03-07T10:30:00Z
+updated: 2026-03-07T11:00:00Z
 ---
 
 ## Current Test
@@ -22,9 +22,8 @@ result: pass
 
 ### 3. Full Thread Badge (모집 완료)
 expected: 정원이 찬 스레드(currentParticipants >= maxParticipants)에 파란색 "모집 완료" 뱃지가 사이드바 카드와 지도 팝업에 표시됨. 팝업에서 신청 버튼이 비활성화되어 "정원이 찼습니다"로 표시됨. 만료된 스레드와는 구분됨.
-result: issue
-reported: "사이드바 카드에 모집 완료 뱃지가 없으며 여전히 '만료됨'이라는 빨간 뱃지가 붙어있어. 정원이 가득찬 상태를 만료되었다고 나타나니까 이상해. 기본적으로 프론트에서 현재 날짜부터 이후의 모든 스레드를 가져오도록 해야 함."
-severity: major
+result: pass
+note: "Hot-fixed during UAT: badge cascade priority swapped (isFull > isExpired), default dateFrom set to today, re-fetch detail after apply/cancel"
 
 ### 4. Edit Mode Bypasses Active Thread Guard
 expected: 이미 활성 스레드가 있는 상태에서 내 스레드의 수정 버튼을 누르면, "이미 활성 스레드가 있습니다" 배너 없이 수정 폼이 정상적으로 표시됨.
@@ -54,21 +53,11 @@ note: "Nominatim 무한호출 문제로 역지오코딩 제거됨. 기능 자체
 ## Summary
 
 total: 9
-passed: 7
-issues: 1
+passed: 8
+issues: 0
 pending: 0
 skipped: 1
 
 ## Gaps
 
-- truth: "정원이 찬 스레드에 '모집 완료' 뱃지가 표시되어야 하며, '만료됨'과 구분되어야 함. 프론트에서 기본적으로 현재 날짜 이후 스레드만 로드해야 함."
-  status: failed
-  reason: "User reported: 사이드바 카드에 모집 완료 뱃지가 없고 정원이 찬 스레드에 '만료됨' 빨간 뱃지가 표시됨. 시간 만료와 정원 초과를 구분하지 못함."
-  severity: major
-  test: 3
-  root_cause: ""
-  artifacts: []
-  missing:
-    - "사이드바 배지 로직에서 isExpired와 isFull(currentParticipants >= maxParticipants) 분리"
-    - "프론트 기본 dateFrom을 오늘 날짜로 설정하여 과거 스레드 제외"
-  debug_session: ""
+[none - all issues hot-fixed during testing]
