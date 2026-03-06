@@ -51,9 +51,9 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 ### Pet Management (Phase 5) — FR-PET
 
 - [x] **PET-01**: 반려견 등록 — `birthDate` canonical 단일 입력 (FR-PET-001, `PET-CREATE`, DEC-003)
-- [ ] **PET-02**: 반려견 수정 (FR-PET-001, `PET-PATCH`)
-- [ ] **PET-03**: 반려견 삭제 (FR-PET-001, `PET-DELETE`)
-- [ ] **PET-04**: 메인 반려견 변경 (FR-PET-002, `PET-MAIN-PATCH`)
+- [x] **PET-02**: 반려견 수정 (FR-PET-001, `PET-PATCH`)
+- [x] **PET-03**: 반려견 삭제 (FR-PET-001, `PET-DELETE`)
+- [x] **PET-04**: 메인 반려견 변경 (FR-PET-002, `PET-MAIN-PATCH`)
 - [x] **PET-05**: 견종 마스터 조회 (FR-PET-003, `PET-BREEDS-GET`)
 - [x] **PET-06**: 성향 마스터 조회 (FR-PET-003, `PET-PERSONALITIES-GET`)
 - [x] **PET-07**: 산책스타일 마스터 조회 (FR-PET-003, `PET-WALKING-STYLES-GET`)
@@ -203,9 +203,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | MEM-12 | Phase 4 | Complete |
 | MEM-13 | Phase 4 | Complete |
 | PET-01 | Phase 5 | Complete |
-| PET-02 | Phase 5 | Pending |
-| PET-03 | Phase 5 | Pending |
-| PET-04 | Phase 5 | Pending |
+| PET-02 | Phase 5 | Complete |
+| PET-03 | Phase 5 | Complete |
+| PET-04 | Phase 5 | Complete |
 | PET-05 | Phase 5 | Complete |
 | PET-06 | Phase 5 | Complete |
 | PET-07 | Phase 5 | Complete |

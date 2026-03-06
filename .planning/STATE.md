@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-06T06:01:59.063Z"
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-03-06T06:06:43.526Z"
 last_activity: "2026-03-06 -- Completed plan 03-02 (3-step signup flow: Account->Profile->Pet->Complete)"
 progress:
   total_phases: 12
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 16
-  completed_plans: 15
+  completed_plans: 16
   percent: 100
 ---
 
@@ -63,6 +63,7 @@ Progress: [██████████] 100%
 | Phase 04-member-profile-relations P05 | 2 | 1 tasks | 1 files |
 | Phase 04-member-profile-relations P06 | 3 | 2 tasks | 3 files |
 | Phase 05-pet-management P01 | 3 | 2 tasks | 6 files |
+| Phase 05-pet-management P02 | 4 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -116,6 +117,9 @@ Recent decisions affecting current work:
 - [Phase 05-01]: PetForm edit mode shows breed/gender/size as read-only (backend rejects changes)
 - [Phase 05-01]: ProfileDogs main pet indicator uses Crown icon (lucide-react) top-right of card image; 10-pet limit disables add button with Korean message
 - [Phase 05-01]: mapPetResponseToDogType removed from MyProfileView; legacy modals use 'as any' cast pending Plan 02 rewire
+- [Phase 05-02]: DogDetailModal manages DeleteConfirmDialog state internally; calls onDeleted() on success
+- [Phase 05-02]: Main-switch optimistic pattern: fires setMainPet immediately, onMainChanged() triggers refetch on both success and failure
+- [Phase 05-02]: walkingStyleCodes used in updatePet (not walkingStyles) per research Pitfall 2 for edit mode
 
 ### Pending Todos
 
@@ -127,6 +131,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T06:01:59.060Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-03-06T06:06:43.523Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
