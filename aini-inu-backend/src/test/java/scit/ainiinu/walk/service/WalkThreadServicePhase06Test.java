@@ -179,10 +179,10 @@ class WalkThreadServicePhase06Test {
             Slice<WalkThread> slice = new SliceImpl<>(List.of(thread), pageable, false);
             given(walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(WalkThreadStatus.RECRUITING, pageable))
                     .willReturn(slice);
-            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(0L);
-            given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(1L, memberId, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(Optional.empty());
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
 
             // when
             SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, null, null, null, null, null);
@@ -206,10 +206,10 @@ class WalkThreadServicePhase06Test {
             given(walkThreadRepository.findByStatusAndWalkDateRange(
                     WalkThreadStatus.RECRUITING, startDate, LocalDate.of(2099, 12, 31), pageable))
                     .willReturn(slice);
-            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(0L);
-            given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(1L, memberId, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(Optional.empty());
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
 
             // when
             SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, startDate, null, null, null, null);
@@ -232,10 +232,10 @@ class WalkThreadServicePhase06Test {
             given(walkThreadRepository.findByStatusAndWalkDateRange(
                     WalkThreadStatus.RECRUITING, LocalDate.of(2000, 1, 1), endDate, pageable))
                     .willReturn(slice);
-            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(0L);
-            given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(1L, memberId, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(Optional.empty());
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
 
             // when
             SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, null, endDate, null, null, null);
@@ -259,10 +259,10 @@ class WalkThreadServicePhase06Test {
             given(walkThreadRepository.findByStatusAndWalkDateRange(
                     WalkThreadStatus.RECRUITING, startDate, endDate, pageable))
                     .willReturn(slice);
-            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(0L);
-            given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(1L, memberId, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(Optional.empty());
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
 
             // when
             SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, startDate, endDate, null, null, null);
@@ -296,10 +296,10 @@ class WalkThreadServicePhase06Test {
             Slice<WalkThread> slice = new SliceImpl<>(List.of(nearThread, farThread), pageable, false);
             given(walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(WalkThreadStatus.RECRUITING, pageable))
                     .willReturn(slice);
-            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(0L);
-            given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(1L, memberId, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(Optional.empty());
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
 
             // when
             SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(
@@ -342,10 +342,10 @@ class WalkThreadServicePhase06Test {
             Slice<WalkThread> slice = new SliceImpl<>(List.of(activeThread, expiredThread), pageable, false);
             given(walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(WalkThreadStatus.RECRUITING, pageable))
                     .willReturn(slice);
-            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(0L);
-            given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(1L, memberId, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(Optional.empty());
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
 
             // when
             SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, null, null, null, null, null);
@@ -369,10 +369,10 @@ class WalkThreadServicePhase06Test {
 
             given(walkThreadRepository.findAllByAuthorIdAndStatus(memberId, WalkThreadStatus.RECRUITING))
                     .willReturn(List.of(thread));
-            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(0L);
-            given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(1L, memberId, WalkThreadApplicationStatus.JOINED))
-                    .willReturn(Optional.empty());
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
 
             // when
             List<ThreadSummaryResponse> result = walkThreadService.getMyActiveThread(memberId);
@@ -490,6 +490,64 @@ class WalkThreadServicePhase06Test {
         }
     }
 
+    @Nested
+    @DisplayName("지도용 모집글 날짜 필터")
+    class GetMapThreads {
+
+        @Test
+        @DisplayName("startDate/endDate 필터 적용 시 범위 내 스레드만 반환")
+        void getMapThreads_withDateFilter_returnsOnlyMatchingDates() {
+            // given
+            Long memberId = 1L;
+            double lat = 37.5445, lng = 127.0445, radiusKm = 10.0;
+
+            // Thread with walkDate = today + 2 days
+            WalkThread thread1 = buildFutureThreadWithWalkDate(1L, 2L, LocalDate.now().plusDays(2));
+            // Thread with walkDate = today + 10 days
+            WalkThread thread2 = buildFutureThreadWithWalkDate(2L, 3L, LocalDate.now().plusDays(10));
+
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(thread1, thread2));
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+
+            // Date range covers only thread1 (today to today+5)
+            LocalDate startDate = LocalDate.now();
+            LocalDate endDate = LocalDate.now().plusDays(5);
+
+            // when
+            List<scit.ainiinu.walk.dto.response.ThreadMapResponse> result =
+                    walkThreadService.getMapThreads(memberId, lat, lng, radiusKm, startDate, endDate);
+
+            // then
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).getThreadId()).isEqualTo(1L);
+        }
+
+        @Test
+        @DisplayName("날짜 필터 null이면 모든 비만료 스레드 반환 (하위 호환)")
+        void getMapThreads_noDateFilter_returnsAll() {
+            // given
+            Long memberId = 1L;
+            double lat = 37.5445, lng = 127.0445, radiusKm = 10.0;
+
+            WalkThread thread1 = buildFutureThreadWithWalkDate(1L, 2L, LocalDate.now().plusDays(2));
+            WalkThread thread2 = buildFutureThreadWithWalkDate(2L, 3L, LocalDate.now().plusDays(10));
+
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(thread1, thread2));
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L, 2L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+
+            // when
+            List<scit.ainiinu.walk.dto.response.ThreadMapResponse> result =
+                    walkThreadService.getMapThreads(memberId, lat, lng, radiusKm, null, null);
+
+            // then
+            assertThat(result).hasSize(2);
+        }
+    }
+
     // --- Helper methods ---
 
     private WalkThread buildThread(Long threadId, Long authorId) {
@@ -517,6 +575,28 @@ class WalkThreadServicePhase06Test {
     private WalkThread buildFutureThread(Long threadId, Long authorId) {
         return buildFutureThreadWithLocation(threadId, authorId,
                 BigDecimal.valueOf(37.5445), BigDecimal.valueOf(127.0445));
+    }
+
+    private WalkThread buildFutureThreadWithWalkDate(Long threadId, Long authorId, LocalDate walkDate) {
+        WalkThread thread = WalkThread.builder()
+                .authorId(authorId)
+                .title("산책 모집 " + threadId)
+                .description("산책 함께해요")
+                .walkDate(walkDate)
+                .startTime(walkDate.atTime(14, 0))
+                .endTime(walkDate.atTime(15, 0))
+                .chatType(WalkChatType.GROUP)
+                .maxParticipants(5)
+                .allowNonPetOwner(true)
+                .isVisibleAlways(true)
+                .placeName("서울숲")
+                .latitude(BigDecimal.valueOf(37.5445))
+                .longitude(BigDecimal.valueOf(127.0445))
+                .address("성동구")
+                .status(WalkThreadStatus.RECRUITING)
+                .build();
+        ReflectionTestUtils.setField(thread, "id", threadId);
+        return thread;
     }
 
     private WalkThread buildFutureThreadWithLocation(Long threadId, Long authorId,
