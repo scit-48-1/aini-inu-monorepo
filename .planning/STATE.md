@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-09-PLAN.md
-last_updated: "2026-03-06T15:19:01.268Z"
+stopped_at: Completed 06-10-PLAN.md
+last_updated: "2026-03-06T15:22:20.952Z"
 last_activity: 2026-03-07 -- Completed plan 06-07 (map date filter + loadMore location fix)
 progress:
   total_phases: 12
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 28
-  completed_plans: 27
+  completed_plans: 28
   percent: 96
 ---
 
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 
 ## Current Position
 
-Phase: 6 of 12 (Walk Threads)
-Plan: 7 of 8 in current phase (06-07 complete)
+Phase: 6 of 12 (Walk Threads) -- COMPLETE
+Plan: 10 of 10 in current phase (06-10 complete)
 Status: Executing
-Last activity: 2026-03-07 -- Completed plan 06-07 (map date filter + loadMore location fix)
+Last activity: 2026-03-07 -- Completed plan 06-10 (free map drag + reverse geocoding)
 
-Progress: [██████████] 96%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -75,6 +75,7 @@ Progress: [██████████] 96%
 | Phase 06-walk-threads P07 | 3 | 2 tasks | 7 files |
 | Phase 06-walk-threads PP08 | 1 | 1 tasks | 2 files |
 | Phase 06-walk-threads PP09 | 2 | 1 tasks | 5 files |
+| Phase 06-walk-threads P10 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -150,6 +151,7 @@ Recent decisions affecting current work:
 - [Phase 06-07]: loadMore passes latitude/longitude/radius from searchCoordinates or GPS coordinates to preserve location filter on pagination
 - [Phase 06-walk-threads]: Badge priority order: expired (red) > full (blue) > remaining time (amber) for walk thread status display
 - [Phase 06-09]: setLocation('현재 위치') in applyCoords resets GPS label on every fresh acquisition
+- [Phase 06-10]: Nominatim for reverse geocoding: free, no API key, Korean addresses with accept-language=ko
 
 ### Pending Todos
 
@@ -161,6 +163,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T15:19:01.265Z
-Stopped at: Completed 06-09-PLAN.md
+Last session: 2026-03-06T15:22:20.949Z
+Stopped at: Completed 06-10-PLAN.md
 Resume file: None
