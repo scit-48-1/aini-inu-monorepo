@@ -80,11 +80,11 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 
 - [x] **DIARY-01**: 산책일기 생성 — content 최대 300자, 기본 공개 (FR-WALK-004/006, `DIARY-CREATE`, DEC-011)
 - [x] **DIARY-02**: 산책일기 목록 조회 (FR-WALK-004, `DIARY-LIST`)
-- [ ] **DIARY-03**: 산책일기 상세 조회 (FR-WALK-004, `DIARY-DETAIL`)
+- [x] **DIARY-03**: 산책일기 상세 조회 (FR-WALK-004, `DIARY-DETAIL`)
 - [x] **DIARY-04**: 산책일기 수정 — content 최대 300자 (FR-WALK-004, `DIARY-PATCH`)
 - [x] **DIARY-05**: 산책일기 삭제 (FR-WALK-004, `DIARY-DELETE`)
-- [ ] **DIARY-06**: 팔로잉 피드 (산책일기 팔로잉 목록) (FR-WALK-004, `DIARY-FOLLOWING-LIST`)
-- [ ] **DIARY-07**: 스토리 조회 — 팔로워 대상, 회원당 아이콘 1개 그룹, 24h 만료 (FR-COMMUNITY-004/DEC-022~025, `STORY-LIST`)
+- [x] **DIARY-06**: 팔로잉 피드 (산책일기 팔로잉 목록) (FR-WALK-004, `DIARY-FOLLOWING-LIST`)
+- [x] **DIARY-07**: 스토리 조회 — 팔로워 대상, 회원당 아이콘 1개 그룹, 24h 만료 (FR-COMMUNITY-004/DEC-022~025, `STORY-LIST`)
 
 ### Chat System (Phase 8) — FR-CHAT
 
@@ -226,11 +226,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | WALK-14 | Phase 6 | Complete |
 | DIARY-01 | Phase 7 | Complete |
 | DIARY-02 | Phase 7 | Complete |
-| DIARY-03 | Phase 7 | Pending |
+| DIARY-03 | Phase 7 | Complete |
 | DIARY-04 | Phase 7 | Complete |
 | DIARY-05 | Phase 7 | Complete |
-| DIARY-06 | Phase 7 | Pending |
-| DIARY-07 | Phase 7 | Pending |
+| DIARY-06 | Phase 7 | Complete |
+| DIARY-07 | Phase 7 | Complete |
 | CHAT-01 | Phase 8 | Pending |
 | CHAT-02 | Phase 8 | Pending |
 | CHAT-03 | Phase 8 | Pending |

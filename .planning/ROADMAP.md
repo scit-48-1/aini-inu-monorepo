@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Member Profile/Relations** - Profile view/edit, other member profiles, follow/unfollow, search, walk stats, personality types (completed 2026-03-06)
 - [x] **Phase 5: Pet Management** - Pet CRUD, main pet selection, breed/personality/walk-style master data (completed 2026-03-06)
 - [x] **Phase 6: Walk Threads** - Thread CRUD, apply/cancel, map exploration, hotspots, GPS, chat-type selection (completed 2026-03-06)
-- [ ] **Phase 7: Walk Diary + Story** - Diary CRUD, following feed, story list with 24h expiry
+- [x] **Phase 7: Walk Diary + Story** - Diary CRUD, following feed, story list with 24h expiry (completed 2026-03-06)
 - [ ] **Phase 8: Chat System** - Room list/detail, direct chat, messages, WebSocket STOMP, walk confirm, reviews
 - [ ] **Phase 9: Community Feed** - Post CRUD, comments, likes with optimistic update, presigned image upload
 - [ ] **Phase 10: Lost Pet** - Missing report, sighting report, AI analysis, matching, chat connect on approve
@@ -240,7 +240,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 4. Member Profile/Relations | 6/6 | Complete   | 2026-03-06 |
 | 5. Pet Management | 3/4 | In progress | - |
 | 6. Walk Threads | 6/8 | In Progress|  |
-| 7. Walk Diary + Story | 0/2 | Not started | - |
+| 7. Walk Diary + Story | 2/2 | Complete   | 2026-03-06 |
 | 8. Chat System | 0/3 | Not started | - |
 | 9. Community Feed | 0/2 | Not started | - |
 | 10. Lost Pet | 0/2 | Not started | - |
