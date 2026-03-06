@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Plus, Crown } from 'lucide-react';
+import { Plus, Crown, Dog } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
@@ -15,6 +15,23 @@ interface ProfileDogsProps {
 
 export const ProfileDogs: React.FC<ProfileDogsProps> = ({ pets, onPetClick, onAddClick }) => {
   const isAtLimit = pets.length >= 10;
+
+  if (pets.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 min-h-[300px]">
+        <Dog size={48} className="text-zinc-300 mb-4" />
+        <Typography variant="body" className="text-zinc-400 mb-6">
+          아직 등록된 반려견이 없습니다
+        </Typography>
+        <button
+          onClick={onAddClick}
+          className="bg-amber-500 text-white px-6 py-3 rounded-full font-bold hover:bg-amber-600 transition-colors"
+        >
+          반려견 등록하기
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 md:p-8 animate-in slide-in-from-bottom-4 duration-500">
