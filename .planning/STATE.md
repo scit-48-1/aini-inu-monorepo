@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-03-05T23:36:03.956Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-03-06T00:16:44.972Z"
 last_activity: "2026-03-06 -- Completed plan 03-02 (3-step signup flow: Account->Profile->Pet->Complete)"
 progress:
   total_phases: 12
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 8
+  completed_plans: 8
   percent: 100
 ---
 
@@ -55,6 +55,7 @@ Progress: [██████████] 100%
 | Phase 02 P03 | 2 | 2 tasks | 5 files |
 | Phase 03 P01 | 2 | 2 tasks | 6 files |
 | Phase 03 P02 | 7 | 2 tasks | 6 files |
+| Phase 03-authentication P03-03 | 8 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,9 @@ Recent decisions affecting current work:
 - [Phase 03-02]: signup/createProfile in members.ts accept optional ApiRequestOptions param to enable suppressToast per call site
 - [Phase 03-02]: ImageIcon alias from lucide-react used in SignupProfileStep to avoid jsx-a11y/alt-text false positive on Image component
 - [Phase 03-02]: SignupComplete auto-redirects to /dashboard after 5s and calls fetchProfile(true) to populate user state post-signup
+- [Phase 03-03]: skipHydration: true in Zustand persist + explicit rehydrate() in AuthProvider bootstrap to fix session loss on refresh
+- [Phase 03-03]: skipAuth: true on login() and logout() API calls to bypass 401 interceptor for expected auth errors
+- [Phase 03-03]: Sidebar LogOut uses useAuth().logout() button instead of Link to / for proper token revocation and state cleanup
 
 ### Pending Todos
 
@@ -97,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-05T23:31:35.867Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-03-06T00:16:44.970Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
