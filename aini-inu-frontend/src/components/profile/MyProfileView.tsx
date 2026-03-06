@@ -25,6 +25,7 @@ import { PostDetailModal } from '@/components/profile/PostDetailModal';
 import { DiaryBookModal } from '@/components/profile/DiaryBookModal';
 import { DiaryCreateModal } from '@/components/profile/DiaryCreateModal';
 import { NeighborsModal } from '@/components/profile/NeighborsModal';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -175,6 +176,7 @@ export const MyProfileView: React.FC = () => {
   // Diary CRUD modal state
   const [isDiaryCreateOpen, setIsDiaryCreateOpen] = useState(false);
   const [editingDiary, setEditingDiary] = useState<WalkDiaryResponse | null>(null);
+  const [diaryDeleteTargetId, setDiaryDeleteTargetId] = useState<number | null>(null);
 
   const {
     diaries,
@@ -410,10 +412,8 @@ export const MyProfileView: React.FC = () => {
         selectedDiaryId={selectedHistory?.id}
         diaries={diaries}
         onSaveSuccess={fetchData}
-        onDelete={async (diaryId: number) => {
-          if (!window.confirm('산책일기를 삭제하시겠습니까?')) return;
-          await handleDelete(diaryId);
-          setSelectedHistory(null);
+        onDelete={(diaryId: number) => {
+          setDiaryDeleteTargetId(diaryId);
         }}
       />
 
@@ -430,6 +430,23 @@ export const MyProfileView: React.FC = () => {
           setIsDiaryCreateOpen(false);
           setEditingDiary(null);
         }}
+      />
+
+      <ConfirmModal
+        isOpen={diaryDeleteTargetId !== null}
+        title="일기 삭제"
+        message={`산책일기를 삭제하시겠습니까?\n삭제된 일기는 복구할 수 없습니다.`}
+        confirmLabel="삭제"
+        cancelLabel="취소"
+        variant="danger"
+        onConfirm={async () => {
+          if (diaryDeleteTargetId !== null) {
+            await handleDelete(diaryDeleteTargetId);
+            setSelectedHistory(null);
+            setDiaryDeleteTargetId(null);
+          }
+        }}
+        onCancel={() => setDiaryDeleteTargetId(null)}
       />
 
       {zoomedPhoto && createPortal(
