@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 03-authentication
 source: [03-01-SUMMARY.md, 03-02-SUMMARY.md]
 started: 2026-03-06T00:00:00Z
@@ -73,13 +73,28 @@ skipped: 1
   reason: "User reported: 새로고침하면 로그인이 풀린다."
   severity: major
   test: 3
-  artifacts: []
-  missing: []
+  root_cause: "useAuthStore persist middleware uses window.localStorage which throws on SSR, causing createJSONStorage to return undefined. persistImpl detects !storage and skips hydrate() entirely. When AuthProvider bootstrap runs (useEffect), getRefreshToken() returns null because the store was never hydrated from localStorage. The bootstrap concludes the user is not logged in and redirects to /login."
+  artifacts:
+    - path: "aini-inu-frontend/src/store/useAuthStore.ts"
+      issue: "persist config missing skipHydration: true — store auto-hydrates at module init time (SSR context) where window is unavailable, so hydration silently fails"
+    - path: "aini-inu-frontend/src/providers/AuthProvider.tsx"
+      issue: "bootstrap effect reads getRefreshToken() without first awaiting useAuthStore.persist.rehydrate()"
+  missing:
+    - "Add skipHydration: true to useAuthStore persist config"
+    - "Call await useAuthStore.persist.rehydrate() at start of AuthProvider bootstrap effect"
+  debug_session: ".planning/debug/auth-session-lost-on-refresh.md"
 
 - truth: "Wrong credentials on login form shows an inline error message near the fields"
   status: failed
   reason: "User reported: 잘못된 비밀번호를 입력해도 어떠한 에러메시지도 나타나지 않는다. (올바른 로그인은 dashboard로 이동됨)"
   severity: major
   test: 2
-  artifacts: []
-  missing: []
+  root_cause: "apiClient's 401 interceptor fires on the login endpoint's 401 (wrong credentials), calls handle401 which tries token refresh, fails, then does window.location.href = '/login' — a full page reload. The reload destroys React state including LoginForm's fieldError setter. The session-expired toast is also destroyed. User sees nothing."
+  artifacts:
+    - path: "aini-inu-frontend/src/api/client.ts"
+      issue: "line 129: 401 interceptor has no exception for the login endpoint — skipAuth: false on login calls routes wrong-credential 401 into handle401"
+    - path: "aini-inu-frontend/src/api/auth.ts"
+      issue: "line 31: login() call missing { skipAuth: true } option"
+  missing:
+    - "Pass { skipAuth: true } to apiClient.post in auth.ts login() function"
+  debug_session: ".planning/debug/login-form-no-error-message.md"
