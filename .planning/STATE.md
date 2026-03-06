@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-03-PLAN.md
+stopped_at: Completed 06-04-PLAN.md
 last_updated: "2026-03-06T09:43:18.956Z"
 last_activity: "2026-03-06 -- Completed plan 03-02 (3-step signup flow: Account->Profile->Pet->Complete)"
 progress:
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 
 ## Current Position
 
-Phase: 3 of 12 (Authentication)
-Plan: 2 of 3 in current phase (03-02 complete)
+Phase: 6 of 12 (Walk Threads)
+Plan: 4 of 6 in current phase (06-04 complete)
 Status: Executing
-Last activity: 2026-03-06 -- Completed plan 03-02 (3-step signup flow: Account->Profile->Pet->Complete)
+Last activity: 2026-03-06 -- Completed plan 06-04 (backend blockers: duplicate key fix, applied field, expired filter, my/active endpoint)
 
 Progress: [██████████] 100%
 
@@ -69,6 +69,7 @@ Progress: [██████████] 100%
 | Phase 06-walk-threads P01 | 3 | 2 tasks | 3 files |
 | Phase 06-walk-threads P02 | 2 | 2 tasks | 2 files |
 | Phase 06-walk-threads P03 | 186 | 2 tasks | 3 files |
+| Phase 06-walk-threads P04 | 4 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -135,6 +136,8 @@ Recent decisions affecting current work:
 - [Phase 06-walk-threads]: useUserStore profile.id is string; converted to Number(profile.id) for authorId comparison in RadarMapSection
 - [Phase 06-walk-threads]: Hotspot markers use DynamicMap via SEOUL_DISTRICT_COORDS lookup; unmapped regions fall back to overlay panel
 - [Phase 06-walk-threads]: Owner actions (edit/delete) only in map popup (full ThreadResponse with authorId); removed from sidebar cards
+- [Phase 06-04]: SliceImpl used to reconstruct Slice after in-memory expired filter since SliceResponse.of() only accepts Slice<T>
+- [Phase 06-04]: applied field added to ThreadResponse as Boolean (not primitive) for null semantics in from() factory
 
 ### Pending Todos
 
@@ -147,5 +150,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-06T09:43:18.953Z
-Stopped at: Completed 06-03-PLAN.md
+Stopped at: Completed 06-04-PLAN.md
 Resume file: None
