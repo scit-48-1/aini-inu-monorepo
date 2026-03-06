@@ -410,6 +410,11 @@ export const MyProfileView: React.FC = () => {
         selectedDiaryId={selectedHistory?.id}
         diaries={diaries}
         onSaveSuccess={fetchData}
+        onDelete={async (diaryId: number) => {
+          if (!window.confirm('산책일기를 삭제하시겠습니까?')) return;
+          await handleDelete(diaryId);
+          setSelectedHistory(null);
+        }}
       />
 
       <DiaryCreateModal
