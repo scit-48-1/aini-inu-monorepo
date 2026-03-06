@@ -70,6 +70,7 @@ export interface ThreadResponse {
   status: string;
   petIds: number[];
   applicants: ApplicantSummary[];
+  applied: boolean;
 }
 
 export interface ThreadSummaryResponse {
@@ -158,6 +159,10 @@ export async function applyToThread(threadId: number, data: ThreadApplyRequest):
 
 export async function cancelApplication(threadId: number): Promise<void> {
   return apiClient.delete<void>(`/threads/${threadId}/apply`);
+}
+
+export async function getMyActiveThread(): Promise<ThreadSummaryResponse[]> {
+  return apiClient.get<ThreadSummaryResponse[]>('/threads/my/active');
 }
 
 export async function getThreadMap(params: {

@@ -8,6 +8,7 @@ import {
   getHotspots,
   getThread,
   deleteThread,
+  getMyActiveThread,
 } from '@/api/threads';
 import type {
   ThreadSummaryResponse,
@@ -63,6 +64,9 @@ export function useRadarLogic() {
 
   // Edit state
   const [editingThreadId, setEditingThreadId] = useState<number | null>(null);
+
+  // My active thread
+  const [myActiveThread, setMyActiveThread] = useState<ThreadSummaryResponse | null>(null);
 
   // ---------------------------------------------------------------
   // Fetch thread data (list + map + hotspots)
@@ -125,6 +129,9 @@ export function useRadarLogic() {
       .catch(() => {
         // Non-critical — silently ignore
       });
+    getMyActiveThread()
+      .then(list => setMyActiveThread(list.length > 0 ? list[0] : null))
+      .catch(() => {});
   }, []);
 
   // ---------------------------------------------------------------
@@ -194,6 +201,7 @@ export function useRadarLogic() {
     try {
       await deleteThread(threadId);
       toast.success('모집글이 삭제되었습니다.');
+      setEditingThreadId(null);
       clearSelection();
       await fetchThreadData(coordinates);
     } catch {
@@ -235,6 +243,8 @@ export function useRadarLogic() {
     // Edit
     editingThreadId,
     startEdit,
+    // My active thread
+    myActiveThread,
     // Actions
     handleDeleteThread,
     handleRefresh,

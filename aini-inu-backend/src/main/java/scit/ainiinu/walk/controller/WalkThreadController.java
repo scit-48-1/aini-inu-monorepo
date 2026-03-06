@@ -101,6 +101,15 @@ public class WalkThreadController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @GetMapping("/threads/my/active")
+    @Operation(summary = "내 활성 모집글 조회", description = "현재 사용자의 활성(만료되지 않은 RECRUITING) 모집글 목록을 조회합니다.")
+    public ResponseEntity<ApiResponse<List<ThreadSummaryResponse>>> getMyActiveThread(
+            @CurrentMember Long memberId
+    ) {
+        List<ThreadSummaryResponse> response = walkThreadService.getMyActiveThread(memberId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @GetMapping("/threads/{threadId}")
     @Operation(summary = "산책 모집글 상세 조회", description = "threadId로 산책 모집글 상세를 조회합니다.")
     public ResponseEntity<ApiResponse<ThreadResponse>> getThread(
