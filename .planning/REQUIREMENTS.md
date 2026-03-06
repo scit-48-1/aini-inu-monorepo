@@ -43,7 +43,7 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 - [ ] **MEM-07**: 팔로우 (FR-MEMBER-004, `MEM-FOLLOWS-POST`)
 - [ ] **MEM-08**: 언팔로우 (FR-MEMBER-004, `MEM-FOLLOWS-DELETE`)
 - [x] **MEM-09**: 산책 활동 통계 조회 (FR-MEMBER-005, `MEM-WALK-STATS-GET`)
-- [ ] **MEM-10**: 회원 검색 (FR-MEMBER-006, `MEM-SEARCH-GET`)
+- [x] **MEM-10**: 회원 검색 (FR-MEMBER-006, `MEM-SEARCH-GET`)
 - [x] **MEM-11**: 회원 성향 마스터 조회 (FR-MEMBER-007, `MEM-PERSONALITY-TYPES-GET`)
 - [x] **MEM-12**: 프로필 UI — 권한별 편집 가능 여부, 팔로우 토글 실패 복구, 반려견 빈 상태 (PRD §8.3)
 - [ ] **MEM-13**: 팔로우 카운트 + 목록 공개 (DEC-010)
@@ -198,7 +198,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | MEM-07 | Phase 4 | Pending |
 | MEM-08 | Phase 4 | Pending |
 | MEM-09 | Phase 4 | Complete |
-| MEM-10 | Phase 4 | Pending |
+| MEM-10 | Phase 4 | Complete |
 | MEM-11 | Phase 4 | Complete |
 | MEM-12 | Phase 4 | Complete |
 | MEM-13 | Phase 4 | Pending |
