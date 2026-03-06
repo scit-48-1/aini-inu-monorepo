@@ -1,59 +1,82 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
-import { threadService } from '@/services/api/threadService';
-import { WalkDiaryType } from '@/types';
+import { useState, useCallback } from 'react';
+import {
+  getDiaries,
+  createDiary,
+  updateDiary,
+  deleteDiary,
+} from '@/api/diaries';
+import type {
+  WalkDiaryCreateRequest,
+  WalkDiaryPatchRequest,
+  WalkDiaryResponse,
+} from '@/api/diaries';
 import { toast } from 'sonner';
 
-export function useWalkDiaries(memberId?: string) {
-  const [diaries, setDiaries] = useState<Record<string, WalkDiaryType>>({});
+export function useWalkDiaries() {
+  const [diaries, setDiaries] = useState<WalkDiaryResponse[]>([]);
+  const [hasNext, setHasNext] = useState(false);
+  const [page, setPage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchDiaries = useCallback(async (targetId?: string) => {
+  const fetchDiaries = useCallback(async (pageNum = 0) => {
     setIsLoading(true);
     try {
-      const data = await threadService.getWalkDiaries(targetId || memberId);
-      setDiaries(data || {});
+      const res = await getDiaries({ page: pageNum, size: 20 });
+      if (pageNum === 0) {
+        setDiaries(res.content);
+      } else {
+        setDiaries((prev) => [...prev, ...res.content]);
+      }
+      setHasNext(res.hasNext);
+      setPage(pageNum);
     } catch (e) {
       console.error('Failed to fetch diaries:', e);
     } finally {
       setIsLoading(false);
     }
-  }, [memberId]);
+  }, []);
 
-  const saveDiary = useCallback(async (id: string | number, data: Partial<WalkDiaryType>) => {
-    try {
-      await threadService.saveWalkDiary(id, data);
-      toast.success('일기가 저장되었습니다!');
-      await fetchDiaries(); // 최신 데이터로 갱신
-      return true;
-    } catch (e) {
-      toast.error('저장 중 오류가 발생했습니다.');
-      return false;
-    }
-  }, [fetchDiaries]);
+  const loadMore = useCallback(() => {
+    fetchDiaries(page + 1);
+  }, [fetchDiaries, page]);
 
-  // UI에서 사용하기 좋게 가공된 데이터 리스트
-  const processedDiaries = useMemo(() => {
-    return Object.entries(diaries).map(([, diary]) => {
-      const dateObj = diary.walkDate ? new Date(diary.walkDate) : new Date();
-      return {
-        ...diary,
-        diaryTitle: diary.title || '산책일기',
-        walkDate: isNaN(dateObj.getTime()) 
-          ? (diary.walkDate || '2026.02.10') 
-          : dateObj.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }),
-        // 상세 데이터가 없는 경우를 위한 기본 파트너 정보
-        partner: diary.partner || { nickname: '이웃', avatar: '/AINIINU_ROGO_B.png' }
-      };
-    });
-  }, [diaries]);
+  const handleCreate = useCallback(
+    async (data: WalkDiaryCreateRequest) => {
+      await createDiary(data);
+      toast.success('산책일기가 작성되었습니다!');
+      await fetchDiaries(0);
+    },
+    [fetchDiaries],
+  );
+
+  const handleUpdate = useCallback(
+    async (diaryId: number, data: WalkDiaryPatchRequest) => {
+      await updateDiary(diaryId, data);
+      toast.success('산책일기가 수정되었습니다!');
+      await fetchDiaries(0);
+    },
+    [fetchDiaries],
+  );
+
+  const handleDelete = useCallback(
+    async (diaryId: number) => {
+      await deleteDiary(diaryId);
+      toast.success('산책일기가 삭제되었습니다!');
+      await fetchDiaries(0);
+    },
+    [fetchDiaries],
+  );
 
   return {
     diaries,
-    processedDiaries,
     isLoading,
+    hasNext,
     fetchDiaries,
-    saveDiary
+    loadMore,
+    handleCreate,
+    handleUpdate,
+    handleDelete,
   };
 }

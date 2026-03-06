@@ -1,37 +1,92 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { threadService } from '@/services/api/threadService';
-import { toast } from 'sonner';
+import type {
+  WalkDiaryCreateRequest,
+  WalkDiaryPatchRequest,
+  WalkDiaryResponse,
+} from '@/api/diaries';
 
-export function useDiaryForm(onSuccess?: () => void) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [diaryForm, setDiaryForm] = useState({
+interface DiaryFormState {
+  title: string;
+  content: string;
+  photoUrls: string[];
+  walkDate: string;
+  isPublic: boolean;
+  threadId: number | undefined;
+}
+
+function getDefaultForm(): DiaryFormState {
+  const today = new Date().toISOString().slice(0, 10);
+  return {
     title: '',
     content: '',
-    photos: [] as string[],
-    isPublic: false,
-    tags: [] as { id: string; nickname: string; avatar: string }[]
-  });
+    photoUrls: [],
+    walkDate: today,
+    isPublic: true,
+    threadId: undefined,
+  };
+}
 
-  const handleSave = useCallback(async (id: string | number) => {
-    setIsSubmitting(true);
-    try {
-      await threadService.saveWalkDiary(id, diaryForm);
-      toast.success('일기가 저장되었습니다!');
-      onSuccess?.();
-      return true;
-    } catch (e) {
-      toast.error('저장 중 오류가 발생했습니다.');
-      return false;
-    } finally {
-      setIsSubmitting(false);
+export function useDiaryForm() {
+  const [form, setForm] = useState<DiaryFormState>(getDefaultForm);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const resetForm = useCallback(() => {
+    setForm(getDefaultForm());
+  }, []);
+
+  const loadForEdit = useCallback((diary: WalkDiaryResponse) => {
+    setForm({
+      title: diary.title,
+      content: diary.content,
+      photoUrls: diary.photoUrls || [],
+      walkDate: diary.walkDate,
+      isPublic: diary.isPublic,
+      threadId: diary.threadId || undefined,
+    });
+  }, []);
+
+  const toCreateRequest = useCallback((): WalkDiaryCreateRequest => {
+    const req: WalkDiaryCreateRequest = {
+      title: form.title,
+      content: form.content,
+      walkDate: form.walkDate,
+      isPublic: form.isPublic,
+    };
+    if (form.photoUrls.length > 0) {
+      req.photoUrls = form.photoUrls;
     }
-  }, [diaryForm, onSuccess]);
+    if (form.threadId) {
+      req.threadId = form.threadId;
+    }
+    return req;
+  }, [form]);
+
+  const toPatchRequest = useCallback((): WalkDiaryPatchRequest => {
+    const req: WalkDiaryPatchRequest = {
+      title: form.title,
+      content: form.content,
+      walkDate: form.walkDate,
+      isPublic: form.isPublic,
+    };
+    if (form.photoUrls.length > 0) {
+      req.photoUrls = form.photoUrls;
+    }
+    if (form.threadId) {
+      req.threadId = form.threadId;
+    }
+    return req;
+  }, [form]);
 
   return {
-    diaryForm, setDiaryForm,
+    form,
+    setForm,
+    resetForm,
+    loadForEdit,
+    toCreateRequest,
+    toPatchRequest,
     isSubmitting,
-    handleSave
+    setIsSubmitting,
   };
 }

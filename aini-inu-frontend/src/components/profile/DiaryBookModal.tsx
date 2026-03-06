@@ -7,7 +7,6 @@ import { useBookAnimation } from '@/components/common/BookFlip/useBookAnimation'
 import { DiaryPageRenderer } from './DiaryModal/DiaryPageRenderer';
 import { DesktopBookEngine } from './DiaryModal/DesktopBookEngine';
 import { MobileBookEngine } from './DiaryModal/MobileBookEngine';
-import { useDiaryForm } from '@/hooks/forms/useDiaryForm';
 import { useUserStore } from '@/store/useUserStore';
 import { WalkDiaryType } from '@/types';
 
@@ -56,10 +55,20 @@ export const DiaryBookModal: React.FC<DiaryBookModalProps> = ({
     return selectedHistory.authorId !== myProfile.id;
   }, [selectedHistory, myProfile]);
 
-  const { diaryForm, setDiaryForm, handleSave } = useDiaryForm(() => {
+  // TODO: DiaryBookModal will be fully rewired in Plan 02 — using inline state for now
+  const [diaryForm, setDiaryForm] = useState({
+    title: '',
+    content: '',
+    photos: [] as string[],
+    isPublic: false,
+    tags: [] as { id: string; nickname: string; avatar: string }[],
+  });
+
+  const handleSave = useCallback(async (_id: string) => {
+    // Placeholder — Plan 02 rewires with proper API calls
     setEditMode('NONE');
     onSaveSuccess?.();
-  });
+  }, [onSaveSuccess]);
 
   useEffect(() => {
     if (selectedHistory) {
@@ -71,7 +80,7 @@ export const DiaryBookModal: React.FC<DiaryBookModalProps> = ({
         tags: selectedHistory.tags || []
       });
     }
-  }, [selectedHistory, setDiaryForm]);
+  }, [selectedHistory]);
 
   const initialPageIndex = useMemo(() => {
     const idx = diaryList.findIndex(h => h.id === selectedDiaryId);
@@ -113,11 +122,11 @@ export const DiaryBookModal: React.FC<DiaryBookModalProps> = ({
 
   const { pageDirection, tempNextData, navigate: customNavigate } = useBookAnimation({
     dataList: diaryList,
-    onPageChange: (nextDiary) => {
-      setDiaryForm({ 
+    onPageChange: (nextDiary: any) => {
+      setDiaryForm({
         title: nextDiary.title,
-        content: nextDiary.content, 
-        photos: nextDiary.photos, 
+        content: nextDiary.content,
+        photos: nextDiary.photos || [],
         isPublic: !!nextDiary.isPublic,
         tags: nextDiary.tags || []
       });
@@ -147,7 +156,7 @@ export const DiaryBookModal: React.FC<DiaryBookModalProps> = ({
         diaryForm={diaryForm} setDiaryForm={setDiaryForm} onClose={onClose}
         onSave={() => handleSave(data.id)} setEditMode={setEditMode}
         onZoom={(photo) => setZoomedPhoto(photo)}
-        onImageUpload={async (base64) => setDiaryForm(prev => ({ ...prev, photos: [...prev.photos, base64] }))}
+        onImageUpload={async (base64: string) => setDiaryForm((prev: any) => ({ ...prev, photos: [...prev.photos, base64] }))}
       />
     );
   };
