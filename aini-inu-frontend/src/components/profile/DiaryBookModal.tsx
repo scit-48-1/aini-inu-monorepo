@@ -262,6 +262,17 @@ export const DiaryBookModal: React.FC<DiaryBookModalProps> = ({
     // Story header for story mode
     const storyHeader = mode === 'story' ? storyHeaderMap.get(data.id) : undefined;
 
+    const handleToggleVisibility = async (diaryId: number, newIsPublic: boolean) => {
+      try {
+        await updateDiary(diaryId, { isPublic: newIsPublic });
+        toast.success(newIsPublic ? '공개로 변경되었습니다.' : '비공개로 변경되었습니다.');
+        onSaveSuccess?.();
+      } catch (err) {
+        console.error('Failed to toggle visibility:', err);
+        toast.error('변경에 실패했습니다.');
+      }
+    };
+
     return (
       <DiaryPageRenderer
         data={data} side={side} isCurrent={isCurrent} isReadOnly={isReadOnly} editMode={editMode}
@@ -271,6 +282,7 @@ export const DiaryBookModal: React.FC<DiaryBookModalProps> = ({
         onImageUpload={async (imageUrl: string) => setDiaryForm((prev: any) => ({ ...prev, photoUrls: [...prev.photoUrls, imageUrl] }))}
         onDelete={mode === 'profile' && onDelete && !isReadOnly ? (() => onDelete(data.id)) : undefined}
         storyHeader={storyHeader}
+        onToggleVisibility={!isReadOnly ? handleToggleVisibility : undefined}
       />
     );
   };
@@ -312,8 +324,8 @@ export const DiaryBookModal: React.FC<DiaryBookModalProps> = ({
           {/* Navigation Controls */}
           {diaryList.length > 1 ? (
             <>
-              <button onClick={() => handleNavigate('prev')} className="fixed left-4 md:left-10 top-1/2 -translate-y-1/2 z-[3100] p-4 text-white/20 hover:text-white transition-all active:scale-95 disabled:opacity-0" disabled={editMode !== 'NONE'}><ChevronLeft size={80} strokeWidth={1} /></button>
-              <button onClick={() => handleNavigate('next')} className="fixed right-4 md:right-10 top-1/2 -translate-y-1/2 z-[3100] p-4 text-white/20 hover:text-white transition-all active:scale-95 disabled:opacity-0" disabled={editMode !== 'NONE'}><ChevronRight size={80} strokeWidth={1} /></button>
+              <button onClick={() => handleNavigate('prev')} className="absolute -left-16 md:-left-20 top-1/2 -translate-y-1/2 z-[3100] p-4 text-white/20 hover:text-white transition-all active:scale-95 disabled:opacity-0" disabled={editMode !== 'NONE'}><ChevronLeft size={80} strokeWidth={1} /></button>
+              <button onClick={() => handleNavigate('next')} className="absolute -right-16 md:-right-20 top-1/2 -translate-y-1/2 z-[3100] p-4 text-white/20 hover:text-white transition-all active:scale-95 disabled:opacity-0" disabled={editMode !== 'NONE'}><ChevronRight size={80} strokeWidth={1} /></button>
             </>
           ) : null}
         </div>

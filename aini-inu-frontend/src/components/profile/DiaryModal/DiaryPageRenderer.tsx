@@ -40,10 +40,11 @@ interface DiaryPageRendererProps {
   onImageUpload: (imageUrl: string) => void;
   onDelete?: () => void;
   storyHeader?: StoryHeader;
+  onToggleVisibility?: (diaryId: number, newIsPublic: boolean) => void;
 }
 
 export const DiaryPageRenderer: React.FC<DiaryPageRendererProps> = ({
-  data, side, isCurrent, isReadOnly, editMode, diaryForm, setDiaryForm, onClose, onZoom, setEditMode, onSave, onImageUpload, onDelete, storyHeader
+  data, side, isCurrent, isReadOnly, editMode, diaryForm, setDiaryForm, onClose, onZoom, setEditMode, onSave, onImageUpload, onDelete, storyHeader, onToggleVisibility
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   if (!data) return null;
@@ -52,7 +53,7 @@ export const DiaryPageRenderer: React.FC<DiaryPageRendererProps> = ({
     const files = Array.from(e.target.files || []);
     for (const file of files) {
       try {
-        const imageUrl = await uploadImageFlow(file, 'DIARY');
+        const imageUrl = await uploadImageFlow(file, 'WALK_DIARY');
         onImageUpload(imageUrl);
       } catch (err) {
         console.error('Failed to upload image:', err);
@@ -150,13 +151,19 @@ export const DiaryPageRenderer: React.FC<DiaryPageRendererProps> = ({
               <Typography variant="label" className="text-amber-600 font-black uppercase tracking-widest text-[10px]">Diary Entry</Typography>
               <div className="flex items-center gap-3">
                 <Typography variant="h3" className="text-lg md:text-xl text-navy-900 font-serif">{data.walkDate}</Typography>
-                {isCurrent && !isReadOnly && editMode !== 'NONE' ? (
+                {isCurrent && !isReadOnly ? (
                   <button
-                    onClick={() => setDiaryForm({ ...diaryForm, isPublic: !diaryForm.isPublic })}
+                    onClick={() => {
+                      if (editMode !== 'NONE') {
+                        setDiaryForm({ ...diaryForm, isPublic: !diaryForm.isPublic });
+                      } else if (onToggleVisibility) {
+                        onToggleVisibility(data.id, !data.isPublic);
+                      }
+                    }}
                     className="transition-opacity hover:opacity-70"
                   >
-                    <Badge variant="emerald" className={cn("text-[8px] px-2 py-0 cursor-pointer", diaryForm.isPublic ? "bg-emerald-50 text-emerald-600" : "bg-zinc-100 text-zinc-400")}>
-                      {diaryForm.isPublic ? 'PUBLIC' : 'PRIVATE'}
+                    <Badge variant="emerald" className={cn("text-[8px] px-2 py-0 cursor-pointer", (editMode !== 'NONE' ? diaryForm.isPublic : !!data.isPublic) ? "bg-emerald-50 text-emerald-600" : "bg-zinc-100 text-zinc-400")}>
+                      {(editMode !== 'NONE' ? diaryForm.isPublic : !!data.isPublic) ? 'PUBLIC' : 'PRIVATE'}
                     </Badge>
                   </button>
                 ) : (
