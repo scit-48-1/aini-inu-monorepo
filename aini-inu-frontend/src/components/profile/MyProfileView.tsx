@@ -5,8 +5,9 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Loader2, Activity, RefreshCw } from 'lucide-react';
 
-import { getMe, getWalkStats, getFollowers, getFollowing, getMemberPets } from '@/api/members';
+import { getMe, getWalkStats, getFollowers, getFollowing } from '@/api/members';
 import type { MemberResponse, WalkStatsResponse } from '@/api/members';
+import { getMyPets } from '@/api/pets';
 import type { PetResponse } from '@/api/pets';
 
 import { useUserStore } from '@/store/useUserStore';
@@ -218,7 +219,7 @@ export const MyProfileView: React.FC = () => {
     try {
       const [memberRes, petsRes, postsRes, followersRes, followingRes] = await Promise.all([
         getMe(),
-        getMemberPets(0), // 0 = placeholder, will fetch from /pets via getMyPets in Task 3
+        getMyPets(),
         postService.getPosts(undefined),
         getFollowers({ size: 1000 }),
         getFollowing({ size: 1000 }),
