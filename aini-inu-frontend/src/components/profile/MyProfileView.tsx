@@ -57,7 +57,7 @@ function mapPetResponseToDogType(pet: PetResponse): DogType {
     gender: (pet.gender === 'MALE' ? 'M' : 'F') as 'M' | 'F',
     image: pet.photoUrl || '/AINIINU_ROGO_B.png',
     tendencies: (pet.personalities || []).map(p => p.name) as DogType['tendencies'],
-    walkStyle: (pet.walkingStyles?.[0]?.name || '') as DogType['walkStyle'],
+    walkStyle: (pet.walkingStyles?.[0] || '') as DogType['walkStyle'],
     mbti: pet.mbti || undefined,
     isNeutralized: pet.isNeutered,
     isMain: pet.isMain,

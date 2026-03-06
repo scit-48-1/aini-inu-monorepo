@@ -40,7 +40,7 @@ export interface PetResponse {
   photoUrl: string;
   isMain: boolean;
   isCertified: boolean;
-  walkingStyles: WalkingStyleResponse[];
+  walkingStyles: string[];
   personalities: PersonalityResponse[];
   createdAt: string;
 }
