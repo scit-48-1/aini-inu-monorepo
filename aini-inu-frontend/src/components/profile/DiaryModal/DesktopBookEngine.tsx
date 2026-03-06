@@ -53,14 +53,14 @@ export const DesktopBookEngine: React.FC<DesktopBookEngineProps> = ({
       usePortrait={false} 
       startZIndex={100} 
       autoSize={false} 
-      showPageCorners={editMode === 'NONE'} // [MODIFIED] 수정 중에는 모서리 효과 끔
-      clickEventForward={true} 
-      useMouseEvents={editMode === 'NONE'} // [MODIFIED] 수정 중에는 마우스 드래그 금지
+      showPageCorners={false}
+      clickEventForward={true}
+      useMouseEvents={false}
       swipeDistance={50}
       onFlip={onFlip}
       startPage={initialPage}
       style={{}}
-      disableFlipByClick={editMode !== 'NONE'} // [MODIFIED] 클릭으로 넘기기 방지
+      disableFlipByClick={true}
     >
       {walkHistoryDetails.map((item, i) => [
         <LibPage key={`l-${item.id}`} number={i*2+1} side="LEFT">
