@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-03-06T09:38:15.107Z"
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-03-06T09:43:18.956Z"
 last_activity: "2026-03-06 -- Completed plan 03-02 (3-step signup flow: Account->Profile->Pet->Complete)"
 progress:
   total_phases: 12
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 21
-  completed_plans: 20
+  completed_plans: 21
   percent: 100
 ---
 
@@ -68,6 +68,7 @@ Progress: [██████████] 100%
 | Phase 05-pet-management P04 | 1 | 1 tasks | 2 files |
 | Phase 06-walk-threads P01 | 3 | 2 tasks | 3 files |
 | Phase 06-walk-threads P02 | 2 | 2 tasks | 2 files |
+| Phase 06-walk-threads P03 | 186 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,9 @@ Recent decisions affecting current work:
 - [Phase 06-01]: Temporary adapters in page.tsx preserve existing RadarMapSection/RadarSidebar compatibility until Plan 03 rewire
 - [Phase 06-walk-threads]: RecruitForm owns DaumPostcode internally rather than delegating to page.tsx modal
 - [Phase 06-walk-threads]: Non-pet-owner block is early return before form state -- simpler control flow (RecruitForm)
+- [Phase 06-walk-threads]: useUserStore profile.id is string; converted to Number(profile.id) for authorId comparison in RadarMapSection
+- [Phase 06-walk-threads]: Hotspot markers use DynamicMap via SEOUL_DISTRICT_COORDS lookup; unmapped regions fall back to overlay panel
+- [Phase 06-walk-threads]: Owner actions (edit/delete) only in map popup (full ThreadResponse with authorId); removed from sidebar cards
 
 ### Pending Todos
 
@@ -142,6 +146,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T09:38:15.105Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-03-06T09:43:18.953Z
+Stopped at: Completed 06-03-PLAN.md
 Resume file: None
