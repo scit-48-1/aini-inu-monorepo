@@ -222,6 +222,8 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
 
   const isOwner = selectedThread ? selectedThread.authorId === currentUserId : false;
 
+  const isFull = selectedThread ? selectedThread.currentParticipants >= selectedThread.maxParticipants : false;
+
   return (
     <div
       className={cn(
@@ -284,6 +286,11 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
                   {isExpired(selectedThread.startTime) && (
                     <Badge variant="default" className="bg-red-100 text-red-500 border-none px-3 text-[10px]">
                       만료됨
+                    </Badge>
+                  )}
+                  {isFull && !isExpired(selectedThread.startTime) && (
+                    <Badge variant="default" className="bg-blue-100 text-blue-600 border-none px-3 text-[10px]">
+                      모집 완료
                     </Badge>
                   )}
                 </div>
@@ -463,10 +470,11 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
                   variant="primary"
                   fullWidth
                   size="lg"
-                  className="h-16 text-lg rounded-[24px] shadow-2xl bg-navy-900"
-                  onClick={() => setShowPetSelect(true)}
+                  className={cn("h-16 text-lg rounded-[24px] shadow-2xl bg-navy-900", isFull && "opacity-50 cursor-not-allowed")}
+                  disabled={isFull}
+                  onClick={() => !isFull && setShowPetSelect(true)}
                 >
-                  산책 신청하기
+                  {isFull ? '정원이 찼습니다' : '산책 신청하기'}
                 </Button>
               )}
             </div>
