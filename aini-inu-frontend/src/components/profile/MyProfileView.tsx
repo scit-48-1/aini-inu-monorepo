@@ -29,7 +29,6 @@ import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
-import { postService } from '@/services/api/postService';
 import { FeedPostType, DogType, WalkDiaryType } from '@/types';
 
 // --- Walk Stats helpers ---
@@ -217,16 +216,14 @@ export const MyProfileView: React.FC = () => {
     setIsLoading(true);
     setHasError(false);
     try {
-      const [memberRes, petsRes, postsRes, followersRes, followingRes] = await Promise.all([
+      const [memberRes, petsRes, followersRes, followingRes] = await Promise.all([
         getMe(),
         getMyPets(),
-        postService.getPosts(undefined),
         getFollowers({ size: 1000 }),
         getFollowing({ size: 1000 }),
       ]);
       setMember(memberRes);
       setDogs((petsRes || []).map(mapPetResponseToDogType));
-      setPosts(postsRes || []);
       setFollowerCount(followersRes?.content?.length ?? 0);
       setFollowingCount(followingRes?.content?.length ?? 0);
       await fetchDiaries(undefined);

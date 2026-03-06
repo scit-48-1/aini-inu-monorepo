@@ -133,14 +133,18 @@ export async function getMemberPets(memberId: number): Promise<PetResponse[]> {
   return apiClient.get<PetResponse[]>(`/members/${memberId}/pets`);
 }
 
-export async function getFollowers(params?: PaginationParams): Promise<SliceResponse<MemberFollowResponse>> {
-  const query = buildQuery({ ...params });
-  return apiClient.get<SliceResponse<MemberFollowResponse>>(`/members/me/followers${query}`);
+export async function getFollowers(params?: PaginationParams & { memberId?: number }): Promise<SliceResponse<MemberFollowResponse>> {
+  const { memberId, ...rest } = params ?? {};
+  const query = buildQuery({ ...rest });
+  const base = memberId != null ? `/members/${memberId}/followers` : '/members/me/followers';
+  return apiClient.get<SliceResponse<MemberFollowResponse>>(`${base}${query}`);
 }
 
-export async function getFollowing(params?: PaginationParams): Promise<SliceResponse<MemberFollowResponse>> {
-  const query = buildQuery({ ...params });
-  return apiClient.get<SliceResponse<MemberFollowResponse>>(`/members/me/following${query}`);
+export async function getFollowing(params?: PaginationParams & { memberId?: number }): Promise<SliceResponse<MemberFollowResponse>> {
+  const { memberId, ...rest } = params ?? {};
+  const query = buildQuery({ ...rest });
+  const base = memberId != null ? `/members/${memberId}/following` : '/members/me/following';
+  return apiClient.get<SliceResponse<MemberFollowResponse>>(`${base}${query}`);
 }
 
 export async function follow(targetId: number): Promise<FollowStatusResponse> {
@@ -149,6 +153,10 @@ export async function follow(targetId: number): Promise<FollowStatusResponse> {
 
 export async function unfollow(targetId: number): Promise<FollowStatusResponse> {
   return apiClient.delete<FollowStatusResponse>(`/members/me/follows/${targetId}`);
+}
+
+export async function getFollowStatus(targetId: number): Promise<FollowStatusResponse> {
+  return apiClient.get<FollowStatusResponse>(`/members/me/follows/${targetId}`);
 }
 
 export async function getWalkStats(): Promise<WalkStatsResponse> {
