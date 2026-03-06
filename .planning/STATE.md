@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 6 of 12 (Walk Threads)
-Plan: 5 of 6 in current phase (06-05 complete)
+Plan: 7 of 8 in current phase (06-07 complete)
 Status: Executing
-Last activity: 2026-03-06 -- Completed plan 06-05 (frontend bug fixes + date range filter)
+Last activity: 2026-03-07 -- Completed plan 06-07 (map date filter + loadMore location fix)
 
 Progress: [██████████] 96%
 
@@ -72,6 +72,7 @@ Progress: [██████████] 96%
 | Phase 06-walk-threads P04 | 4 | 2 tasks | 6 files |
 | Phase 06-walk-threads PP05 | 5 | 2 tasks | 13 files |
 | Phase 06-walk-threads P06 | 2 | 2 tasks | 3 files |
+| Phase 06-walk-threads P07 | 3 | 2 tasks | 7 files |
 | Phase 06-walk-threads PP08 | 1 | 1 tasks | 2 files |
 
 ## Accumulated Context
@@ -144,6 +145,8 @@ Recent decisions affecting current work:
 - [Phase 06-walk-threads]: isApplied reads selectedThread.applied directly instead of scanning applicants array
 - [Phase 06-walk-threads]: Date filter auto-refetches via useEffect watching dateFrom/dateTo; JPQL IS NULL OR pattern for optional date params
 - [Phase 06-walk-threads]: formatRemainingTime uses days/hours/mins decomposition with Korean suffixes for human-readable remaining time
+- [Phase 06-07]: In-memory date filter on getMapThreads (not JPQL) since method already loads all RECRUITING threads for distance calc
+- [Phase 06-07]: loadMore passes latitude/longitude/radius from searchCoordinates or GPS coordinates to preserve location filter on pagination
 - [Phase 06-walk-threads]: Badge priority order: expired (red) > full (blue) > remaining time (amber) for walk thread status display
 
 ### Pending Todos
@@ -156,6 +159,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T15:12:55.234Z
-Stopped at: Completed 06-08-PLAN.md
+Last session: 2026-03-06T15:14:20Z
+Stopped at: Completed 06-07-PLAN.md
 Resume file: None
