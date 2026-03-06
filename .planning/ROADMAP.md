@@ -230,7 +230,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 1. Critical Bugs | 2/2 | Complete | 2026-03-06 |
 | 2. Common Infrastructure | 1/3 | In progress | - |
 | 3. Authentication | 3/3 | Complete   | 2026-03-06 |
-| 4. Member Profile/Relations | 0/3 | Not started | - |
+| 4. Member Profile/Relations | 1/3 | In Progress|  |
 | 5. Pet Management | 0/2 | Not started | - |
 | 6. Walk Threads | 0/3 | Not started | - |
 | 7. Walk Diary + Story | 0/2 | Not started | - |

@@ -34,18 +34,18 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 
 ### Member Profile/Relations (Phase 4) — FR-MEMBER
 
-- [ ] **MEM-01**: 내 프로필 조회 (FR-MEMBER-001, `MEM-ME-GET`)
-- [ ] **MEM-02**: 내 프로필 수정 (FR-MEMBER-001, `MEM-ME-PATCH`)
+- [x] **MEM-01**: 내 프로필 조회 (FR-MEMBER-001, `MEM-ME-GET`)
+- [x] **MEM-02**: 내 프로필 수정 (FR-MEMBER-001, `MEM-ME-PATCH`)
 - [ ] **MEM-03**: 타 회원 프로필 조회 (FR-MEMBER-002, `MEM-ID-GET`)
 - [ ] **MEM-04**: 타 회원 반려견 목록 조회 (FR-MEMBER-002, `MEM-ID-PETS-GET`)
 - [ ] **MEM-05**: 팔로워 목록 조회 (FR-MEMBER-003, `MEM-FOLLOWERS-GET`)
 - [ ] **MEM-06**: 팔로잉 목록 조회 (FR-MEMBER-003, `MEM-FOLLOWING-GET`)
 - [ ] **MEM-07**: 팔로우 (FR-MEMBER-004, `MEM-FOLLOWS-POST`)
 - [ ] **MEM-08**: 언팔로우 (FR-MEMBER-004, `MEM-FOLLOWS-DELETE`)
-- [ ] **MEM-09**: 산책 활동 통계 조회 (FR-MEMBER-005, `MEM-WALK-STATS-GET`)
+- [x] **MEM-09**: 산책 활동 통계 조회 (FR-MEMBER-005, `MEM-WALK-STATS-GET`)
 - [ ] **MEM-10**: 회원 검색 (FR-MEMBER-006, `MEM-SEARCH-GET`)
-- [ ] **MEM-11**: 회원 성향 마스터 조회 (FR-MEMBER-007, `MEM-PERSONALITY-TYPES-GET`)
-- [ ] **MEM-12**: 프로필 UI — 권한별 편집 가능 여부, 팔로우 토글 실패 복구, 반려견 빈 상태 (PRD §8.3)
+- [x] **MEM-11**: 회원 성향 마스터 조회 (FR-MEMBER-007, `MEM-PERSONALITY-TYPES-GET`)
+- [x] **MEM-12**: 프로필 UI — 권한별 편집 가능 여부, 팔로우 토글 실패 복구, 반려견 빈 상태 (PRD §8.3)
 - [ ] **MEM-13**: 팔로우 카운트 + 목록 공개 (DEC-010)
 
 ### Pet Management (Phase 5) — FR-PET
@@ -189,18 +189,18 @@ Deferred to future release. Tracked but not in current roadmap.
 | AUTH-04 | Phase 3 | Complete |
 | AUTH-05 | Phase 3 | Complete |
 | AUTH-06 | Phase 3 | Complete |
-| MEM-01 | Phase 4 | Pending |
-| MEM-02 | Phase 4 | Pending |
+| MEM-01 | Phase 4 | Complete |
+| MEM-02 | Phase 4 | Complete |
 | MEM-03 | Phase 4 | Pending |
 | MEM-04 | Phase 4 | Pending |
 | MEM-05 | Phase 4 | Pending |
 | MEM-06 | Phase 4 | Pending |
 | MEM-07 | Phase 4 | Pending |
 | MEM-08 | Phase 4 | Pending |
-| MEM-09 | Phase 4 | Pending |
+| MEM-09 | Phase 4 | Complete |
 | MEM-10 | Phase 4 | Pending |
-| MEM-11 | Phase 4 | Pending |
-| MEM-12 | Phase 4 | Pending |
+| MEM-11 | Phase 4 | Complete |
+| MEM-12 | Phase 4 | Complete |
 | MEM-13 | Phase 4 | Pending |
 | PET-01 | Phase 5 | Pending |
 | PET-02 | Phase 5 | Pending |

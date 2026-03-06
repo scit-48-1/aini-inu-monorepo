@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-06T00:56:36.052Z"
+stopped_at: Completed 04-01-PLAN.md (own-profile experience)
+last_updated: "2026-03-06T01:35:27.865Z"
 last_activity: "2026-03-06 -- Completed plan 03-02 (3-step signup flow: Account->Profile->Pet->Complete)"
 progress:
   total_phases: 12
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 11
+  completed_plans: 9
   percent: 100
 ---
 
@@ -56,6 +56,7 @@ Progress: [██████████] 100%
 | Phase 03 P01 | 2 | 2 tasks | 6 files |
 | Phase 03 P02 | 7 | 2 tasks | 6 files |
 | Phase 03-authentication P03-03 | 8 | 3 tasks | 4 files |
+| Phase 04-member-profile-relations P01 | 8 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,10 @@ Recent decisions affecting current work:
 - [Phase 03-03]: skipHydration: true in Zustand persist + explicit rehydrate() in AuthProvider bootstrap to fix session loss on refresh
 - [Phase 03-03]: skipAuth: true on login() and logout() API calls to bypass 401 interceptor for expected auth errors
 - [Phase 03-03]: Sidebar LogOut uses useAuth().logout() button instead of Link to / for proper token revocation and state cleanup
+- [Phase 04-01]: ProfileHeader accepts explicit followerCount/followingCount props since MemberResponse lacks these fields
+- [Phase 04-01]: walkStatsSlot React.ReactNode slot prop on ProfileHeader for parent-injected heatmap content
+- [Phase 04-01]: ProfileEditModal owns updateMe() API call directly, parent passes onSaved() callback for refetch
+- [Phase 04-01]: OtherProfileView is a loading spinner placeholder — full implementation deferred to Plan 02
 
 ### Pending Todos
 
@@ -101,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T00:56:36.049Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-member-profile-relations/04-CONTEXT.md
+Last session: 2026-03-06T01:35:27.862Z
+Stopped at: Completed 04-01-PLAN.md (own-profile experience)
+Resume file: None
