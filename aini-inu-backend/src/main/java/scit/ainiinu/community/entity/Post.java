@@ -74,12 +74,23 @@ public class Post extends BaseTimeEntity {
         }
     }
 
-        //좋아요 +1
-        public void increaseLike () {this.likeCount++;}
-        //좋아요 취소
-        public void decreaseLike () {if (this.likeCount > 0) this.likeCount--;}
-        //댓글 추가
-        public void increaseComment () {this.commentCount++;}
-        //댓글 삭제
-        public void decreaseComment () {if (this.commentCount > 0) this.commentCount--;}
+    //좋아요 +1
+    public void increaseLike() {
+        this.likeCount++;
     }
+
+    //좋아요 취소
+    public void decreaseLike() {
+        if (this.likeCount > 0) this.likeCount--;
+    }
+
+    //댓글 추가
+    public void increaseComment() {
+        this.commentCount++;
+    }
+
+    //댓글 삭제
+    public void decreaseComment() {
+        if (this.commentCount > 0) this.commentCount--;
+    }
+}

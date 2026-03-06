@@ -8,7 +8,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import scit.ainiinu.common.response.ApiResponse;
-import scit.ainiinu.member.exception.MemberException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,23 +25,6 @@ public class GlobalExceptionHandler {
 
         log.warn("Business Exception: code={}, message={}",
                 errorCode.getCode(), errorCode.getMessage());
-
-        ApiResponse<Object> response = ApiResponse.error(errorCode);
-
-        return ResponseEntity
-            .status(errorCode.getHttpStatus())
-            .body(response);
-    }
-
-    /**
-     * Handle MemberException
-     */
-    @ExceptionHandler(MemberException.class)
-    public ResponseEntity<ApiResponse<Object>> handleMemberException(MemberException e) {
-        ErrorCode errorCode = e.getErrorCode();
-
-        log.warn("Member Exception: code={}, message={}",
-            errorCode.getCode(), errorCode.getMessage());
 
         ApiResponse<Object> response = ApiResponse.error(errorCode);
 
