@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-03-PLAN.md (member search modal)
-last_updated: "2026-03-06T01:40:29.889Z"
+stopped_at: Completed 04-02-PLAN.md (other-member profile + follow toggle + NeighborsModal)
+last_updated: "2026-03-06T01:42:11.593Z"
 last_activity: "2026-03-06 -- Completed plan 03-02 (3-step signup flow: Account->Profile->Pet->Complete)"
 progress:
   total_phases: 12
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
   percent: 100
 ---
 
@@ -58,6 +58,7 @@ Progress: [██████████] 100%
 | Phase 03-authentication P03-03 | 8 | 3 tasks | 4 files |
 | Phase 04-member-profile-relations P01 | 8 | 2 tasks | 6 files |
 | Phase 04-member-profile-relations P03 | 3 | 2 tasks | 2 files |
+| Phase 04-member-profile-relations P02 | 4 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,9 @@ Recent decisions affecting current work:
 - [Phase 04-01]: OtherProfileView is a loading spinner placeholder — full implementation deferred to Plan 02
 - [Phase 04-member-profile-relations]: New MemberSearchModal placed in src/components/search/ for global Sidebar usage (not dashboard/)
 - [Phase 04-member-profile-relations]: Mobile nav gets Search button as extra action item, opens modal instead of navigating
+- [Phase 04-02]: useFollowToggle targetId changed from string to number; optimistic toggle fires callbacks immediately and reverts on API failure with error-only toast
+- [Phase 04-02]: OtherProfileView: follow state determined by scanning getFollowing() list; followingCount stays 0 (no endpoint for target member's following count)
+- [Phase 04-02]: NeighborsModal: SliceResponse.content accessed directly; load-more appends pages when hasNext is true; resets on tab change
 
 ### Pending Todos
 
@@ -109,6 +113,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T01:40:29.887Z
-Stopped at: Completed 04-03-PLAN.md (member search modal)
+Last session: 2026-03-06T01:42:11.591Z
+Stopped at: Completed 04-02-PLAN.md (other-member profile + follow toggle + NeighborsModal)
 Resume file: None
