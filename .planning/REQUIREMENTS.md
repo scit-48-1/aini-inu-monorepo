@@ -78,11 +78,11 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 
 ### Walk Diary + Story (Phase 7) — FR-WALK (일기) + FR-COMMUNITY (스토리)
 
-- [ ] **DIARY-01**: 산책일기 생성 — content 최대 300자, 기본 공개 (FR-WALK-004/006, `DIARY-CREATE`, DEC-011)
-- [ ] **DIARY-02**: 산책일기 목록 조회 (FR-WALK-004, `DIARY-LIST`)
+- [x] **DIARY-01**: 산책일기 생성 — content 최대 300자, 기본 공개 (FR-WALK-004/006, `DIARY-CREATE`, DEC-011)
+- [x] **DIARY-02**: 산책일기 목록 조회 (FR-WALK-004, `DIARY-LIST`)
 - [ ] **DIARY-03**: 산책일기 상세 조회 (FR-WALK-004, `DIARY-DETAIL`)
-- [ ] **DIARY-04**: 산책일기 수정 — content 최대 300자 (FR-WALK-004, `DIARY-PATCH`)
-- [ ] **DIARY-05**: 산책일기 삭제 (FR-WALK-004, `DIARY-DELETE`)
+- [x] **DIARY-04**: 산책일기 수정 — content 최대 300자 (FR-WALK-004, `DIARY-PATCH`)
+- [x] **DIARY-05**: 산책일기 삭제 (FR-WALK-004, `DIARY-DELETE`)
 - [ ] **DIARY-06**: 팔로잉 피드 (산책일기 팔로잉 목록) (FR-WALK-004, `DIARY-FOLLOWING-LIST`)
 - [ ] **DIARY-07**: 스토리 조회 — 팔로워 대상, 회원당 아이콘 1개 그룹, 24h 만료 (FR-COMMUNITY-004/DEC-022~025, `STORY-LIST`)
 
@@ -224,11 +224,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | WALK-12 | Phase 6 | Complete |
 | WALK-13 | Phase 6 | Complete |
 | WALK-14 | Phase 6 | Complete |
-| DIARY-01 | Phase 7 | Pending |
-| DIARY-02 | Phase 7 | Pending |
+| DIARY-01 | Phase 7 | Complete |
+| DIARY-02 | Phase 7 | Complete |
 | DIARY-03 | Phase 7 | Pending |
-| DIARY-04 | Phase 7 | Pending |
-| DIARY-05 | Phase 7 | Pending |
+| DIARY-04 | Phase 7 | Complete |
+| DIARY-05 | Phase 7 | Complete |
 | DIARY-06 | Phase 7 | Pending |
 | DIARY-07 | Phase 7 | Pending |
 | CHAT-01 | Phase 8 | Pending |
