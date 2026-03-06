@@ -1,124 +1,238 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { MessageList } from '@/components/chat/MessageList';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ProfileExplorer } from '@/components/chat/ProfileExplorer';
-import { chatService } from '@/services/api/chatService';
-import { ChatRoom } from '@/types';
-import { memberService } from '@/services/api/memberService';
-import { threadService } from '@/services/api/threadService';
-import { Loader2 } from 'lucide-react';
+import {
+  getRoom,
+  getMessages,
+  sendMessage,
+  markMessagesRead,
+  type ChatRoomDetailResponse,
+} from '@/api/chat';
+import { useChatStore } from '@/store/useChatStore';
+import { useChatWebSocket } from '@/hooks/useChatWebSocket';
+import { useUserStore } from '@/store/useUserStore';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-
-type ChatRoomType = ChatRoom;
+import { Typography } from '@/components/ui/Typography';
 
 export default function ChatRoomPage() {
   const params = useParams();
-  const roomId = params?.id as string;
+  const roomId = Number(params?.id);
   const router = useRouter();
 
-  const [room, setRoom] = useState<ChatRoomType | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const profile = useUserStore((s) => s.profile);
+  const currentMemberId = Number(profile?.id) || 0;
+
+  const [room, setRoom] = useState<ChatRoomDetailResponse | null>(null);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [partnerHasRecentDiary, setPartnerHasRecentDiary] = useState(false);
 
-  // Consecutive failure counter for message polling auto-stop
-  const pollFailCountRef = useRef(0);
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Cursor pagination state
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
 
-  const fetchData = async () => {
-    try {
-      const [rooms, msgs, user] = await Promise.all([
-        chatService.getRooms(),
-        chatService.getMessages(roomId),
-        memberService.getMe(),
-      ]);
+  // Chat store
+  const messages = useChatStore((s) => s.messages);
+  const pendingMessages = useChatStore((s) => s.pendingMessages);
+  const setMessages = useChatStore((s) => s.setMessages);
+  const prependMessages = useChatStore((s) => s.prependMessages);
+  const addPendingMessage = useChatStore((s) => s.addPendingMessage);
+  const removePendingMessage = useChatStore((s) => s.removePendingMessage);
+  const markPendingFailed = useChatStore((s) => s.markPendingFailed);
 
-      const currentRoom = rooms?.find(r => r.id === roomId);
-      if (!currentRoom) {
-        toast.error('채팅방을 찾을 수 없습니다.');
-        router.push('/chat');
-        return;
-      }
+  // WebSocket hook -- enables once room is loaded
+  const { connectionMode } = useChatWebSocket(roomId, !!room);
 
-      setRoom(currentRoom);
-      setMessages(msgs);
-      setCurrentUser(user);
+  // Mark-read debounce ref
+  const markReadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-      // ChatHeader amber ring 표시를 위한 파트너 다이어리 조회
-      try {
-        const partnerDiaries = await threadService.getWalkDiaries(currentRoom?.partner?.id);
-        const now = Date.now();
-        const oneDayMs = 24 * 60 * 60 * 1000;
-        const hasRecent = Object.values(partnerDiaries || {}).some((d: any) => {
-          const ts = d.createdAt
-            ? new Date(d.createdAt).getTime()
-            : d.walkDate
-              ? new Date(d.walkDate.replace(/\./g, '-')).getTime()
-              : 0;
-          return ts > 0 && now - ts <= oneDayMs;
-        });
-        setPartnerHasRecentDiary(hasRecent);
-      } catch { /* 무시 */ }
-    } catch (e) {
-      console.error(e);
-      toast.error('대화 내용을 불러오는데 실패했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Initial data fetch
   useEffect(() => {
-    if (roomId) fetchData();
+    if (!roomId || isNaN(roomId)) {
+      setError(true);
+      setIsLoading(false);
+      return;
+    }
 
-    pollFailCountRef.current = 0;
+    let cancelled = false;
 
-    // [Prototype] Polling for new messages simulation
-    pollIntervalRef.current = setInterval(async () => {
-      if (!roomId) return;
+    async function fetchInitial() {
       try {
-        const msgs = await chatService.getMessages(roomId);
-        pollFailCountRef.current = 0; // reset on success
-        setMessages(msgs);
+        const [roomData, msgData] = await Promise.all([
+          getRoom(roomId),
+          getMessages(roomId, { size: 20 }),
+        ]);
+
+        if (cancelled) return;
+
+        setRoom(roomData);
+        setMessages(msgData.content);
+        setNextCursor(msgData.nextCursor);
+        setHasMore(msgData.hasMore);
       } catch (e) {
         console.error(e);
-        pollFailCountRef.current += 1;
-        if (pollFailCountRef.current >= 3) {
-          if (pollIntervalRef.current !== null) {
-            clearInterval(pollIntervalRef.current);
-            pollIntervalRef.current = null;
-          }
-          console.warn('[ChatRoom] Message polling stopped after 3 consecutive failures');
+        if (!cancelled) {
+          setError(true);
+          toast.error('채팅방을 불러오는데 실패했습니다.');
         }
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
-    }, 3000);
+    }
 
+    fetchInitial();
     return () => {
-      if (pollIntervalRef.current !== null) {
-        clearInterval(pollIntervalRef.current);
-        pollIntervalRef.current = null;
-      }
+      cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
-  const handleSendMessage = async () => {
-    if (!inputText.trim()) return;
-    try {
-      const sentMsg = await chatService.sendMessage(roomId, inputText);
-      setMessages([...messages, sentMsg]);
-      setInputText('');
-    } catch {
-      toast.error('메시지 전송 실패');
-    }
-  };
+  // Mark messages as read on mount and when new messages arrive
+  useEffect(() => {
+    if (!room || messages.length === 0) return;
 
-  if (isLoading || !room || !currentUser) {
+    const latestMessage = messages[messages.length - 1];
+    if (!latestMessage) return;
+
+    // Debounce 2 seconds
+    if (markReadTimer.current) clearTimeout(markReadTimer.current);
+    markReadTimer.current = setTimeout(() => {
+      markMessagesRead(roomId, {
+        messageId: latestMessage.id,
+        readAt: new Date().toISOString(),
+      }).catch(() => {
+        // Silent -- mark-read failure is non-critical
+      });
+    }, 2000);
+
+    return () => {
+      if (markReadTimer.current) clearTimeout(markReadTimer.current);
+    };
+  }, [room, messages, roomId]);
+
+  // Load older messages (cursor pagination)
+  const handleLoadOlder = useCallback(async () => {
+    if (!nextCursor || isLoadingOlder) return;
+    setIsLoadingOlder(true);
+    try {
+      const result = await getMessages(roomId, {
+        cursor: nextCursor,
+        size: 20,
+      });
+      prependMessages(result.content);
+      setNextCursor(result.nextCursor);
+      setHasMore(result.hasMore);
+    } catch (e) {
+      console.error('Failed to load older messages:', e);
+    } finally {
+      setIsLoadingOlder(false);
+    }
+  }, [roomId, nextCursor, isLoadingOlder, prependMessages]);
+
+  // Send message (optimistic)
+  const handleSend = useCallback(async () => {
+    const content = inputText.trim();
+    if (!content) return;
+
+    const clientMessageId = crypto.randomUUID();
+    const pending = {
+      clientMessageId,
+      content,
+      status: 'pending' as const,
+      sentAt: new Date().toISOString(),
+    };
+
+    setInputText('');
+    addPendingMessage(pending);
+
+    try {
+      const serverMsg = await sendMessage(roomId, {
+        content,
+        messageType: 'TEXT',
+        clientMessageId,
+      });
+      removePendingMessage(clientMessageId);
+      // The addMessage in store handles dedup if WS already delivered it
+      useChatStore.getState().addMessage(serverMsg);
+    } catch {
+      markPendingFailed(clientMessageId);
+      toast.error('메시지 전송에 실패했습니다.');
+    }
+  }, [
+    inputText,
+    roomId,
+    addPendingMessage,
+    removePendingMessage,
+    markPendingFailed,
+  ]);
+
+  // Retry failed message
+  const handleRetry = useCallback(
+    async (clientMessageId: string) => {
+      const pending = pendingMessages.find(
+        (p) => p.clientMessageId === clientMessageId,
+      );
+      if (!pending) return;
+
+      // Reset to pending status
+      useChatStore.getState().markPendingFailed(clientMessageId);
+      const store = useChatStore.getState();
+      store.removePendingMessage(clientMessageId);
+      store.addPendingMessage({
+        ...pending,
+        status: 'pending',
+        sentAt: new Date().toISOString(),
+      });
+
+      try {
+        const serverMsg = await sendMessage(roomId, {
+          content: pending.content,
+          messageType: 'TEXT',
+          clientMessageId,
+        });
+        useChatStore.getState().removePendingMessage(clientMessageId);
+        useChatStore.getState().addMessage(serverMsg);
+      } catch {
+        useChatStore.getState().markPendingFailed(clientMessageId);
+        toast.error('메시지 전송에 실패했습니다.');
+      }
+    },
+    [roomId, pendingMessages],
+  );
+
+  // Derive partnerId for ProfileExplorer
+  const partnerId =
+    room?.participants.find((p) => p.memberId !== currentMemberId)?.memberId ??
+    0;
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-[#fdfbf7]">
+        <Typography variant="body" className="text-zinc-500">
+          채팅방을 찾을 수 없습니다.
+        </Typography>
+        <button
+          onClick={() => router.push('/chat')}
+          className="flex items-center gap-2 px-4 py-2 bg-zinc-100 rounded-xl text-sm font-bold text-navy-900 hover:bg-zinc-200 transition-colors"
+        >
+          <ArrowLeft size={16} />
+          채팅 목록으로
+        </button>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (isLoading || !room) {
     return (
       <div className="flex-1 flex items-center justify-center bg-[#fdfbf7]">
         <Loader2 className="animate-spin text-amber-500" size={40} />
@@ -130,31 +244,35 @@ export default function ChatRoomPage() {
     <div className="flex w-full h-full relative overflow-hidden bg-[#fdfbf7]">
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-500 ease-in-out">
         <ChatHeader
-          partner={room.partner}
-          isConfirmed={false}
-          hasRecentDiary={partnerHasRecentDiary}
+          room={room}
+          currentMemberId={currentMemberId}
           showInfo={isProfileOpen}
           onShowInfoToggle={() => setIsProfileOpen(!isProfileOpen)}
           onBack={() => router.push('/chat')}
-          roomTitle={room?.partner?.nickname ?? ''}
+          connectionMode={connectionMode}
         />
 
         <MessageList
           messages={messages}
-          currentUserId={currentUser?.id}
-          partner={room.partner}
+          pendingMessages={pendingMessages}
+          currentMemberId={currentMemberId}
+          onLoadOlder={handleLoadOlder}
+          hasMore={hasMore}
+          isLoadingOlder={isLoadingOlder}
+          onRetry={handleRetry}
         />
 
         <ChatInput
           inputText={inputText}
           setInputText={setInputText}
-          onSend={handleSendMessage}
+          onSend={handleSend}
+          isArchived={room.status === 'CLOSED'}
         />
       </div>
 
-      {/* 4th Pane: Profile Explorer */}
+      {/* Profile Explorer */}
       <ProfileExplorer
-        partnerId={room?.partner?.id ?? ''}
+        partnerId={String(partnerId)}
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
       />
