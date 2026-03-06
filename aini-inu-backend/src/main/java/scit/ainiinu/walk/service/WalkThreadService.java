@@ -45,9 +45,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -118,34 +120,45 @@ public class WalkThreadService {
         final double lng = hasLocation ? longitude : 0;
         final double rad = hasLocation ? radiusKm : 0;
 
-        List<ThreadSummaryResponse> content = slice.getContent().stream()
+        List<WalkThread> filteredThreads = slice.getContent().stream()
                 .filter(thread -> !thread.isExpired(now))
                 .filter(thread -> !hasLocation || distanceInKm(lat, lng,
                         thread.getLatitude().doubleValue(), thread.getLongitude().doubleValue()) <= rad)
-                .map(thread -> toSummaryResponse(thread, memberId))
                 .toList();
+
+        List<ThreadSummaryResponse> content = toBatchSummaryResponses(filteredThreads, memberId);
         Slice<ThreadSummaryResponse> filtered = new org.springframework.data.domain.SliceImpl<>(
                 content, safePageable, slice.hasNext());
         return SliceResponse.of(filtered);
     }
 
-    public List<ThreadMapResponse> getMapThreads(Long memberId, double latitude, double longitude, double radiusKm) {
+    public List<ThreadMapResponse> getMapThreads(Long memberId, double latitude, double longitude, double radiusKm, LocalDate startDate, LocalDate endDate) {
         LocalDateTime now = LocalDateTime.now();
         List<WalkThread> recruitingThreads = walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING);
 
-        List<ThreadMapResponse> results = new ArrayList<>();
+        List<WalkThread> filteredThreads = new ArrayList<>();
         for (WalkThread thread : recruitingThreads) {
             if (thread.isExpired(now)) {
                 continue;
             }
-            double distance = distanceInKm(latitude, longitude, thread.getLatitude().doubleValue(), thread.getLongitude().doubleValue());
-            if (distance > radiusKm) {
+            if (startDate != null && thread.getWalkDate().isBefore(startDate)) {
                 continue;
             }
-            long currentParticipants = walkThreadApplicationRepository.countByThreadIdAndStatus(
-                    thread.getId(),
-                    WalkThreadApplicationStatus.JOINED
-            );
+            if (endDate != null && thread.getWalkDate().isAfter(endDate)) {
+                continue;
+            }
+            double distance = distanceInKm(latitude, longitude, thread.getLatitude().doubleValue(), thread.getLongitude().doubleValue());
+            if (distance <= radiusKm) {
+                filteredThreads.add(thread);
+            }
+        }
+
+        List<Long> threadIds = filteredThreads.stream().map(WalkThread::getId).toList();
+        Map<Long, Long> countMap = batchCountByStatus(threadIds, WalkThreadApplicationStatus.JOINED);
+
+        List<ThreadMapResponse> results = new ArrayList<>();
+        for (WalkThread thread : filteredThreads) {
+            long currentParticipants = countMap.getOrDefault(thread.getId(), 0L);
             results.add(ThreadMapResponse.builder()
                     .threadId(thread.getId())
                     .title(thread.getTitle())
@@ -304,22 +317,26 @@ public class WalkThreadService {
     public List<ThreadSummaryResponse> getMyActiveThread(Long memberId) {
         LocalDateTime now = LocalDateTime.now();
         List<WalkThread> threads = walkThreadRepository.findAllByAuthorIdAndStatus(memberId, WalkThreadStatus.RECRUITING);
-        return threads.stream()
+        List<WalkThread> activeThreads = threads.stream()
                 .filter(thread -> !thread.isExpired(now))
-                .map(thread -> toSummaryResponse(thread, memberId))
+                .toList();
+        return toBatchSummaryResponses(activeThreads, memberId);
+    }
+
+    private List<ThreadSummaryResponse> toBatchSummaryResponses(List<WalkThread> threads, Long memberId) {
+        if (threads.isEmpty()) {
+            return List.of();
+        }
+        List<Long> threadIds = threads.stream().map(WalkThread::getId).toList();
+        Map<Long, Long> countMap = batchCountByStatus(threadIds, WalkThreadApplicationStatus.JOINED);
+        Set<Long> appliedSet = batchAppliedSet(threadIds, memberId, WalkThreadApplicationStatus.JOINED);
+
+        return threads.stream()
+                .map(thread -> toSummaryResponse(thread, countMap.getOrDefault(thread.getId(), 0L), appliedSet.contains(thread.getId())))
                 .toList();
     }
 
-    private ThreadSummaryResponse toSummaryResponse(WalkThread thread, Long memberId) {
-        long currentParticipants = walkThreadApplicationRepository.countByThreadIdAndStatus(
-                thread.getId(),
-                WalkThreadApplicationStatus.JOINED
-        );
-
-        boolean isApplied = walkThreadApplicationRepository
-                .findByThreadIdAndMemberIdAndStatus(thread.getId(), memberId, WalkThreadApplicationStatus.JOINED)
-                .isPresent();
-
+    private ThreadSummaryResponse toSummaryResponse(WalkThread thread, long currentParticipants, boolean isApplied) {
         return ThreadSummaryResponse.builder()
                 .id(thread.getId())
                 .title(thread.getTitle())
@@ -335,6 +352,22 @@ public class WalkThreadService {
                 .status(thread.getStatus().name())
                 .isApplied(isApplied)
                 .build();
+    }
+
+    private Map<Long, Long> batchCountByStatus(List<Long> threadIds, WalkThreadApplicationStatus status) {
+        Map<Long, Long> countMap = new HashMap<>();
+        for (Object[] row : walkThreadApplicationRepository.countByThreadIdInAndStatus(threadIds, status)) {
+            countMap.put((Long) row[0], (Long) row[1]);
+        }
+        return countMap;
+    }
+
+    private Set<Long> batchAppliedSet(List<Long> threadIds, Long memberId, WalkThreadApplicationStatus status) {
+        Set<Long> appliedSet = new HashSet<>();
+        for (WalkThreadApplication app : walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(threadIds, memberId, status)) {
+            appliedSet.add(app.getThreadId());
+        }
+        return appliedSet;
     }
 
     private ThreadResponse toThreadResponse(WalkThread thread, Long memberId) {

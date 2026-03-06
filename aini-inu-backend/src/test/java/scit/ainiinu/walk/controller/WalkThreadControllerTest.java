@@ -252,7 +252,7 @@ class WalkThreadControllerTest {
                     .maxParticipants(5)
                     .placeName("서울숲")
                     .build();
-            given(walkThreadService.getMapThreads(anyLong(), eq(37.54), eq(127.04), eq(5.0)))
+            given(walkThreadService.getMapThreads(anyLong(), eq(37.54), eq(127.04), eq(5.0), any(), any()))
                     .willReturn(List.of(mapResponse));
 
             // when & then

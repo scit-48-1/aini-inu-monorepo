@@ -79,10 +79,10 @@ class WalkThreadServiceCoverageTest {
 
         given(walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(eq(WalkThreadStatus.RECRUITING), any(Pageable.class)))
                 .willReturn(slice);
-        given(walkThreadApplicationRepository.countByThreadIdAndStatus(101L, WalkThreadApplicationStatus.JOINED))
-                .willReturn(2L);
-        given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(101L, 1L, WalkThreadApplicationStatus.JOINED))
-                .willReturn(Optional.of(WalkThreadApplication.joined(101L, 1L, 9001L)));
+        given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(101L), WalkThreadApplicationStatus.JOINED))
+                .willReturn(List.<Object[]>of(new Object[]{101L, 2L}));
+        given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(101L), 1L, WalkThreadApplicationStatus.JOINED))
+                .willReturn(List.of(WalkThreadApplication.joined(101L, 1L, 9001L)));
 
         // when
         SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(1L, pageable, null, null, null, null, null);
@@ -103,10 +103,11 @@ class WalkThreadServiceCoverageTest {
         WalkThread expired = recruitingThread(103L, 10L, "강남", 37.4979, 127.0276, LocalDateTime.now().minusHours(3));
 
         given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING)).willReturn(List.of(near, far, expired));
-        given(walkThreadApplicationRepository.countByThreadIdAndStatus(101L, WalkThreadApplicationStatus.JOINED)).willReturn(3L);
+        given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(101L), WalkThreadApplicationStatus.JOINED))
+                .willReturn(List.<Object[]>of(new Object[]{101L, 3L}));
 
         // when
-        List<ThreadMapResponse> responses = walkThreadService.getMapThreads(1L, 37.5663, 126.9779, 5.0);
+        List<ThreadMapResponse> responses = walkThreadService.getMapThreads(1L, 37.5663, 126.9779, 5.0, null, null);
 
         // then
         assertThat(responses).hasSize(1);

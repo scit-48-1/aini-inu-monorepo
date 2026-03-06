@@ -103,9 +103,11 @@ public class WalkThreadController {
             @CurrentMember Long memberId,
             @RequestParam Double latitude,
             @RequestParam Double longitude,
-            @RequestParam(defaultValue = "5") Double radius
+            @RequestParam(defaultValue = "5") Double radius,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
-        List<ThreadMapResponse> response = walkThreadService.getMapThreads(memberId, latitude, longitude, radius);
+        List<ThreadMapResponse> response = walkThreadService.getMapThreads(memberId, latitude, longitude, radius, startDate, endDate);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
