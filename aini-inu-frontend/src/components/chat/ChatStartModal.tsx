@@ -6,9 +6,12 @@ import { X, Search, MessageCircle, Loader2, Users } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { cn } from '@/lib/utils';
-import { memberService } from '@/services/api/memberService';
-import { chatService } from '@/services/api/chatService';
-import { UserType } from '@/types';
+import {
+  searchMembers,
+  getFollowing,
+  type MemberFollowResponse,
+} from '@/api/members';
+import { createDirectRoom } from '@/api/chat';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -18,18 +21,29 @@ interface ChatStartModalProps {
   onRoomCreated: () => void;
 }
 
-export const ChatStartModal: React.FC<ChatStartModalProps> = ({ isOpen, onClose, onRoomCreated }) => {
+// Unified display type for both following users and search results
+interface DisplayUser {
+  memberId: number;
+  nickname: string;
+  profileImageUrl: string | null;
+}
+
+export const ChatStartModal: React.FC<ChatStartModalProps> = ({
+  isOpen,
+  onClose,
+  onRoomCreated,
+}) => {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [query, setQuery] = useState('');
-  const [followingUsers, setFollowingUsers] = useState<UserType[]>([]);
-  const [searchResults, setSearchResults] = useState<UserType[]>([]);
+  const [followingUsers, setFollowingUsers] = useState<DisplayUser[]>([]);
+  const [searchResults, setSearchResults] = useState<DisplayUser[]>([]);
   const [isLoadingFollowing, setIsLoadingFollowing] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [startingChatId, setStartingChatId] = useState<string | null>(null);
+  const [startingChatId, setStartingChatId] = useState<number | null>(null);
 
-  // 모달 오픈 시 팔로잉 목록 로드
+  // Load following list on modal open
   useEffect(() => {
     if (!isOpen) {
       setQuery('');
@@ -38,13 +52,22 @@ export const ChatStartModal: React.FC<ChatStartModalProps> = ({ isOpen, onClose,
     }
     inputRef.current?.focus();
     setIsLoadingFollowing(true);
-    memberService.getFollowing()
-      .then((data) => setFollowingUsers(data || []))
+    getFollowing()
+      .then((result) => {
+        const users: DisplayUser[] = (result.content ?? []).map(
+          (f: MemberFollowResponse) => ({
+            memberId: f.id,
+            nickname: f.nickname,
+            profileImageUrl: f.profileImageUrl,
+          }),
+        );
+        setFollowingUsers(users);
+      })
       .catch(() => setFollowingUsers([]))
       .finally(() => setIsLoadingFollowing(false));
   }, [isOpen]);
 
-  // 검색어 debounce
+  // Debounced search
   useEffect(() => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -53,8 +76,13 @@ export const ChatStartModal: React.FC<ChatStartModalProps> = ({ isOpen, onClose,
     const timer = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const data = await memberService.searchMembers(query.trim());
-        setSearchResults(data || []);
+        const result = await searchMembers(query.trim());
+        const users: DisplayUser[] = (result.content ?? []).map((m) => ({
+          memberId: m.id,
+          nickname: m.nickname,
+          profileImageUrl: m.profileImageUrl,
+        }));
+        setSearchResults(users);
       } catch {
         setSearchResults([]);
       } finally {
@@ -64,16 +92,14 @@ export const ChatStartModal: React.FC<ChatStartModalProps> = ({ isOpen, onClose,
     return () => clearTimeout(timer);
   }, [query]);
 
-  const handleStartChat = async (user: UserType) => {
-    if (startingChatId) return;
-    setStartingChatId(user.id);
+  const handleStartChat = async (user: DisplayUser) => {
+    if (startingChatId !== null) return;
+    setStartingChatId(user.memberId);
     try {
-      const room = await chatService.getOrCreateRoom(user.id);
-      if (room) {
-        onRoomCreated();
-        onClose();
-        router.push(`/chat/${room.id}`);
-      }
+      const room = await createDirectRoom({ partnerId: user.memberId });
+      onRoomCreated();
+      onClose();
+      router.push(`/chat/${room.chatRoomId}`);
     } catch {
       toast.error('채팅방을 만들 수 없습니다.');
     } finally {
@@ -92,7 +118,7 @@ export const ChatStartModal: React.FC<ChatStartModalProps> = ({ isOpen, onClose,
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <Card className="w-full max-w-md bg-white shadow-2xl animate-in zoom-in-95 duration-500 border-none overflow-hidden flex flex-col h-[600px] rounded-[48px]">
-        {/* 헤더 */}
+        {/* Header */}
         <div className="p-8 shrink-0 space-y-6 border-b border-zinc-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -100,13 +126,21 @@ export const ChatStartModal: React.FC<ChatStartModalProps> = ({ isOpen, onClose,
                 <MessageCircle size={22} />
               </div>
               <div>
-                <Typography variant="h3" className="text-navy-900 font-serif">새 대화 시작</Typography>
-                <Typography variant="label" className="text-zinc-400 text-[10px] font-black uppercase tracking-widest normal-case">
+                <Typography variant="h3" className="text-navy-900 font-serif">
+                  새 대화 시작
+                </Typography>
+                <Typography
+                  variant="label"
+                  className="text-zinc-400 text-[10px] font-black uppercase tracking-widest normal-case"
+                >
                   {!query.trim() ? '팔로잉 이웃' : '검색 결과'}
                 </Typography>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 text-zinc-300 hover:text-navy-900 transition-colors">
+            <button
+              onClick={onClose}
+              className="p-2 text-zinc-300 hover:text-navy-900 transition-colors"
+            >
               <X size={28} />
             </button>
           </div>
@@ -127,7 +161,7 @@ export const ChatStartModal: React.FC<ChatStartModalProps> = ({ isOpen, onClose,
           </div>
         </div>
 
-        {/* 목록 */}
+        {/* List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar">
           {isLoading ? (
             <div className="h-full flex flex-col items-center justify-center opacity-20 gap-4">
@@ -138,68 +172,64 @@ export const ChatStartModal: React.FC<ChatStartModalProps> = ({ isOpen, onClose,
               {query.trim() ? (
                 <>
                   <Search size={48} strokeWidth={1} />
-                  <Typography variant="label">&apos;{query}&apos;에 해당하는 이웃이 없어요.</Typography>
+                  <Typography variant="label">
+                    &apos;{query}&apos;에 해당하는 이웃이 없어요.
+                  </Typography>
                 </>
               ) : (
                 <>
                   <Users size={48} strokeWidth={1} />
-                  <Typography variant="label">아직 팔로잉하는 이웃이 없어요.</Typography>
-                  <Typography variant="label" className="text-[10px]">동네 탐색에서 이웃을 찾아보세요.</Typography>
+                  <Typography variant="label">
+                    아직 팔로잉하는 이웃이 없어요.
+                  </Typography>
+                  <Typography variant="label" className="text-[10px]">
+                    동네 탐색에서 이웃을 찾아보세요.
+                  </Typography>
                 </>
               )}
             </div>
           ) : (
             displayUsers.map((user) => {
-              const isStarting = startingChatId === user.id;
+              const isStarting = startingChatId === user.memberId;
               return (
                 <button
-                  key={user.id}
+                  key={user.memberId}
                   onClick={() => handleStartChat(user)}
-                  disabled={!!startingChatId}
+                  disabled={startingChatId !== null}
                   className="w-full flex items-center justify-between p-4 hover:bg-zinc-50 rounded-[24px] transition-all cursor-pointer active:scale-[0.98] disabled:opacity-60 text-left"
                 >
                   <div className="flex items-center gap-4 min-w-0">
                     <div className="relative shrink-0">
                       <div className="w-12 h-12 rounded-full overflow-hidden shadow-sm border border-zinc-100">
                         <img
-                          src={user.avatar || '/AINIINU_ROGO_B.png'}
+                          src={user.profileImageUrl || '/AINIINU_ROGO_B.png'}
                           className="w-full h-full object-cover"
                           alt={user.nickname}
                         />
                       </div>
-                      {user.dogs?.[0] && (
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white overflow-hidden shadow-sm">
-                          <img
-                            src={user.dogs[0].image || '/AINIINU_ROGO_B.png'}
-                            className="w-full h-full object-cover"
-                            alt="Dog"
-                          />
-                        </div>
-                      )}
                     </div>
                     <div className="min-w-0">
-                      <Typography variant="body" className="font-black text-sm text-navy-900 leading-tight truncate">
+                      <Typography
+                        variant="body"
+                        className="font-black text-sm text-navy-900 leading-tight truncate"
+                      >
                         {user.nickname}
                       </Typography>
-                      <Typography variant="label" className="text-[10px] text-amber-500/80 font-black truncate">
-                        {user.handle || `@user_${user.id}`}
-                      </Typography>
-                      {user.dogs?.[0] && (
-                        <Typography variant="label" className="text-[10px] text-zinc-400 truncate">
-                          {user.dogs[0].name} · {user.dogs[0].breed}
-                        </Typography>
-                      )}
                     </div>
                   </div>
 
-                  <div className={cn(
-                    'shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-black transition-all bg-navy-900 text-white hover:bg-amber-500 hover:text-navy-900 shadow-sm',
-                    isStarting && 'bg-amber-500 text-navy-900'
-                  )}>
+                  <div
+                    className={cn(
+                      'shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-black transition-all bg-navy-900 text-white hover:bg-amber-500 hover:text-navy-900 shadow-sm',
+                      isStarting && 'bg-amber-500 text-navy-900',
+                    )}
+                  >
                     {isStarting ? (
                       <Loader2 size={12} className="animate-spin" />
                     ) : (
-                      <><MessageCircle size={12} /> 채팅</>
+                      <>
+                        <MessageCircle size={12} /> 채팅
+                      </>
                     )}
                   </div>
                 </button>
@@ -209,6 +239,6 @@ export const ChatStartModal: React.FC<ChatStartModalProps> = ({ isOpen, onClose,
         </div>
       </Card>
     </div>,
-    document.body
+    document.body,
   );
 };

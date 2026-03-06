@@ -51,7 +51,7 @@ function buildIdSet(messages: ChatMessageResponse[]): Set<string> {
   return set;
 }
 
-export const useChatStore = create<ChatState>()((set, get) => ({
+export const useChatStore = create<ChatState>()((set) => ({
   connectionMode: 'disconnected',
   messages: [],
   pendingMessages: [],
