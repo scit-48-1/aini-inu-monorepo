@@ -1,17 +1,19 @@
 'use client';
 
 import React from 'react';
-import { ShieldCheck, Settings, MapPin, UserPlus, UserCheck } from 'lucide-react';
+import { ShieldCheck, Settings, UserPlus, UserCheck } from 'lucide-react';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { MannerScoreGauge } from '@/components/common/MannerScoreGauge';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import { cn } from '@/lib/utils';
-import { UserType } from '@/types';
+import type { MemberResponse } from '@/api/members';
 
 interface ProfileHeaderProps {
-  user: UserType | null;
+  member: MemberResponse | null;
   postCount: number;
+  followerCount: number;
+  followingCount: number;
   isAnyDogVerified: boolean;
   isMe: boolean;
   isFollowing?: boolean;
@@ -24,11 +26,15 @@ interface ProfileHeaderProps {
   onFollowingClick: () => void;
   onFollowToggle?: () => void;
   isFollowLoading?: boolean;
+  /** Optional slot for injecting walk stats heatmap below the header (used by MyProfileView) */
+  walkStatsSlot?: React.ReactNode;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
-  user,
+  member,
   postCount,
+  followerCount,
+  followingCount,
   isAnyDogVerified,
   isMe,
   isFollowing = false,
@@ -40,16 +46,19 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onFollowingClick,
   onFollowToggle,
   isFollowLoading = false,
+  walkStatsSlot,
 }) => {
-  if (!user) return null;
+  if (!member) return null;
+
+  const displayHandle = member.linkedNickname || member.nickname;
 
   return (
     <section className={cn(compact ? "p-5 space-y-4" : "p-6 lg:p-12 space-y-8")}>
       <div className={cn("flex items-start", compact ? "gap-4" : "gap-8 lg:gap-16")}>
         <div className="relative shrink-0">
           <UserAvatar
-            src={user.avatar}
-            alt={user.nickname}
+            src={member.profileImageUrl}
+            alt={member.nickname}
             hasRecentDiary={hasRecentDiary}
             size={compact ? "lg" : "xl"}
           />
@@ -65,7 +74,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 "text-navy-900 lowercase tracking-tighter",
                 compact ? "text-xl" : "text-2xl lg:text-3xl"
               )}>
-                {user.nickname}
+                {member.nickname}
               </Typography>
               {isAnyDogVerified && (
                 <div className="bg-blue-500 text-white p-1 rounded-full shadow-sm">
@@ -111,35 +120,39 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <span className={cn("text-zinc-400 font-bold", compact ? "text-[10px]" : "text-sm")}>포스팅</span>
             </div>
             <button onClick={onFollowersClick} className="flex items-center gap-1.5 hover:opacity-60 transition-opacity">
-              <span className={cn("font-black text-navy-900", compact ? "text-sm" : "")}>{user.followerCount || 0}</span>
+              <span className={cn("font-black text-navy-900", compact ? "text-sm" : "")}>{followerCount}</span>
               <span className={cn("text-zinc-400 font-bold", compact ? "text-[10px]" : "text-sm")}>팔로워</span>
             </button>
             <button onClick={onFollowingClick} className="flex items-center gap-1.5 hover:opacity-60 transition-opacity">
-              <span className={cn("font-black text-navy-900", compact ? "text-sm" : "")}>{user.followingCount || 0}</span>
+              <span className={cn("font-black text-navy-900", compact ? "text-sm" : "")}>{followingCount}</span>
               <span className={cn("text-zinc-400 font-bold", compact ? "text-[10px]" : "text-sm")}>팔로잉</span>
             </button>
             {!compact && (
               <div className="pl-4 border-l border-zinc-100">
-                <MannerScoreGauge score={user.mannerScore || 0} />
+                <MannerScoreGauge score={member.mannerTemperature || 0} />
               </div>
             )}
           </div>
 
           {/* compact 전용: MannerScore 별도 행 */}
           {compact && (
-            <MannerScoreGauge score={user.mannerScore || 0} />
+            <MannerScoreGauge score={member.mannerTemperature || 0} />
           )}
 
           {/* 소개 (compact: 항상 표시 / 기본: lg 이상에서만 표시) */}
           <div className={cn(compact ? "block space-y-1" : "hidden lg:block space-y-1")}>
-            <Typography variant="body" className={cn("font-black text-navy-900", compact ? "text-xs" : "")}>{user.handle}</Typography>
-            <Typography variant="body" className={cn("text-zinc-500 leading-relaxed whitespace-pre-line", compact ? "text-[11px]" : "text-sm max-w-md")}>{user.about}</Typography>
-            <div className={cn("flex items-center gap-1.5 text-zinc-400 font-bold pt-2", compact ? "text-[9px]" : "text-xs")}>
-              <MapPin size={compact ? 10 : 12} className="text-amber-500" /> {user.location || '서울시 성수동'}
-            </div>
+            <Typography variant="body" className={cn("font-black text-navy-900", compact ? "text-xs" : "")}>{displayHandle}</Typography>
+            <Typography variant="body" className={cn("text-zinc-500 leading-relaxed whitespace-pre-line", compact ? "text-[11px]" : "text-sm max-w-md")}>{member.selfIntroduction}</Typography>
           </div>
         </div>
       </div>
+
+      {/* Walk stats heatmap slot (optional, injected by MyProfileView) */}
+      {walkStatsSlot && (
+        <div className="mt-4">
+          {walkStatsSlot}
+        </div>
+      )}
     </section>
   );
 };

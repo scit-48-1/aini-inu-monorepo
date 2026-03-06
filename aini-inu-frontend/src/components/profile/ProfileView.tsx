@@ -7,6 +7,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { postService } from '@/services/api/postService';
 import { memberService } from '@/services/api/memberService';
 import { FeedPostType, DogType, UserType, WalkDiaryType } from '@/types';
+import type { MemberResponse } from '@/api/members';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileTabs, ProfileTab } from '@/components/profile/ProfileTabs';
 import { Typography } from '@/components/ui/Typography';
@@ -171,8 +172,30 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
   return (
     <>
       <ProfileHeader
-        user={profile}
+        member={profile ? {
+          id: Number(profile.id) || 0,
+          email: profile.email || '',
+          nickname: profile.nickname || '',
+          memberType: profile.isOwner ? 'OWNER' : 'NON_OWNER',
+          profileImageUrl: profile.avatar || '',
+          linkedNickname: profile.handle || '',
+          phone: profile.phone || '',
+          age: profile.age || 0,
+          gender: profile.gender || '',
+          mbti: profile.mbti || '',
+          personality: '',
+          selfIntroduction: profile.about || '',
+          personalityTypes: (profile.tendencies || []).map((name, i) => ({ id: i, name, code: name })),
+          mannerTemperature: profile.mannerScore || 0,
+          status: 'ACTIVE',
+          createdAt: '',
+          nicknameChangedAt: profile.nicknameChangedAt || '',
+          verified: false,
+          isVerified: false,
+        } as MemberResponse : null}
         postCount={posts.length}
+        followerCount={profile?.followerCount || 0}
+        followingCount={profile?.followingCount || 0}
         isAnyDogVerified={dogs.some(d => !!d.registrationNumber)}
         isMe={isMe}
         isFollowing={isFollowing}
