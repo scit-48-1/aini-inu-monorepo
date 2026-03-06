@@ -23,13 +23,15 @@ import { DogRegisterModal } from '@/components/profile/DogRegisterModal';
 import { DogDetailModal } from '@/components/profile/DogDetailModal';
 import { PostDetailModal } from '@/components/profile/PostDetailModal';
 import { DiaryBookModal } from '@/components/profile/DiaryBookModal';
+import { DiaryCreateModal } from '@/components/profile/DiaryCreateModal';
 import { NeighborsModal } from '@/components/profile/NeighborsModal';
 
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
-import { FeedPostType, WalkDiaryType } from '@/types';
+import type { WalkDiaryResponse, WalkDiaryCreateRequest } from '@/api/diaries';
+import { FeedPostType } from '@/types';
 
 // --- Walk Stats helpers ---
 
@@ -164,29 +166,36 @@ export const MyProfileView: React.FC = () => {
   const [isNeighborsModalOpen, setIsNeighborsModalOpen] = useState(false);
   const [neighborsModalType, setNeighborsModalType] = useState<'FOLLOWERS' | 'FOLLOWING'>('FOLLOWERS');
   const [selectedPet, setSelectedPet] = useState<PetResponse | null>(null);
-  const [selectedHistory, setSelectedHistory] = useState<WalkDiaryType | null>(null);
+  const [selectedHistory, setSelectedHistory] = useState<WalkDiaryResponse | null>(null);
   const [selectedPost, setSelectedPost] = useState<FeedPostType | null>(null);
   const [isEditingPost, setIsEditingPost] = useState(false);
   const [editCaption, setEditCaption] = useState('');
   const [zoomedPhoto, setZoomedPhoto] = useState<string | null>(null);
 
+  // Diary CRUD modal state
+  const [isDiaryCreateOpen, setIsDiaryCreateOpen] = useState(false);
+  const [editingDiary, setEditingDiary] = useState<WalkDiaryResponse | null>(null);
+
   const {
-    diaries: allDiaries,
-    processedDiaries: walkHistoryDetails,
+    diaries,
+    isLoading: diariesLoading,
+    hasNext,
     fetchDiaries,
-  } = useWalkDiaries('me');
+    loadMore,
+    handleCreate,
+    handleUpdate,
+    handleDelete,
+  } = useWalkDiaries();
 
   const hasRecentDiary = useMemo(() => {
-    if (!allDiaries || typeof allDiaries !== 'object') return false;
+    if (!diaries || diaries.length === 0) return false;
     const now = Date.now();
     const oneDayMs = 24 * 60 * 60 * 1000;
-    return Object.values(allDiaries).some((d) => {
-      const ts = d?.walkDate
-        ? new Date(d.walkDate.replace(/\./g, '-')).getTime()
-        : 0;
+    return diaries.some((d) => {
+      const ts = d.createdAt ? new Date(d.createdAt).getTime() : 0;
       return ts > 0 && now - ts <= oneDayMs;
     });
-  }, [allDiaries]);
+  }, [diaries]);
 
   const grassData = useMemo(
     () => (walkStats ? transformWalkStats(walkStats) : []),
@@ -207,7 +216,7 @@ export const MyProfileView: React.FC = () => {
       setPets(petsRes || []);
       setFollowerCount(followersRes?.content?.length ?? 0);
       setFollowingCount(followingRes?.content?.length ?? 0);
-      await fetchDiaries(undefined);
+      await fetchDiaries(0);
     } catch (e) {
       console.error('MyProfileView fetchData error:', e);
       setHasError(true);
@@ -307,9 +316,12 @@ export const MyProfileView: React.FC = () => {
         )}
         {activeTab === 'HISTORY' && (
           <ProfileHistory
-            walkHistory={walkHistoryDetails}
-            allDiaries={allDiaries}
-            onHistoryClick={(h) => setSelectedHistory(h)}
+            diaries={diaries}
+            isLoading={diariesLoading}
+            hasNext={hasNext}
+            onLoadMore={loadMore}
+            onDiaryClick={(d) => setSelectedHistory(d)}
+            onCreateClick={() => { setEditingDiary(null); setIsDiaryCreateOpen(true); }}
           />
         )}
       </div>
@@ -394,9 +406,24 @@ export const MyProfileView: React.FC = () => {
       <DiaryBookModal
         isOpen={!!selectedHistory}
         onClose={() => setSelectedHistory(null)}
-        selectedDiaryId={selectedHistory?.id ?? ''}
-        diaries={allDiaries}
+        selectedDiaryId={String(selectedHistory?.id || '')}
+        diaries={diaries as any}
         onSaveSuccess={fetchData}
+      />
+
+      <DiaryCreateModal
+        isOpen={isDiaryCreateOpen}
+        onClose={() => { setIsDiaryCreateOpen(false); setEditingDiary(null); }}
+        editDiary={editingDiary ?? undefined}
+        onSubmit={async (data) => {
+          if (editingDiary) {
+            await handleUpdate(editingDiary.id, data);
+          } else {
+            await handleCreate(data as WalkDiaryCreateRequest);
+          }
+          setIsDiaryCreateOpen(false);
+          setEditingDiary(null);
+        }}
       />
 
       {zoomedPhoto && createPortal(

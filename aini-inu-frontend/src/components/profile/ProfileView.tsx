@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useProfile } from '@/hooks/useProfile';
 import { postService } from '@/services/api/postService';
 import { memberService } from '@/services/api/memberService';
-import { FeedPostType, DogType, UserType, WalkDiaryType } from '@/types';
+import { FeedPostType, DogType, UserType } from '@/types';
+import type { WalkDiaryResponse } from '@/api/diaries';
 import type { MemberResponse } from '@/api/members';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileTabs, ProfileTab } from '@/components/profile/ProfileTabs';
@@ -38,10 +39,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
   const { profile: myProfile, fetchProfile: fetchMyProfile } = useProfile();
 
   const {
-    diaries: allDiaries,
-    processedDiaries: walkHistoryDetails,
+    diaries,
+    isLoading: diariesLoading,
+    hasNext,
     fetchDiaries,
-  } = useWalkDiaries(memberId);
+    loadMore,
+  } = useWalkDiaries();
 
   const [profile, setProfile] = useState<UserType | null>(null);
   const [dogs, setDogs] = useState<DogType[]>([]);
@@ -56,7 +59,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
   const [isNeighborsModalOpen, setIsNeighborsModalOpen] = useState(false);
   const [neighborsModalType, setNeighborsModalType] = useState<'FOLLOWERS' | 'FOLLOWING'>('FOLLOWERS');
   const [selectedDog, setSelectedDog] = useState<DogType | null>(null);
-  const [selectedHistory, setSelectedHistory] = useState<WalkDiaryType | null>(null);
+  const [selectedHistory, setSelectedHistory] = useState<WalkDiaryResponse | null>(null);
   const [editMode, setEditMode] = useState<EditMode>('NONE');
   const [selectedPost, setSelectedPost] = useState<FeedPostType | null>(null);
   const [isEditingPost, setIsEditingPost] = useState(false);
@@ -69,18 +72,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
   }, [memberId, myProfile]);
 
   const hasRecentDiary = useMemo(() => {
-    if (!allDiaries || typeof allDiaries !== 'object') return false;
+    if (!diaries || diaries.length === 0) return false;
     const now = Date.now();
     const oneDayMs = 24 * 60 * 60 * 1000;
-    return Object.values(allDiaries).some((d: any) => {
-      const ts = d?.createdAt
-        ? new Date(d.createdAt).getTime()
-        : d?.walkDate
-          ? new Date(d.walkDate.replace(/\./g, '-')).getTime()
-          : 0;
+    return diaries.some((d) => {
+      const ts = d.createdAt ? new Date(d.createdAt).getTime() : 0;
       return ts > 0 && now - ts <= oneDayMs;
     });
-  }, [allDiaries]);
+  }, [diaries]);
 
   const fetchData = async () => {
     if (!memberId || memberId === 'undefined' || memberId === '[memberId]') {
@@ -104,7 +103,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
       setProfile(userRes);
       setDogs(dogsRes || []);
       setPosts(postsRes || []);
-      await fetchDiaries(targetId);
+      await fetchDiaries(0);
 
       if (!isTargetMe) {
         try {
@@ -228,9 +227,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
         )}
         {activeTab === 'HISTORY' && (
           <ProfileHistory
-            walkHistory={walkHistoryDetails}
-            allDiaries={allDiaries}
-            onHistoryClick={(h) => { setSelectedHistory(h); setEditMode('NONE'); }}
+            diaries={diaries}
+            isLoading={diariesLoading}
+            hasNext={hasNext}
+            onLoadMore={loadMore}
+            onDiaryClick={(d) => { setSelectedHistory(d); setEditMode('NONE'); }}
+            onCreateClick={() => {/* Create handled by MyProfileView only */}}
           />
         )}
       </div>
@@ -310,8 +312,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
       <DiaryBookModal
         isOpen={!!selectedHistory}
         onClose={() => setSelectedHistory(null)}
-        selectedDiaryId={selectedHistory?.id ?? ''}
-        diaries={allDiaries}
+        selectedDiaryId={String(selectedHistory?.id || '')}
+        diaries={diaries as any}
         onSaveSuccess={fetchData}
       />
 
