@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 05-pet-management
 source: [05-01-SUMMARY.md, 05-02-SUMMARY.md, 05-03-SUMMARY.md]
 started: 2026-03-06T00:00:00Z
@@ -72,13 +72,31 @@ skipped: 0
   reason: "User reported: 펫 등록 폼의 항목은 모두 뜨지만... 펫 이미지 등록에 실패하네.. 백엔드 문제일까?"
   severity: major
   test: 4
-  artifacts: []
-  missing: []
+  root_cause: "Frontend sends upload purpose 'PET_PROFILE' but backend UploadPurpose enum expects 'PET_PHOTO', causing INVALID_UPLOAD_PURPOSE exception"
+  artifacts:
+    - path: "aini-inu-frontend/src/components/profile/PetForm.tsx"
+      issue: "Line 74 passes 'PET_PROFILE' as purpose -- should be 'PET_PHOTO'"
+    - path: "aini-inu-backend/src/main/java/scit/ainiinu/community/dto/UploadPurpose.java"
+      issue: "Defines PET_PHOTO (not PET_PROFILE) as the enum value for pet image uploads"
+  missing:
+    - "Change 'PET_PROFILE' to 'PET_PHOTO' in PetForm.tsx line 74"
+  debug_session: ".planning/debug/pet-image-upload-fails.md"
 
 - truth: "Edit modal pre-fills birthDate with the pet's existing value"
   status: failed
   reason: "User reported: 다른것은 모두 잘 되는데, 수정하기를 누른 순간 birthDate만 빈값으로 되어 있어. 그래서 수정을 원한다면 반드시 birthDate을 지정해줘야하네"
   severity: major
   test: 7
-  artifacts: []
-  missing: []
+  root_cause: "Two-layer gap: (1) backend PetResponse returns only computed 'age' not raw 'birthDate', (2) PetForm.tsx line 49 hardcodes useState('') instead of reading from initialData"
+  artifacts:
+    - path: "aini-inu-backend/src/main/java/scit/ainiinu/pet/dto/response/PetResponse.java"
+      issue: "Missing birthDate field; only returns computed age"
+    - path: "aini-inu-frontend/src/api/pets.ts"
+      issue: "PetResponse interface lacks birthDate field"
+    - path: "aini-inu-frontend/src/components/profile/PetForm.tsx"
+      issue: "Line 49 hardcodes birthDate to '' instead of reading from initialData"
+  missing:
+    - "Add birthDate: LocalDate to PetResponse.java and map in from() builder"
+    - "Add birthDate?: string to PetResponse interface in api/pets.ts"
+    - "Change PetForm line 49 to useState(initialData?.birthDate || '')"
+  debug_session: ".planning/debug/birthdate-empty-edit-modal.md"
