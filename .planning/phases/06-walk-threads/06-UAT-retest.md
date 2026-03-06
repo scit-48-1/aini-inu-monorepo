@@ -1,18 +1,14 @@
 ---
-status: testing
+status: complete
 phase: 06-walk-threads
 source: 06-UAT.md (gap retest after 06-04, 06-05, 06-06 fixes)
 started: 2026-03-06T14:00:00Z
-updated: 2026-03-06T14:00:00Z
+updated: 2026-03-06T15:00:00Z
 ---
 
 ## Current Test
 
-number: 11
-name: 날짜 범위 필터 + 반경 + 동네 설정 재탐색
-expected: |
-  헤더에 날짜 범위 + 반경 선택 UI가 있음. 동네 설정 후 날짜/반경 지정 후 재탐색 버튼을 누르면 해당 조건으로 필터링됨. 입력만으로 자동 요청하지 않음.
-awaiting: user response
+[testing complete]
 
 ## Tests
 
@@ -68,16 +64,24 @@ severity: major
 
 ### 12. 만료 스레드 미표시
 expected: 목록(사이드바)에서 만료된 스레드가 기본적으로 표시되지 않음. 만료된 스레드가 회색으로 보이거나 목록에서 사라짐.
-result: [pending]
+result: issue
+reported: "시간이 지난 스레드들은 안보이는 것이 맞지만, 정원이 모두 찬 스레드는 숨기지 말고 보여주면서 '모집 완료' 배지로 표기해야 함. '만료됨'과 '모집 완료'를 구분해야 함."
+severity: minor
 
 ## Summary
 
 total: 12
 passed: 9
-issues: 1
-pending: 2
+issues: 2
+pending: 0
 skipped: 0
 
 ## Gaps
 
-[none yet]
+- truth: "정원이 찬 스레드는 숨기지 않고 '모집 완료' 배지로 표시, 시간 만료 스레드만 숨김"
+  status: failed
+  reason: "User reported: 정원이 모두 찬 스레드는 숨기지 말고 보여주면서 '모집 완료' 배지로 표기해야 함"
+  severity: minor
+  test: 12
+  artifacts: []
+  missing: []
