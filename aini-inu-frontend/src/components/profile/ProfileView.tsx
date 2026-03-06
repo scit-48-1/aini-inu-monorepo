@@ -147,7 +147,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
     isFollowing,
     isLoading: isFollowLoading,
     toggle: handleFollowToggle,
-  } = useFollowToggle(profile?.id ?? '', isFollowingInit, {
+  } = useFollowToggle(profile?.id ? Number(profile.id) : 0, isFollowingInit, {
     onFollow: () => setProfile(prev => prev ? { ...prev, followerCount: (prev.followerCount ?? 0) + 1 } : prev),
     onUnfollow: () => setProfile(prev => prev ? { ...prev, followerCount: Math.max(0, (prev.followerCount ?? 0) - 1) } : prev),
   });

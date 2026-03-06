@@ -1,19 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { memberService } from '@/services/api/memberService';
+import { follow, unfollow } from '@/api/members';
 import { toast } from 'sonner';
 
 /**
  * 팔로우/언팔로우 토글 로직을 캡슐화한 훅.
- * ProfileView, NeighborsModal 등 팔로우 기능이 필요한 모든 컴포넌트에서 재사용합니다.
+ * Optimistic update pattern: toggles state immediately, reverts on failure.
  */
 export function useFollowToggle(
-  targetId: string,
+  targetId: number,
   initialIsFollowing: boolean,
   options?: {
     onFollow?: () => void;
     onUnfollow?: () => void;
+    onError?: () => void;
   }
 ) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
@@ -24,22 +25,35 @@ export function useFollowToggle(
     setIsFollowing(initialIsFollowing);
   }, [initialIsFollowing]);
 
-  const toggle = async (targetNickname?: string) => {
+  const toggle = async () => {
     if (isLoading) return;
+
+    // Optimistic update: toggle immediately before API call
+    const wasFollowing = isFollowing;
+    setIsFollowing(!wasFollowing);
     setIsLoading(true);
+
+    if (wasFollowing) {
+      options?.onUnfollow?.();
+    } else {
+      options?.onFollow?.();
+    }
+
     try {
-      if (isFollowing) {
-        await memberService.unfollow(targetId);
-        setIsFollowing(false);
-        toast.success(targetNickname ? `${targetNickname}님 팔로우를 취소했습니다.` : '팔로우를 취소했습니다.');
-        options?.onUnfollow?.();
+      if (wasFollowing) {
+        await unfollow(targetId);
       } else {
-        await memberService.follow(targetId);
-        setIsFollowing(true);
-        toast.success(targetNickname ? `${targetNickname}님을 팔로우했습니다.` : '팔로우했습니다.');
-        options?.onFollow?.();
+        await follow(targetId);
       }
     } catch {
+      // Rollback on failure
+      setIsFollowing(wasFollowing);
+      if (wasFollowing) {
+        options?.onFollow?.(); // revert the unfollow count change
+      } else {
+        options?.onUnfollow?.(); // revert the follow count change
+      }
+      options?.onError?.();
       toast.error('팔로우 처리에 실패했습니다.');
     } finally {
       setIsLoading(false);
