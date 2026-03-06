@@ -179,6 +179,8 @@ export async function getThreadMap(params: {
   latitude: number;
   longitude: number;
   radius?: number;
+  startDate?: string;
+  endDate?: string;
 }): Promise<ThreadMapResponse[]> {
   const query = buildQuery(params);
   return apiClient.get<ThreadMapResponse[]>(`/threads/map${query}`);

@@ -86,7 +86,7 @@ export function useRadarLogic() {
     try {
       const [listResult, markerResult, hotspotResult] = await Promise.all([
         getThreads({ page: 0, size: 20, startDate: filterDateFrom || undefined, endDate: filterDateTo || undefined, latitude, longitude, radius: radiusKm ?? 5 }),
-        getThreadMap({ latitude, longitude, radius: radiusKm ?? 5 }),
+        getThreadMap({ latitude, longitude, radius: radiusKm ?? 5, startDate: filterDateFrom || undefined, endDate: filterDateTo || undefined }),
         getHotspots(),
       ]);
       setThreadList(listResult.content);
@@ -170,14 +170,23 @@ export function useRadarLogic() {
     if (!threadListHasNext) return;
     try {
       const nextPage = threadListPage + 1;
-      const result = await getThreads({ page: nextPage, size: 20, startDate: dateFrom || undefined, endDate: dateTo || undefined });
+      const coords = searchCoordinates ?? coordinates;
+      const result = await getThreads({
+        page: nextPage,
+        size: 20,
+        startDate: dateFrom || undefined,
+        endDate: dateTo || undefined,
+        latitude: coords[0],
+        longitude: coords[1],
+        radius,
+      });
       setThreadList((prev) => [...prev, ...result.content]);
       setThreadListPage(nextPage);
       setThreadListHasNext(result.hasNext);
     } catch {
       toast.error('더 불러오는데 실패했습니다.');
     }
-  }, [threadListPage, threadListHasNext, dateFrom, dateTo]);
+  }, [threadListPage, threadListHasNext, dateFrom, dateTo, coordinates, searchCoordinates, radius]);
 
   // ---------------------------------------------------------------
   // Manual re-search (DEC-029: only way to refetch)
