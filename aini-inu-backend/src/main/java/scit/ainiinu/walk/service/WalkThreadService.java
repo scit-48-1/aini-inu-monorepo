@@ -103,8 +103,10 @@ public class WalkThreadService {
         Pageable safePageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
         Slice<WalkThread> slice;
         if (startDate != null || endDate != null) {
-            slice = walkThreadRepository.findByStatusAndWalkDateBetween(
-                    WalkThreadStatus.RECRUITING, startDate, endDate, safePageable);
+            LocalDate effectiveStart = startDate != null ? startDate : LocalDate.of(2000, 1, 1);
+            LocalDate effectiveEnd = endDate != null ? endDate : LocalDate.of(2099, 12, 31);
+            slice = walkThreadRepository.findByStatusAndWalkDateRange(
+                    WalkThreadStatus.RECRUITING, effectiveStart, effectiveEnd, safePageable);
         } else {
             slice = walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(
                     WalkThreadStatus.RECRUITING, safePageable);
@@ -189,6 +191,7 @@ public class WalkThreadService {
 
         if (request.getPetIds() != null) {
             walkThreadPetRepository.deleteAllByThreadId(threadId);
+            walkThreadPetRepository.flush();
             saveThreadPets(threadId, request.getPetIds());
         }
 

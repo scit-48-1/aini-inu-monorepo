@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { MapPin, Edit2, Footprints, PlusCircle, Siren, RefreshCw, CalendarDays } from 'lucide-react';
+import { MapPin, Edit2, Footprints, PlusCircle, Siren, RefreshCw, CalendarDays, Radar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Typography } from '@/components/ui/Typography';
 
@@ -18,6 +18,8 @@ interface AroundMeHeaderProps {
   dateTo?: string;
   onDateFromChange?: (val: string) => void;
   onDateToChange?: (val: string) => void;
+  radius?: number;
+  onRadiusChange?: (val: number) => void;
 }
 
 export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
@@ -31,6 +33,8 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
   dateTo,
   onDateFromChange,
   onDateToChange,
+  radius = 5,
+  onRadiusChange,
 }) => {
   return (
     <div className="p-6 md:px-10 md:py-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 border-b border-card-border bg-white sticky top-0 z-20 shadow-sm transition-all">
@@ -73,6 +77,20 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
                 onChange={(e) => onDateToChange?.(e.target.value)}
                 className="bg-transparent border-none outline-none text-xs font-black text-zinc-600 w-[110px]"
               />
+            </div>
+          )}
+          {onRadiusChange && (
+            <div className="flex items-center gap-1.5 bg-zinc-50/50 px-3 py-1.5 rounded-full border border-zinc-100 text-xs font-black text-zinc-500">
+              <Radar size={12} className="text-amber-500" />
+              <select
+                value={radius}
+                onChange={(e) => onRadiusChange(Number(e.target.value))}
+                className="bg-transparent border-none outline-none text-xs font-black text-zinc-600 cursor-pointer"
+              >
+                {[1, 2, 3, 5, 10, 20, 50, 100].map((r) => (
+                  <option key={r} value={r}>{r}km</option>
+                ))}
+              </select>
             </div>
           )}
         </div>

@@ -72,15 +72,21 @@ export function useRadarLogic() {
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
 
+  // Radius (km)
+  const [radius, setRadius] = useState<number>(5);
+
+  // Search coordinates (may differ from GPS after 동네 설정)
+  const [searchCoordinates, setSearchCoordinates] = useState<[number, number] | null>(null);
+
   // ---------------------------------------------------------------
   // Fetch thread data (list + map + hotspots)
   // ---------------------------------------------------------------
-  const fetchThreadData = useCallback(async (coords: [number, number], filterDateFrom?: string, filterDateTo?: string) => {
+  const fetchThreadData = useCallback(async (coords: [number, number], filterDateFrom?: string, filterDateTo?: string, radiusKm?: number) => {
     const [latitude, longitude] = coords;
     try {
       const [listResult, markerResult, hotspotResult] = await Promise.all([
         getThreads({ page: 0, size: 20, startDate: filterDateFrom || undefined, endDate: filterDateTo || undefined }),
-        getThreadMap({ latitude, longitude, radius: 5 }),
+        getThreadMap({ latitude, longitude, radius: radiusKm ?? 5 }),
         getHotspots(),
       ]);
       setThreadList(listResult.content);
@@ -149,16 +155,6 @@ export function useRadarLogic() {
   }, [gpsLoading]);
 
   // ---------------------------------------------------------------
-  // Re-fetch when date filters change
-  // ---------------------------------------------------------------
-  useEffect(() => {
-    if (!gpsLoading && coordinates) {
-      fetchThreadData(coordinates, dateFrom, dateTo);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateFrom, dateTo]);
-
-  // ---------------------------------------------------------------
   // Local expiry timer — updates display clock every 60 seconds
   // NO data fetching here
   // ---------------------------------------------------------------
@@ -188,9 +184,13 @@ export function useRadarLogic() {
   // ---------------------------------------------------------------
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await fetchThreadData(coordinates, dateFrom, dateTo);
+    const coords = searchCoordinates ?? coordinates;
+    await fetchThreadData(coords, dateFrom, dateTo, radius);
+    getMyActiveThread()
+      .then(list => setMyActiveThread(list.length > 0 ? list[0] : null))
+      .catch(() => {});
     setIsRefreshing(false);
-  }, [fetchThreadData, coordinates, dateFrom, dateTo]);
+  }, [fetchThreadData, coordinates, searchCoordinates, dateFrom, dateTo, radius]);
 
   // ---------------------------------------------------------------
   // Thread selection
@@ -216,12 +216,14 @@ export function useRadarLogic() {
       await deleteThread(threadId);
       toast.success('모집글이 삭제되었습니다.');
       setEditingThreadId(null);
+      setMyActiveThread(null);
       clearSelection();
-      await fetchThreadData(coordinates);
+      const coords = searchCoordinates ?? coordinates;
+      await fetchThreadData(coords, dateFrom, dateTo, radius);
     } catch {
       toast.error('삭제에 실패했습니다.');
     }
-  }, [clearSelection, fetchThreadData, coordinates]);
+  }, [clearSelection, fetchThreadData, coordinates, searchCoordinates, dateFrom, dateTo, radius]);
 
   const startEdit = useCallback((threadId: number) => {
     setEditingThreadId(threadId);
@@ -264,6 +266,12 @@ export function useRadarLogic() {
     dateTo,
     setDateFrom,
     setDateTo,
+    // Radius
+    radius,
+    setRadius,
+    // Search coordinates
+    searchCoordinates,
+    setSearchCoordinates,
     // Actions
     handleDeleteThread,
     handleRefresh,

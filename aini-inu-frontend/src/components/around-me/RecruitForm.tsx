@@ -436,11 +436,20 @@ export const RecruitForm: React.FC<RecruitFormProps> = ({
             type="number"
             min={2}
             value={form.maxParticipants}
+            disabled={form.chatType === 'INDIVIDUAL'}
             onChange={(e) =>
               setForm({ ...form, maxParticipants: Math.max(2, Number(e.target.value)) })
             }
-            className="w-28 bg-white border border-zinc-200 rounded-2xl py-3 px-5 text-sm font-bold text-navy-900 focus:outline-none focus:border-amber-500 focus:ring-4 ring-amber-500/10 transition-all"
+            className={cn(
+              'w-28 border rounded-2xl py-3 px-5 text-sm font-bold text-navy-900 transition-all',
+              form.chatType === 'INDIVIDUAL'
+                ? 'bg-zinc-100 border-zinc-200 text-zinc-400 cursor-not-allowed'
+                : 'bg-white border-zinc-200 focus:outline-none focus:border-amber-500 focus:ring-4 ring-amber-500/10',
+            )}
           />
+          {form.chatType === 'INDIVIDUAL' && (
+            <p className="text-xs text-zinc-400 mt-1">1:1 채팅은 2명 고정입니다.</p>
+          )}
         </div>
 
         {/* ---- Location ---- */}

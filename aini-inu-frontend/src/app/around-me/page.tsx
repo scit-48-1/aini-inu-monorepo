@@ -15,6 +15,18 @@ import { useRadarLogic } from '@/hooks/useRadarLogic';
 import { useConfigStore } from '@/store/useConfigStore';
 import { useUserStore } from '@/store/useUserStore';
 
+const DISTRICT_COORDS: Record<string, [number, number]> = {
+  '강남구': [37.5172, 127.0473], '강동구': [37.5301, 127.1238], '강북구': [37.6396, 127.0255],
+  '강서구': [37.5510, 126.8495], '관악구': [37.4784, 126.9516], '광진구': [37.5385, 127.0823],
+  '구로구': [37.4954, 126.8874], '금천구': [37.4569, 126.8955], '노원구': [37.6542, 127.0568],
+  '도봉구': [37.6688, 127.0471], '동대문구': [37.5744, 127.0400], '동작구': [37.5124, 126.9393],
+  '마포구': [37.5664, 126.9018], '서대문구': [37.5791, 126.9368], '서초구': [37.4837, 127.0324],
+  '성동구': [37.5633, 127.0371], '성북구': [37.5894, 127.0167], '송파구': [37.5145, 127.1050],
+  '양천구': [37.5170, 126.8665], '영등포구': [37.5264, 126.8963], '용산구': [37.5324, 126.9906],
+  '은평구': [37.6027, 126.9291], '종로구': [37.5735, 126.9790], '중구': [37.5641, 126.9979],
+  '중랑구': [37.6063, 127.0928],
+};
+
 export default function AroundMePage() {
   const [mounted, setMounted] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
@@ -34,6 +46,8 @@ export default function AroundMePage() {
     handleDeleteThread, handleRefresh,
     myActiveThread,
     dateFrom, dateTo, setDateFrom, setDateTo,
+    radius, setRadius,
+    setSearchCoordinates,
   } = useRadarLogic();
 
   useEffect(() => {
@@ -60,6 +74,8 @@ export default function AroundMePage() {
         dateTo={dateTo}
         onDateFromChange={setDateFrom}
         onDateToChange={setDateTo}
+        radius={radius}
+        onRadiusChange={setRadius}
       />
 
       <div className="flex-1 flex flex-col lg:flex-row px-4 md:px-8 py-6 gap-8 overflow-hidden">
@@ -172,7 +188,16 @@ export default function AroundMePage() {
             </div>
             <div className="flex-1 overflow-y-auto">
               <DaumPostcode
-                onComplete={(data) => { setLocation(data.address); setIsLocationModalOpen(false); }}
+                onComplete={(data) => {
+                  setLocation(data.address);
+                  setIsLocationModalOpen(false);
+                  // Try to resolve district coordinates for search
+                  const sigungu = (data as Record<string, string>).sigungu || '';
+                  const district = Object.keys(DISTRICT_COORDS).find((d) => sigungu.includes(d));
+                  if (district) {
+                    setSearchCoordinates(DISTRICT_COORDS[district]);
+                  }
+                }}
                 style={{ height: '100%' }}
               />
             </div>

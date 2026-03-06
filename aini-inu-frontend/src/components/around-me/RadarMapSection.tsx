@@ -106,12 +106,14 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
   const [isCancelling, setIsCancelling] = useState(false);
   const [showPetSelect, setShowPetSelect] = useState(false);
   const [hotspotPopup, setHotspotPopup] = useState<HotspotPopup | null>(null);
+  const [optimisticApplied, setOptimisticApplied] = useState<boolean | null>(null);
 
   useEffect(() => {
     setIsConfirmingDelete(false);
     setSelectedPetIds([]);
     setShowPetSelect(false);
     setHotspotPopup(null);
+    setOptimisticApplied(null);
   }, [selectedThread]);
 
   // Convert ThreadMapResponse[] to MapMarker[] for DynamicMap
@@ -162,6 +164,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
       });
       setShowPetSelect(false);
       setSelectedPetIds([]);
+      setOptimisticApplied(true);
       onRefreshDetail();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
@@ -181,6 +184,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
     try {
       await cancelApplication(selectedThread.id);
       toast.success('신청이 취소되었습니다');
+      setOptimisticApplied(false);
       onRefreshDetail();
     } catch {
       toast.error('취소에 실패했습니다');
@@ -214,7 +218,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
     }
   };
 
-  const isApplied = selectedThread?.applied ?? false;
+  const isApplied = optimisticApplied ?? selectedThread?.applied ?? false;
 
   const isOwner = selectedThread ? selectedThread.authorId === currentUserId : false;
 

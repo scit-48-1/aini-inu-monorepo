@@ -26,10 +26,9 @@ public interface WalkThreadRepository extends JpaRepository<WalkThread, Long> {
     List<WalkThread> findAllByAuthorIdAndStatus(Long authorId, WalkThreadStatus status);
 
     @Query("SELECT t FROM WalkThread t WHERE t.status = :status " +
-           "AND (:startDate IS NULL OR t.walkDate >= :startDate) " +
-           "AND (:endDate IS NULL OR t.walkDate <= :endDate) " +
+           "AND t.walkDate >= :startDate AND t.walkDate <= :endDate " +
            "ORDER BY t.createdAt DESC, t.id DESC")
-    Slice<WalkThread> findByStatusAndWalkDateBetween(
+    Slice<WalkThread> findByStatusAndWalkDateRange(
             @Param("status") WalkThreadStatus status,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
