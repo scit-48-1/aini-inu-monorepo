@@ -44,7 +44,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const storedAccessToken = getAccessToken();
 
       if (!storedRefreshToken) {
-        // No tokens at all — not logged in
         setIsLoading(false);
         const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
         if (isProtected) {
@@ -132,6 +131,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
   };
+
+  // Block children until auth bootstrap completes — prevents race condition
+  // where child components fire API calls (→ 401 → handle401 refresh) before
+  // bootstrap's own refresh, causing RTR to invalidate the bootstrap's token.
+  if (isLoading) {
+    return null;
+  }
 
   return <AuthContext value={value}>{children}</AuthContext>;
 }
