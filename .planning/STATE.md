@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-04-PLAN.md (fix own-profile pet fetching)
-last_updated: "2026-03-06T01:57:42.825Z"
+stopped_at: Completed 04-05-PLAN.md (remove postService.getPosts from MyProfileView)
+last_updated: "2026-03-06T02:29:50.768Z"
 last_activity: "2026-03-06 -- Completed plan 03-02 (3-step signup flow: Account->Profile->Pet->Complete)"
 progress:
   total_phases: 12
-  completed_phases: 4
-  total_plans: 12
-  completed_plans: 12
+  completed_phases: 3
+  total_plans: 14
+  completed_plans: 13
   percent: 100
 ---
 
@@ -60,6 +60,7 @@ Progress: [██████████] 100%
 | Phase 04-member-profile-relations P03 | 3 | 2 tasks | 2 files |
 | Phase 04-member-profile-relations P02 | 4 | 2 tasks | 4 files |
 | Phase 04-member-profile-relations P04 | 1 | 1 tasks | 1 files |
+| Phase 04-member-profile-relations P05 | 2 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,7 @@ Recent decisions affecting current work:
 - [Phase 04-02]: OtherProfileView: follow state determined by scanning getFollowing() list; followingCount stays 0 (no endpoint for target member's following count)
 - [Phase 04-02]: NeighborsModal: SliceResponse.content accessed directly; load-more appends pages when hasNext is true; resets on tab change
 - [Phase 04-member-profile-relations]: [Phase 04-04]: getMyPets import added alongside PetResponse type import from @/api/pets; getMemberPets fully removed from MyProfileView
+- [Phase 04-member-profile-relations]: postService.getPosts() removed from Promise.all in MyProfileView — unauthenticated call blocked entire profile load with 401; posts state kept for future Phase 9 wiring
 
 ### Pending Todos
 
@@ -115,6 +117,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T01:55:10.662Z
-Stopped at: Completed 04-04-PLAN.md (fix own-profile pet fetching)
+Last session: 2026-03-06T02:29:50.765Z
+Stopped at: Completed 04-05-PLAN.md (remove postService.getPosts from MyProfileView)
 Resume file: None
