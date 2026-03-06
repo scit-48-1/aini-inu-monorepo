@@ -141,11 +141,11 @@ Plans:
   2. User can view diary details, edit content, and delete entries with the list reflecting changes
   3. User can browse a following feed showing diary entries from members they follow
   4. Story section shows one grouped icon per member, stories expire after 24 hours, and only follower content appears
-**Plans**: 3 plans
+**Plans**: 2 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 07-01-PLAN.md — Rewire data hooks (useWalkDiaries, useDiaryForm), create DiaryCreateModal, rewire ProfileHistory and MyProfileView for diary CRUD
+- [ ] 07-02-PLAN.md — Rewire DiaryBookModal + DiaryPageRenderer for WalkDiaryResponse, rewire StoryArea + feed page for StoryGroupResponse story viewer
 
 ### Phase 8: Chat System
 **Goal**: Users can participate in real-time chat with message history, WebSocket live updates, walk confirmation, and post-walk reviews
@@ -249,4 +249,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 ---
 *Roadmap created: 2026-03-06*
-*Last updated: 2026-03-06*
+*Last updated: 2026-03-07*
