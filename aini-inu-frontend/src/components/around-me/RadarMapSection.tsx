@@ -169,6 +169,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
       setShowPetSelect(false);
       setSelectedPetIds([]);
       setOptimisticApplied(true);
+      onMarkerClick(selectedThread.id);
       onRefreshDetail();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '';
@@ -189,6 +190,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
       await cancelApplication(selectedThread.id);
       toast.success('신청이 취소되었습니다');
       setOptimisticApplied(false);
+      onMarkerClick(selectedThread.id);
       onRefreshDetail();
     } catch {
       toast.error('취소에 실패했습니다');
@@ -289,16 +291,15 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
                   <Badge variant="amber" className="px-3 text-[10px]">
                     {selectedThread.chatType === 'INDIVIDUAL' ? '1:1 채팅' : '그룹 채팅'}
                   </Badge>
-                  {isExpired(selectedThread.startTime) && (
-                    <Badge variant="default" className="bg-red-100 text-red-500 border-none px-3 text-[10px]">
-                      만료됨
-                    </Badge>
-                  )}
-                  {isFull && !isExpired(selectedThread.startTime) && (
+                  {isFull ? (
                     <Badge variant="default" className="bg-blue-100 text-blue-600 border-none px-3 text-[10px]">
                       모집 완료
                     </Badge>
-                  )}
+                  ) : isExpired(selectedThread.startTime) ? (
+                    <Badge variant="default" className="bg-red-100 text-red-500 border-none px-3 text-[10px]">
+                      만료됨
+                    </Badge>
+                  ) : null}
                 </div>
                 <Typography variant="h3" className="text-xl text-navy-900 leading-tight mb-1">
                   {selectedThread.title}

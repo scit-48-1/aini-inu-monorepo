@@ -68,8 +68,8 @@ export function useRadarLogic() {
   // My active thread
   const [myActiveThread, setMyActiveThread] = useState<ThreadSummaryResponse | null>(null);
 
-  // Date filter
-  const [dateFrom, setDateFrom] = useState<string>('');
+  // Date filter (default: from today)
+  const [dateFrom, setDateFrom] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [dateTo, setDateTo] = useState<string>('');
 
   // Radius (km)
@@ -150,7 +150,7 @@ export function useRadarLogic() {
   // ---------------------------------------------------------------
   useEffect(() => {
     if (!gpsLoading) {
-      fetchThreadData(coordinates);
+      fetchThreadData(coordinates, dateFrom, dateTo, radius);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gpsLoading]);

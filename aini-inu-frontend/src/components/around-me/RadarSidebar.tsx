@@ -157,13 +157,13 @@ export const RadarSidebar: React.FC<RadarSidebarProps> = ({
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    {expired || expired2 ? (
-                      <Badge variant="default" className="bg-red-100 text-red-500 border-none px-3 py-1 text-[10px]">
-                        만료됨
-                      </Badge>
-                    ) : thread.currentParticipants >= thread.maxParticipants ? (
+                    {thread.currentParticipants >= thread.maxParticipants ? (
                       <Badge variant="default" className="bg-blue-100 text-blue-600 border-none px-3 py-1 text-[10px]">
                         모집 완료
+                      </Badge>
+                    ) : expired || expired2 ? (
+                      <Badge variant="default" className="bg-red-100 text-red-500 border-none px-3 py-1 text-[10px]">
+                        만료됨
                       </Badge>
                     ) : (
                       <Badge variant="amber" className="bg-amber-50 text-amber-600 border-none px-3 py-1 text-[10px] flex items-center gap-1">
