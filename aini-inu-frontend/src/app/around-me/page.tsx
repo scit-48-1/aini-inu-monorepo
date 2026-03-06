@@ -47,8 +47,10 @@ export default function AroundMePage() {
     myActiveThread,
     dateFrom, dateTo, setDateFrom, setDateTo,
     radius, setRadius,
-    setSearchCoordinates,
+    searchCoordinates, setSearchCoordinates,
   } = useRadarLogic();
+
+  const effectiveCoordinates = searchCoordinates ?? coordinates;
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
@@ -81,7 +83,7 @@ export default function AroundMePage() {
       <div className="flex-1 flex flex-col lg:flex-row px-4 md:px-8 py-6 gap-8 overflow-hidden">
         {(activeTab === 'FIND' || activeTab === 'EMERGENCY') && (
           <RadarMapSection
-            coordinates={coordinates}
+            coordinates={effectiveCoordinates}
             mapMarkers={mapMarkers}
             hotspots={hotspots}
             selectedThread={selectedThread}
@@ -101,7 +103,7 @@ export default function AroundMePage() {
             isLoading={isLoading}
             threads={threadList}
             hasNext={threadListHasNext}
-            coordinates={coordinates}
+            coordinates={effectiveCoordinates}
             currentTime={currentTime}
             isExpired={isExpired}
             currentUserId={currentUserId}
@@ -142,7 +144,7 @@ export default function AroundMePage() {
               <RecruitForm
                 myPets={myPets}
                 editingThreadId={editingThreadId}
-                coordinates={coordinates}
+                coordinates={effectiveCoordinates}
                 onSuccess={() => {
                   handleRefresh();
                   setActiveTab('FIND');

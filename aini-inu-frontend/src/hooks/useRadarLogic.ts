@@ -85,7 +85,7 @@ export function useRadarLogic() {
     const [latitude, longitude] = coords;
     try {
       const [listResult, markerResult, hotspotResult] = await Promise.all([
-        getThreads({ page: 0, size: 20, startDate: filterDateFrom || undefined, endDate: filterDateTo || undefined }),
+        getThreads({ page: 0, size: 20, startDate: filterDateFrom || undefined, endDate: filterDateTo || undefined, latitude, longitude, radius: radiusKm ?? 5 }),
         getThreadMap({ latitude, longitude, radius: radiusKm ?? 5 }),
         getHotspots(),
       ]);

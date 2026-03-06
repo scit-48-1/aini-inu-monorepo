@@ -99,7 +99,7 @@ public class WalkThreadService {
         return toThreadResponse(savedThread, memberId);
     }
 
-    public SliceResponse<ThreadSummaryResponse> getThreads(Long memberId, Pageable pageable, LocalDate startDate, LocalDate endDate) {
+    public SliceResponse<ThreadSummaryResponse> getThreads(Long memberId, Pageable pageable, LocalDate startDate, LocalDate endDate, Double latitude, Double longitude, Double radiusKm) {
         Pageable safePageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
         Slice<WalkThread> slice;
         if (startDate != null || endDate != null) {
@@ -113,8 +113,15 @@ public class WalkThreadService {
         }
 
         LocalDateTime now = LocalDateTime.now();
+        final boolean hasLocation = latitude != null && longitude != null && radiusKm != null;
+        final double lat = hasLocation ? latitude : 0;
+        final double lng = hasLocation ? longitude : 0;
+        final double rad = hasLocation ? radiusKm : 0;
+
         List<ThreadSummaryResponse> content = slice.getContent().stream()
                 .filter(thread -> !thread.isExpired(now))
+                .filter(thread -> !hasLocation || distanceInKm(lat, lng,
+                        thread.getLatitude().doubleValue(), thread.getLongitude().doubleValue()) <= rad)
                 .map(thread -> toSummaryResponse(thread, memberId))
                 .toList();
         Slice<ThreadSummaryResponse> filtered = new org.springframework.data.domain.SliceImpl<>(

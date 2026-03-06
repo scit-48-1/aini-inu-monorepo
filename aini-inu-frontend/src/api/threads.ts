@@ -135,6 +135,9 @@ function buildQuery(params: Record<string, unknown>): string {
 export interface ThreadListParams extends PaginationParams {
   startDate?: string;
   endDate?: string;
+  latitude?: number;
+  longitude?: number;
+  radius?: number;
 }
 
 // --- Functions ---
