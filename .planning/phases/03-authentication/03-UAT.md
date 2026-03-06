@@ -3,7 +3,7 @@ status: complete
 phase: 03-authentication
 source: [03-01-SUMMARY.md, 03-02-SUMMARY.md, 03-03-SUMMARY.md]
 started: 2026-03-06T00:00:00Z
-updated: 2026-03-06T01:30:00Z
+updated: 2026-03-06T02:00:00Z
 ---
 
 ## Current Test
@@ -19,13 +19,11 @@ result: pass
 ### 2. Login Inline Error Display
 expected: Submit the login form with wrong credentials (or leave fields empty). An error message appears inline near the form fields (not just a toast notification).
 result: pass
-note: Re-verified after 03-03 fix — passes.
 
 ### 3. Session Restoration on Page Load
 expected: Log in, then close/reopen the browser tab (or hard-refresh). You remain logged in — no forced redirect to /login. The app silently restores your session.
-result: issue
-reported: "여전히 새로고침을 하니까 로그인이 풀려버려."
-severity: major
+result: pass
+note: Fixed via 0680608 (SSR-safe custom storage) + 708fb54 (block children during bootstrap)
 
 ### 4. Auth Guard Redirect
 expected: While logged out, navigate directly to a protected page (e.g., /dashboard). You are redirected to /login automatically.
@@ -34,7 +32,6 @@ result: pass
 ### 5. Logout Flow
 expected: While logged in, trigger logout (any logout button/link). You are redirected to /login and your session is cleared (refreshing protected pages redirects again).
 result: pass
-note: Re-verified after 03-03 fix — passes.
 
 ### 6. Signup Account Step — Fields & Password Strength
 expected: Navigate to /signup. Step 1 shows email, password, and nickname fields. As you type a password, you see 5 strength criteria badges that update in real-time (e.g., length, uppercase, number, special char checks).
@@ -59,8 +56,8 @@ result: pass
 ## Summary
 
 total: 10
-passed: 9
-issues: 1
+passed: 10
+issues: 0
 pending: 0
 skipped: 0
 
@@ -71,11 +68,11 @@ skipped: 0
   reason: "User reported: 여전히 새로고침을 하니까 로그인이 풀려버려."
   severity: major
   test: 3
-  root_cause: "Zustand v5 persist middleware evaluates the storage getter once at module init time (during Next.js SSR). At SSR, window.localStorage is undefined, so createJSONStorage returns undefined, disabling both read and write. setTokens() after login never writes to localStorage. On page refresh, rehydrate() reads nothing, getRefreshToken() returns null, and bootstrap redirects to /login. The 03-03 fix addressed hydration timing (skipHydration + rehydrate) but not the storage initialization problem."
+  root_cause: "Race condition: child components (DashboardPage) rendered and fired API calls before AuthProvider bootstrap completed. 401s triggered handle401 → refreshAccessToken() which consumed the refresh token via RTR. Bootstrap's own refresh arrived after the old token was deleted → 500 → clearTokens() → redirect. Secondary: Zustand v5 default storage evaluated localStorage at SSR module init time, but this was masked by the race condition."
   artifacts:
+    - path: "aini-inu-frontend/src/providers/AuthProvider.tsx"
+      issue: "Children rendered during bootstrap, causing competing refresh token calls with RTR"
     - path: "aini-inu-frontend/src/store/useAuthStore.ts"
-      issue: "persist config lacked explicit storage — default createJSONStorage evaluated localStorage at SSR module init time, returning undefined and disabling all persistence"
-  missing:
-    - "Replace default storage with custom storage object that guards typeof window at call time, not at init time"
-  fix: "Added custom storage to persist config with typeof window guard on each method. Build verified passing."
-  fix_commit: "pending"
+      issue: "Default persist storage not SSR-safe"
+  fix: "AuthProvider returns null while isLoading (blocks children until bootstrap completes). Custom storage with typeof window guard for SSR safety."
+  fix_commits: ["0680608", "708fb54"]
