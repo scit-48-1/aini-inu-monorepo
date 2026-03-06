@@ -17,7 +17,7 @@ interface DynamicMapProps {
   onMoveEnd?: (lat: number, lng: number) => void; // 드래그 후 좌표 콜백
 }
 
-function MapController({ center, zoom, onVisualCenterChange }: { center: [number, number]; zoom: number; onVisualCenterChange?: (c: [number, number]) => void }) {
+function MapController({ center, zoom, onVisualCenterChange, onMoveEnd }: { center: [number, number]; zoom: number; onVisualCenterChange?: (c: [number, number]) => void; onMoveEnd?: (lat: number, lng: number) => void }) {
   const map = useMap();
   useEffect(() => {
     map.setView(center, zoom, { animate: true });
@@ -39,7 +39,7 @@ function MapController({ center, zoom, onVisualCenterChange }: { center: [number
     };
   }, [center, zoom, map]);
 
-  // Track visual center on move (drag/zoom)
+  // Track visual center on move (drag/zoom) for Circle
   useEffect(() => {
     if (!onVisualCenterChange) return;
     const handler = () => {
@@ -49,6 +49,17 @@ function MapController({ center, zoom, onVisualCenterChange }: { center: [number
     map.on('move', handler);
     return () => { map.off('move', handler); };
   }, [map, onVisualCenterChange]);
+
+  // Report final center on moveend (drag/zoom complete)
+  useEffect(() => {
+    if (!onMoveEnd) return;
+    const handler = () => {
+      const c = map.getCenter();
+      onMoveEnd(c.lat, c.lng);
+    };
+    map.on('moveend', handler);
+    return () => { map.off('moveend', handler); };
+  }, [map, onMoveEnd]);
 
   return null;
 }
@@ -100,7 +111,7 @@ export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideC
         keyboard={interactive}
         preferCanvas={true}
       >
-        <MapController center={center} zoom={zoom} onVisualCenterChange={setVisualCenter} />
+        <MapController center={center} zoom={zoom} onVisualCenterChange={setVisualCenter} onMoveEnd={onMoveEnd} />
         
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"

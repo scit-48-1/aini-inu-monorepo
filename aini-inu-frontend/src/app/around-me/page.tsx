@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Siren, Users } from 'lucide-react';
 import { AroundMeHeader } from '@/components/around-me/AroundMeHeader';
 import { RadarMapSection } from '@/components/around-me/RadarMapSection';
@@ -59,6 +59,19 @@ export default function AroundMePage() {
 
   const currentUserId = profile ? Number(profile.id) : undefined;
 
+  // Track map visual center (ref to avoid re-renders)
+  const mapCenterRef = useRef<[number, number]>(effectiveCoordinates);
+  const handleMapMoveEnd = useCallback((lat: number, lng: number) => {
+    mapCenterRef.current = [lat, lng];
+  }, []);
+
+  // Refresh using map's current visual center
+  const handleRefreshFromMap = useCallback(() => {
+    const [lat, lng] = mapCenterRef.current;
+    setSearchCoordinates([lat, lng]);
+    setLocation('현재 위치');
+    handleRefresh();
+  }, [setSearchCoordinates, setLocation, handleRefresh]);
 
   if (!mounted || gpsLoading || isLoading) {
     return <div className="flex items-center justify-center h-full"><p className="text-zinc-400">Loading...</p></div>;
@@ -71,7 +84,7 @@ export default function AroundMePage() {
         onLocationClick={() => setIsLocationModalOpen(true)}
         activeTab={activeTab}
         onTabChange={(tab) => { setActiveTab(tab); clearSelection(); }}
-        onRefresh={handleRefresh}
+        onRefresh={handleRefreshFromMap}
         isRefreshing={isRefreshing}
         dateFrom={dateFrom}
         dateTo={dateTo}
@@ -97,6 +110,7 @@ export default function AroundMePage() {
             onEditThread={startEdit}
             onRefreshDetail={handleRefresh}
             radius={radius}
+            onMoveEnd={handleMapMoveEnd}
           />
         )}
 
