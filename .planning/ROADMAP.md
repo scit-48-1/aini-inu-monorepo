@@ -162,9 +162,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
-- [ ] 08-03: TBD
+- [ ] 08-01-PLAN.md — Chat infrastructure: @stomp/stompjs install, useChatStore + useChatWebSocket hook, rewire ChatList + ChatStartModal to api/chat.ts
+- [ ] 08-02-PLAN.md — Chat room detail: rewire ChatHeader/ChatInput/MessageList, cursor pagination, optimistic send with retry, WebSocket real-time, 500-char limit
+- [ ] 08-03-PLAN.md — Walk confirm + leave room + review: walk confirm toggle, leave with dialog, WalkReviewModal rewire, old chatService cleanup
 
 ### Phase 9: Community Feed
 **Goal**: Users can create, browse, and interact with community posts including comments, likes, and image uploads
