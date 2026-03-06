@@ -71,7 +71,7 @@ export const PetForm: React.FC<PetFormProps> = ({
     if (!file) return;
     setIsUploadingPhoto(true);
     try {
-      const url = await uploadImageFlow(file, 'PET_PROFILE');
+      const url = await uploadImageFlow(file, 'PET_PHOTO');
       setPhotoUrl(url);
     } catch {
       toast.error('사진 업로드에 실패했습니다.');
@@ -106,7 +106,7 @@ export const PetForm: React.FC<PetFormProps> = ({
       toast.warning('견종을 선택해주세요.');
       return;
     }
-    if (!birthDate) {
+    if (!isEdit && !birthDate) {
       toast.warning('생년월일을 입력해주세요.');
       return;
     }
@@ -122,11 +122,12 @@ export const PetForm: React.FC<PetFormProps> = ({
     const payload: PetCreateRequest = {
       name: name.trim(),
       breedId: isEdit ? (initialData?.breed?.id ?? 0) : (breedId as number),
-      birthDate,
       gender: isEdit ? (initialData?.gender ?? '') : gender,
       size: isEdit ? (initialData?.size ?? '') : size,
       isNeutered,
     };
+
+    if (birthDate) payload.birthDate = birthDate;
 
     if (mbti.trim()) payload.mbti = mbti.trim();
     if (photoUrl) payload.photoUrl = photoUrl;
@@ -218,11 +219,11 @@ export const PetForm: React.FC<PetFormProps> = ({
 
       {/* Birth Date */}
       <div className="space-y-3">
-        <Typography variant="label">생년월일 <span className="text-red-400">*</span></Typography>
+        <Typography variant="label">생년월일 {!isEdit && <span className="text-red-400">*</span>}{isEdit && <span className="text-zinc-400 text-xs font-normal">(선택)</span>}</Typography>
         <input
           type="date"
           max={TODAY}
-          required
+          required={!isEdit}
           className="w-full bg-zinc-50 border border-zinc-100 rounded-[24px] py-5 px-8 font-bold text-navy-900 outline-none focus:ring-4 ring-amber-500/5 transition-all"
           value={birthDate}
           onChange={e => setBirthDate(e.target.value)}

@@ -5,7 +5,7 @@ import { apiClient } from './client';
 export interface PetCreateRequest {
   name: string;
   breedId: number;
-  birthDate: string;
+  birthDate?: string;
   gender: string;
   size: string;
   mbti?: string;
