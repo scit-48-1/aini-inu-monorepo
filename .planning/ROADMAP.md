@@ -120,12 +120,15 @@ Plans:
   3. User can apply to a thread and get immediate entry, with capacity-exceeded instantly rejected and duplicate apply treated idempotently
   4. User can cancel their application, and thread owners can edit/delete their threads
   5. Hotspot markers are visible on the map and threads auto-expire after 60 minutes
-**Plans**: 3 plans
+**Plans**: 6 plans
 
 Plans:
 - [ ] 06-01-PLAN.md — Core hook rewrite (useRadarLogic): GPS acquisition, dual data fetch, manual refresh, expiry timer, EMERGENCY tab disabled
 - [ ] 06-02-PLAN.md — RecruitForm rewrite: thread create/edit with chatType toggle, pet selection, location, validation, pet-owner block
 - [ ] 06-03-PLAN.md — Map + sidebar rewire: ThreadMapResponse markers, hotspot overlay, thread detail popup with apply/cancel, paginated sidebar
+- [ ] 06-04-PLAN.md — UAT gap closure (backend): duplicate key fix, T404 after delete, applied field in ThreadResponse, active thread endpoint, expire filter in getThreads
+- [ ] 06-05-PLAN.md — UAT gap closure (frontend): maxParticipants auto-set, map zoom, hotspot popup bubbling, apply state, active thread guard, date range filter
+- [ ] 06-06-PLAN.md — UAT gap closure (UX polish): walkDate in popup, delete confirmation visual, formatRemainingTime utility
 
 ### Phase 7: Walk Diary + Story
 **Goal**: Users can write walk diaries (with content limits and default public visibility), browse following feed, and view time-limited stories
@@ -234,7 +237,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 3. Authentication | 3/3 | Complete   | 2026-03-06 |
 | 4. Member Profile/Relations | 6/6 | Complete   | 2026-03-06 |
 | 5. Pet Management | 3/4 | In progress | - |
-| 6. Walk Threads | 3/3 | Complete   | 2026-03-06 |
+| 6. Walk Threads | 3/6 | In progress (gap closure) | - |
 | 7. Walk Diary + Story | 0/2 | Not started | - |
 | 8. Chat System | 0/3 | Not started | - |
 | 9. Community Feed | 0/2 | Not started | - |
