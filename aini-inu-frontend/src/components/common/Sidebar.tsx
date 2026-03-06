@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Rss, Settings, Plus, LogOut, MessageSquare, User } from 'lucide-react';
+import { MapPin, Rss, Settings, Plus, LogOut, MessageSquare, User, Search } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Typography } from '@/components/ui/Typography';
 import { useTheme } from 'next-themes';
 import { CreatePostModal } from './CreatePostModal';
+import { MemberSearchModal } from '@/components/search/MemberSearchModal';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/providers/AuthProvider';
 
@@ -18,6 +19,7 @@ const Sidebar: React.FC = () => {
   const { logout } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -76,7 +78,17 @@ const Sidebar: React.FC = () => {
         </nav>
 
         <div className="flex flex-col gap-6">
-          <button 
+          <button
+            onClick={() => setIsSearchModalOpen(true)}
+            title="회원 검색"
+            className="p-4 text-zinc-300 hover:text-amber-500 transition-colors group relative"
+          >
+            <Search size={20} />
+            <span className="absolute left-full ml-6 px-3 py-1.5 bg-navy-900 text-white text-[10px] font-black rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 uppercase tracking-widest">
+              회원 검색
+            </span>
+          </button>
+          <button
             onClick={() => setIsCreateModalOpen(true)}
             className="p-4 rounded-2xl border-2 border-dashed bg-background border-card-border text-amber-500 hover:bg-amber-50 transition-all active:scale-95"
           >
@@ -103,6 +115,10 @@ const Sidebar: React.FC = () => {
           userProfile={userProfile}
         />
       )}
+      <MemberSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+      />
 
       {/* Mobile Bottom Navigation Bar */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-20 pb-safe px-6 flex items-center justify-around z-[100] border-t border-card-border backdrop-blur-2xl bg-sidebar/90 text-amber-600 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
@@ -125,6 +141,13 @@ const Sidebar: React.FC = () => {
             </Link>
           );
         })}
+        <button
+          onClick={() => setIsSearchModalOpen(true)}
+          className="flex flex-col items-center gap-1.5 p-2 transition-all text-zinc-400 hover:text-amber-600"
+        >
+          <Search size={22} strokeWidth={2} />
+          <span className="text-[9px] font-black uppercase tracking-tighter">검색</span>
+        </button>
       </nav>
     </>
   );
