@@ -52,6 +52,8 @@ public class ThreadResponse {
     private List<Long> petIds;
     @Schema(description = "applicants 값입니다.", example = "[\"예시 항목\"]")
     private List<ApplicantSummary> applicants;
+    @Schema(description = "현재 사용자의 신청 여부입니다.", example = "false")
+    private Boolean applied;
 
     public static ThreadResponse from(WalkThread walkThread) {
         return ThreadResponse.builder()
@@ -74,6 +76,7 @@ public class ThreadResponse {
                 .status(walkThread.getStatus().name())
                 .petIds(List.of())
                 .applicants(List.of())
+                .applied(false)
                 .build();
     }
 

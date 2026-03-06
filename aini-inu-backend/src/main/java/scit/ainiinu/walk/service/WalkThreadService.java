@@ -105,8 +105,14 @@ public class WalkThreadService {
                 safePageable
         );
 
-        Slice<ThreadSummaryResponse> mapped = slice.map(thread -> toSummaryResponse(thread, memberId));
-        return SliceResponse.of(mapped);
+        LocalDateTime now = LocalDateTime.now();
+        List<ThreadSummaryResponse> content = slice.getContent().stream()
+                .filter(thread -> !thread.isExpired(now))
+                .map(thread -> toSummaryResponse(thread, memberId))
+                .toList();
+        Slice<ThreadSummaryResponse> filtered = new org.springframework.data.domain.SliceImpl<>(
+                content, safePageable, slice.hasNext());
+        return SliceResponse.of(filtered);
     }
 
     public List<ThreadMapResponse> getMapThreads(Long memberId, double latitude, double longitude, double radiusKm) {
@@ -280,6 +286,15 @@ public class WalkThreadService {
         return responses;
     }
 
+    public List<ThreadSummaryResponse> getMyActiveThread(Long memberId) {
+        LocalDateTime now = LocalDateTime.now();
+        List<WalkThread> threads = walkThreadRepository.findAllByAuthorIdAndStatus(memberId, WalkThreadStatus.RECRUITING);
+        return threads.stream()
+                .filter(thread -> !thread.isExpired(now))
+                .map(thread -> toSummaryResponse(thread, memberId))
+                .toList();
+    }
+
     private ThreadSummaryResponse toSummaryResponse(WalkThread thread, Long memberId) {
         long currentParticipants = walkThreadApplicationRepository.countByThreadIdAndStatus(
                 thread.getId(),
@@ -332,6 +347,10 @@ public class WalkThreadService {
                     .toList();
         }
 
+        boolean isApplied = walkThreadApplicationRepository
+                .findByThreadIdAndMemberIdAndStatus(thread.getId(), memberId, WalkThreadApplicationStatus.JOINED)
+                .isPresent();
+
         return ThreadResponse.builder()
                 .id(thread.getId())
                 .authorId(thread.getAuthorId())
@@ -352,6 +371,7 @@ public class WalkThreadService {
                 .status(thread.getStatus().name())
                 .petIds(petIds)
                 .applicants(applicants)
+                .applied(isApplied)
                 .build();
     }
 
