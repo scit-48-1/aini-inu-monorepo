@@ -317,7 +317,6 @@ export const DiaryBookModal: React.FC<DiaryBookModalProps> = ({
               dimensions={dimensions} instanceKey={instanceKey} walkHistoryDetails={diaryList}
               onFlip={(e) => setCurrentLibIndex(e.data)} renderContent={renderContent}
               bookRef={bookRef} initialPage={initialPageIndex}
-              editMode={editMode}
             />
             <div className="absolute left-1/2 top-0 bottom-0 w-px bg-black/5 z-[1000] shadow-[0_0_20px_rgba(0,0,0,0.1)] pointer-events-none" />
           </div>

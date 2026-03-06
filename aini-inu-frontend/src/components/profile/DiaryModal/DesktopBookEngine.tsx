@@ -13,7 +13,6 @@ interface DesktopBookEngineProps {
   renderContent: (data: WalkDiaryResponse, side: 'LEFT' | 'RIGHT') => React.ReactNode;
   bookRef: React.RefObject<unknown>;
   initialPage: number;
-  editMode: 'NONE' | 'CONTENT' | 'PHOTOS';
 }
 
 // 라이브러리 전용 페이지 래퍼 (하드 재질 + 모서리 라운딩 적용)
@@ -32,7 +31,7 @@ const LibPage = React.forwardRef<HTMLDivElement, { children: React.ReactNode; nu
 LibPage.displayName = 'LibPage';
 
 export const DesktopBookEngine: React.FC<DesktopBookEngineProps> = ({
-  dimensions, instanceKey, walkHistoryDetails, onFlip, renderContent, bookRef, initialPage, editMode
+  dimensions, instanceKey, walkHistoryDetails, onFlip, renderContent, bookRef, initialPage
 }) => {
   if (dimensions.width === 0) return null;
 
