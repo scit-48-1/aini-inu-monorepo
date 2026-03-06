@@ -7,7 +7,8 @@ import { FeedPostType } from '@/types';
 import { CreatePostModal } from '@/components/common/CreatePostModal';
 import { postService } from '@/services/api/postService';
 import { memberService } from '@/services/api/memberService';
-import { threadService } from '@/services/api/threadService';
+import { getStories } from '@/api/community';
+import type { StoryGroupResponse } from '@/api/community';
 import { FeedItem } from '@/components/feed/FeedItem';
 import { FeedHeader } from '@/components/feed/FeedHeader';
 import { StoryArea } from '@/components/feed/StoryArea';
@@ -18,15 +19,15 @@ import { toast } from 'sonner';
 export default function FeedPage() {
   const { currentLocation } = useConfigStore();
   const [posts, setPosts] = useState<FeedPostType[]>([]);
-  const [stories, setStories] = useState<any[]>([]);
+  const [stories, setStories] = useState<StoryGroupResponse[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+  const [isStoriesLoading, setIsStoriesLoading] = useState(true);
+
   // Modals
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isDiaryModalOpen, setIsDiaryModalOpen] = useState(false);
-  const [followingDiaries, setFollowingDiaries] = useState<Record<string, any>>({});
-  const [selectedDiaryId, setSelectedDiaryId] = useState<string>('');
+  const [selectedStoryIndex, setSelectedStoryIndex] = useState(0);
 
   const fetchPosts = useCallback(async () => {
     setIsLoading(true);
@@ -43,15 +44,15 @@ export default function FeedPage() {
   }, [currentLocation]);
 
   const fetchStories = async () => {
+    setIsStoriesLoading(true);
     try {
-      const [storiesData, diaryRes] = await Promise.all([
-        postService.getStories(),
-        threadService.getFollowingDiaries()
-      ]);
-      
-      if (storiesData) setStories(storiesData);
-      if (diaryRes && typeof diaryRes === 'object') setFollowingDiaries(diaryRes);
-    } catch (e) { console.error(e); }
+      const res = await getStories({ page: 0, size: 20 });
+      setStories(res.content);
+    } catch (e) {
+      console.error('Failed to fetch stories:', e);
+    } finally {
+      setIsStoriesLoading(false);
+    }
   };
 
   const fetchUserProfile = async () => {
@@ -61,16 +62,12 @@ export default function FeedPage() {
     } catch (e) { console.error(e); }
   };
 
-  const handleStoryClick = (story: any) => {
-    const diaryEntries = Object.entries(followingDiaries || {});
-    if (diaryEntries.length === 0) {
+  const handleStoryClick = (group: StoryGroupResponse, index: number) => {
+    if (group.diaries.length === 0) {
       toast.info('불러올 수 있는 산책 일기가 없습니다.');
       return;
     }
-    // story 작성자의 다이어리가 있으면 그것부터, 없으면 첫 번째 다이어리로 시작
-    const authorMatch = diaryEntries.find(([, diary]: [string, any]) => diary.authorId === story?.user?.id);
-    const startId = authorMatch ? authorMatch[0] : diaryEntries[0][0];
-    setSelectedDiaryId(startId);
+    setSelectedStoryIndex(index);
     setIsDiaryModalOpen(true);
   };
 
@@ -85,9 +82,10 @@ export default function FeedPage() {
       <div className="max-w-[700px] mx-auto py-12 px-4 space-y-12">
         <div className="space-y-8">
           <FeedHeader onAddClick={() => setIsPostModalOpen(true)} />
-          <StoryArea 
-            stories={stories || []} 
-            onStoryClick={handleStoryClick} 
+          <StoryArea
+            storyGroups={stories}
+            onStoryClick={handleStoryClick}
+            isLoading={isStoriesLoading}
           />
         </div>
 
@@ -112,19 +110,20 @@ export default function FeedPage() {
         </main>
       </div>
 
-      <CreatePostModal 
-        isOpen={isPostModalOpen} 
-        onClose={() => setIsPostModalOpen(false)} 
+      <CreatePostModal
+        isOpen={isPostModalOpen}
+        onClose={() => setIsPostModalOpen(false)}
         onSuccess={fetchPosts}
         userProfile={userProfile}
       />
 
-      {/* Walk Diaries = Flipbook UI */}
+      {/* Walk Diaries = Flipbook UI (Story mode) */}
       <DiaryBookModal
         isOpen={isDiaryModalOpen}
         onClose={() => setIsDiaryModalOpen(false)}
-        selectedDiaryId={selectedDiaryId}
-        diaries={followingDiaries}
+        mode="story"
+        storyGroups={stories}
+        initialMemberIndex={selectedStoryIndex}
       />
     </div>
   );
