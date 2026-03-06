@@ -29,7 +29,7 @@ import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
-import { FeedPostType, DogType, WalkDiaryType } from '@/types';
+import { FeedPostType, WalkDiaryType } from '@/types';
 
 // --- Walk Stats helpers ---
 
@@ -45,25 +45,6 @@ function transformWalkStats(stats: WalkStatsResponse): number[] {
     data[i] = dateMap.get(key) ?? 0;
   }
   return data;
-}
-
-function mapPetResponseToDogType(pet: PetResponse): DogType {
-  return {
-    id: String(pet.id),
-    name: pet.name,
-    breed: pet.breed?.name || '',
-    age: pet.age || 0,
-    birthDate: '',
-    gender: (pet.gender === 'MALE' ? 'M' : 'F') as 'M' | 'F',
-    image: pet.photoUrl || '/AINIINU_ROGO_B.png',
-    tendencies: (pet.personalities || []).map(p => p.name) as DogType['tendencies'],
-    walkStyle: (pet.walkingStyles?.[0] || '') as DogType['walkStyle'],
-    mbti: pet.mbti || undefined,
-    isNeutralized: pet.isNeutered,
-    isMain: pet.isMain,
-    isVerified: pet.isCertified,
-    registrationNumber: undefined,
-  };
 }
 
 // --- Walk Stats Heatmap component ---
@@ -165,7 +146,7 @@ export const MyProfileView: React.FC = () => {
 
   // Data state
   const [member, setMember] = useState<MemberResponse | null>(null);
-  const [dogs, setDogs] = useState<DogType[]>([]);
+  const [pets, setPets] = useState<PetResponse[]>([]);
   const [posts, setPosts] = useState<FeedPostType[]>([]);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -179,10 +160,10 @@ export const MyProfileView: React.FC = () => {
   // Modal state
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isRegisterDogOpen, setIsRegisterDogOpen] = useState(false);
-  const [editingDog, setEditingDog] = useState<DogType | null>(null);
+  const [editingPet, setEditingPet] = useState<PetResponse | null>(null);
   const [isNeighborsModalOpen, setIsNeighborsModalOpen] = useState(false);
   const [neighborsModalType, setNeighborsModalType] = useState<'FOLLOWERS' | 'FOLLOWING'>('FOLLOWERS');
-  const [selectedDog, setSelectedDog] = useState<DogType | null>(null);
+  const [selectedPet, setSelectedPet] = useState<PetResponse | null>(null);
   const [selectedHistory, setSelectedHistory] = useState<WalkDiaryType | null>(null);
   const [selectedPost, setSelectedPost] = useState<FeedPostType | null>(null);
   const [isEditingPost, setIsEditingPost] = useState(false);
@@ -223,7 +204,7 @@ export const MyProfileView: React.FC = () => {
         getFollowing({ size: 1000 }),
       ]);
       setMember(memberRes);
-      setDogs((petsRes || []).map(mapPetResponseToDogType));
+      setPets(petsRes || []);
       setFollowerCount(followersRes?.content?.length ?? 0);
       setFollowingCount(followingRes?.content?.length ?? 0);
       await fetchDiaries(undefined);
@@ -298,7 +279,7 @@ export const MyProfileView: React.FC = () => {
         postCount={posts.length}
         followerCount={followerCount}
         followingCount={followingCount}
-        isAnyDogVerified={dogs.some(d => d.isVerified)}
+        isAnyDogVerified={pets.some(p => p.isCertified)}
         isMe={true}
         hasRecentDiary={hasRecentDiary}
         onEditClick={() => setIsEditProfileOpen(true)}
@@ -319,8 +300,8 @@ export const MyProfileView: React.FC = () => {
         )}
         {activeTab === 'DOGS' && (
           <ProfileDogs
-            dogs={dogs}
-            onDogClick={setSelectedDog}
+            pets={pets}
+            onPetClick={setSelectedPet}
             onAddClick={() => setIsRegisterDogOpen(true)}
           />
         )}
@@ -350,19 +331,20 @@ export const MyProfileView: React.FC = () => {
         optimizeImage={optimizeImage}
       />
 
+      {/* TODO: Rewire in Plan 02 — DogRegisterModal/DogDetailModal still expect DogType */}
       <DogRegisterModal
         isOpen={isRegisterDogOpen}
-        onClose={() => { setIsRegisterDogOpen(false); setEditingDog(null); }}
-        editingDog={editingDog}
+        onClose={() => { setIsRegisterDogOpen(false); setEditingPet(null); }}
+        editingDog={editingPet as any}
         onSave={async () => { await fetchData(); return true; }}
         optimizeImage={optimizeImage}
       />
 
       <DogDetailModal
-        isOpen={!!selectedDog}
-        onClose={() => setSelectedDog(null)}
-        dog={selectedDog}
-        onEdit={() => { setEditingDog(selectedDog); setIsRegisterDogOpen(true); setSelectedDog(null); }}
+        isOpen={!!selectedPet}
+        onClose={() => setSelectedPet(null)}
+        dog={selectedPet as any}
+        onEdit={() => { setEditingPet(selectedPet); setIsRegisterDogOpen(true); setSelectedPet(null); }}
         onZoom={setZoomedPhoto}
       />
 

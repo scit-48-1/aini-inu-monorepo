@@ -219,9 +219,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
           />
         )}
         {activeTab === 'DOGS' && (
+          // TODO: Rewire in Plan 02 — ProfileView uses legacy DogType[] from memberService
           <ProfileDogs
-            dogs={dogs}
-            onDogClick={setSelectedDog}
+            pets={dogs as any}
+            onPetClick={setSelectedDog as any}
             onAddClick={() => isMe && setIsRegisterDogOpen(true)}
           />
         )}
