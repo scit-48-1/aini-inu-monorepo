@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 8 context gathered
-last_updated: "2026-03-06T19:34:37.025Z"
-last_activity: 2026-03-07 -- Completed plan 07-02 (diary viewer & story feed)
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-03-06T19:54:42.502Z"
+last_activity: 2026-03-07 -- Completed plan 08-01 (chat infrastructure & room list)
 progress:
   total_phases: 12
   completed_phases: 7
-  total_plans: 32
-  completed_plans: 32
-  percent: 100
+  total_plans: 35
+  completed_plans: 33
+  percent: 94
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 
 ## Current Position
 
-Phase: 7 of 12 (Walk Diary Story)
-Plan: 2 of 2 in current phase (07-02 complete)
+Phase: 8 of 12 (Chat System)
+Plan: 1 of 3 in current phase (08-01 complete)
 Status: Executing
-Last activity: 2026-03-07 -- Completed plan 07-02 (diary viewer & story feed)
+Last activity: 2026-03-07 -- Completed plan 08-01 (chat infrastructure & room list)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 94%
 
 ## Performance Metrics
 
@@ -80,6 +80,7 @@ Progress: [██████████] 100%
 | Phase 07 P02 | 5 | 2 tasks | 9 files |
 | Phase 07-walk-diary-story P03 | 3 | 1 tasks | 1 files |
 | Phase 07-walk-diary-story P04 | 2 | 2 tasks | 3 files |
+| Phase 08-chat-system P01 | 3 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -166,6 +167,9 @@ Recent decisions affecting current work:
 - [Phase 07-walk-diary-story]: onToggleVisibility prop added to DiaryPageRenderer -- allows visibility badge click outside edit mode to call updateDiary directly
 - [Phase 07-walk-diary-story]: DesktopBookEngine editMode prop removed -- no longer needed since pageflip props are now always-off constants
 - [Phase 07-walk-diary-story]: Nav arrows changed from fixed to absolute positioning to prevent overlap with RIGHT page edit content
+- [Phase 08-chat-system]: DisplayUser unified type in ChatStartModal maps both MemberFollowResponse and MemberResponse to common interface
+- [Phase 08-chat-system]: Placeholder avatar /AINIINU_ROGO_B.png for room list since ChatRoomSummaryResponse lacks participant avatar
+- [Phase 08-chat-system]: STOMP Client in useRef not state; polling and WS mutually exclusive; beforeConnect refreshes JWT
 
 ### Pending Todos
 
@@ -177,6 +181,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T19:34:37.020Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-chat-system/08-CONTEXT.md
+Last session: 2026-03-06T19:54:42.499Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: None
