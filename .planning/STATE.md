@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-03-PLAN.md
-last_updated: "2026-03-06T06:24:45.571Z"
+stopped_at: Completed 05-04-PLAN.md
+last_updated: "2026-03-06T07:51:30.589Z"
 last_activity: "2026-03-06 -- Completed plan 03-02 (3-step signup flow: Account->Profile->Pet->Complete)"
 progress:
   total_phases: 12
   completed_phases: 5
-  total_plans: 17
-  completed_plans: 17
+  total_plans: 18
+  completed_plans: 18
   percent: 100
 ---
 
@@ -65,6 +65,7 @@ Progress: [██████████] 100%
 | Phase 05-pet-management P01 | 3 | 2 tasks | 6 files |
 | Phase 05-pet-management P02 | 4 | 2 tasks | 5 files |
 | Phase 05-pet-management PP03 | 1 | 1 tasks | 1 files |
+| Phase 05-pet-management P04 | 1 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -122,6 +123,7 @@ Recent decisions affecting current work:
 - [Phase 05-02]: Main-switch optimistic pattern: fires setMainPet immediately, onMainChanged() triggers refetch on both success and failure
 - [Phase 05-02]: walkingStyleCodes used in updatePet (not walkingStyles) per research Pitfall 2 for edit mode
 - [Phase 05-03]: Early-return pattern for empty state keeps existing card grid code untouched
+- [Phase 05-04]: birthDate made optional in PetCreateRequest since backend stores computed age, not raw birthDate
 
 ### Pending Todos
 
@@ -133,6 +135,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T06:21:18.570Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-03-06T07:51:30.587Z
+Stopped at: Completed 05-04-PLAN.md
 Resume file: None
