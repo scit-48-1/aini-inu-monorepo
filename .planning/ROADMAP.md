@@ -89,9 +89,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [ ] 04-01-PLAN.md — Own profile: page orchestrator, MyProfileView, ProfileHeader refactor to MemberResponse, ProfileEditModal rewrite, walk stats heatmap
+- [ ] 04-02-PLAN.md — Other profile: OtherProfileView, useFollowToggle optimistic rewire, NeighborsModal paginated rewire
+- [ ] 04-03-PLAN.md — Member search: MemberSearchModal with debounced search-as-you-type, sidebar search button
 
 ### Phase 5: Pet Management
 **Goal**: Users can register, edit, and delete pets, set a main pet, and all form selects are populated from master data endpoints
