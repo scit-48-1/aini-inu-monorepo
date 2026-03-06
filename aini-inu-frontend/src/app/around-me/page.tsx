@@ -121,14 +121,13 @@ export default function AroundMePage() {
         {activeTab === 'RECRUIT' && (
           <div className="flex-1 overflow-y-auto no-scrollbar">
             <RecruitForm
-              currentLocation={currentLocation}
-              onLocationClick={() => setIsLocationModalOpen(true)}
-              myDogs={myPets as any}
-              isSubmitting={false}
-              isSuccess={false}
-              onSubmit={() => {}}
-              editingThread={null}
-              myActiveThread={null}
+              myPets={myPets}
+              editingThreadId={editingThreadId}
+              coordinates={coordinates}
+              onSuccess={() => {
+                handleRefresh();
+                setActiveTab('FIND');
+              }}
             />
           </div>
         )}
