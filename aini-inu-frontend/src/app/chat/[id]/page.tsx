@@ -171,7 +171,7 @@ export default function ChatRoomPage() {
     const content = inputText.trim();
     if (!content) return;
 
-    const clientMessageId = crypto.randomUUID();
+    const clientMessageId = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
     const pending = {
       clientMessageId,
       content,
