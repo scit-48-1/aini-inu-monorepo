@@ -1,9 +1,12 @@
 package scit.ainiinu.common.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import scit.ainiinu.common.security.interceptor.JwtAuthInterceptor;
@@ -16,7 +19,7 @@ import java.util.List;
  *
  * - Interceptor 등록: JWT 인증 처리
  * - ArgumentResolver 등록: @CurrentMember 파라미터 주입
- * - CORS 설정: 프론트엔드 도메인 허용
+ * - CORS 설정: CorsConfigurationSource 빈으로 통합 (Security + MVC 동시 적용)
  */
 @Configuration
 @RequiredArgsConstructor
@@ -54,24 +57,27 @@ public class WebConfig implements WebMvcConfigurer {
     }
 
     /**
-     * CORS 설정
+     * CORS 설정 (Security 필터 + MVC 레벨 통합)
      *
-     * 프론트엔드에서 API 호출 시 CORS 에러 방지
-     * - Local development: localhost:3000 (React), localhost:5173 (Vite)
-     * - Production: 실제 프론트엔드 도메인으로 변경 필요
+     * SecurityConfig에서도 이 빈을 주입받아 사용하므로,
+     * preflight(OPTIONS) 요청이 Security 필터에서 차단되지 않습니다.
      */
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins(
-                        "http://localhost:3000",     // React 개발 서버
-                        "http://localhost:5173"      // Vite 개발 서버
-                        // Production: "https://ainiinu.com" 추가
-                )
-                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .exposedHeaders("Authorization")  // 프론트엔드에서 Authorization 헤더 읽기 허용
-                .allowCredentials(true)           // 쿠키 전송 허용 (필요 시)
-                .maxAge(3600);                    // Preflight 캐시: 1시간
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(
+                "http://localhost:3000",     // Next.js 개발 서버
+                "http://localhost:5173"      // Vite 개발 서버
+                // Production: "https://ainiinu.com" 추가
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);  // 모든 경로에 적용
+        return source;
     }
 }
