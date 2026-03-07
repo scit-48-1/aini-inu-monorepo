@@ -22,7 +22,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 8: Chat System** - Room list/detail, direct chat, messages, WebSocket STOMP, walk confirm, reviews (completed 2026-03-07)
 - [x] **Phase 9: Community Feed** - Post CRUD, comments, likes with optimistic update, presigned image upload (completed 2026-03-07)
 - [x] **Phase 10: Lost Pet** - Missing report, sighting report, AI analysis, matching, chat connect on approve (completed 2026-03-07)
-- [ ] **Phase 11: Dashboard** - Cross-domain composition with greeting, stats, recommendations, pending reviews
+- [x] **Phase 11: Dashboard** - Cross-domain composition with greeting, stats, recommendations, pending reviews (completed 2026-03-07)
 - [ ] **Phase 12: Settings + Integration UAT** - Theme toggle, logout, full Swagger/PRD/DEC verification, runtime error zero
 
 ## Phase Details
@@ -253,7 +253,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 8. Chat System | 5/5 | Complete   | 2026-03-07 |
 | 9. Community Feed | 7/7 | Complete   | 2026-03-07 |
 | 10. Lost Pet | 2/2 | Complete    | 2026-03-07 |
-| 11. Dashboard | 1/2 | In Progress|  |
+| 11. Dashboard | 2/2 | Complete   | 2026-03-07 |
 | 12. Settings + Integration UAT | 0/3 | Not started | - |
 
 ---
