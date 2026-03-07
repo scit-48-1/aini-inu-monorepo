@@ -105,14 +105,14 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 
 ### Community Feed (Phase 9) — FR-COMMUNITY
 
-- [ ] **FEED-01**: 게시글 생성 — 이미지/본문 필수 (FR-COMMUNITY-001/PRD §9.2, `POST-CREATE`)
+- [x] **FEED-01**: 게시글 생성 — 이미지/본문 필수 (FR-COMMUNITY-001/PRD §9.2, `POST-CREATE`)
 - [x] **FEED-02**: 게시글 목록 조회 (FR-COMMUNITY-001, `POST-LIST`)
 - [x] **FEED-03**: 게시글 상세 조회 (FR-COMMUNITY-001, `POST-DETAIL`)
 - [x] **FEED-04**: 게시글 수정 — content 필수 (FR-COMMUNITY-001/DEC-004, `POST-PATCH`)
 - [x] **FEED-05**: 게시글 삭제 (FR-COMMUNITY-001, `POST-DELETE`)
 - [x] **FEED-06**: 댓글 CRUD — 삭제 권한: 댓글 작성자 또는 게시글 작성자 (FR-COMMUNITY-002/DEC-019, `POST-COMMENT-*`)
 - [x] **FEED-07**: 좋아요 — 낙관적 반영 + 실패 롤백 (FR-COMMUNITY-002/DEC-018, `POST-LIKE-POST`)
-- [ ] **FEED-08**: presigned URL 이미지 업로드 (FR-COMMUNITY-003, `UPLOAD-PRESIGNED-POST/PUT`)
+- [x] **FEED-08**: presigned URL 이미지 업로드 (FR-COMMUNITY-003, `UPLOAD-PRESIGNED-POST/PUT`)
 
 ### Lost Pet (Phase 10) — FR-LOST
 
@@ -245,14 +245,14 @@ Deferred to future release. Tracked but not in current roadmap.
 | CHAT-12 | Phase 8 | Complete |
 | CHAT-13 | Phase 8 | Complete |
 | CHAT-14 | Phase 8 | Complete |
-| FEED-01 | Phase 9 | Pending |
+| FEED-01 | Phase 9 | Complete |
 | FEED-02 | Phase 9 | Complete |
 | FEED-03 | Phase 9 | Complete |
 | FEED-04 | Phase 9 | Complete |
 | FEED-05 | Phase 9 | Complete |
 | FEED-06 | Phase 9 | Complete |
 | FEED-07 | Phase 9 | Complete |
-| FEED-08 | Phase 9 | Pending |
+| FEED-08 | Phase 9 | Complete |
 | LOST-01 | Phase 10 | Pending |
 | LOST-02 | Phase 10 | Pending |
 | LOST-03 | Phase 10 | Pending |

@@ -86,6 +86,7 @@ Progress: [█████████░] 95%
 | Phase 08-chat-system P04 | 2 | 2 tasks | 4 files |
 | Phase 08-chat-system P05 | 3 | 2 tasks | 4 files |
 | Phase 09 P02 | 4 | 2 tasks | 2 files |
+| Phase 09-community-feed P01 | 4 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -184,6 +185,8 @@ Recent decisions affecting current work:
 - [Phase 08-05]: getRoom per room (max 5) on dashboard to extract partner memberId from participants
 - [Phase 09]: getPost detail endpoint used for loading comments on expand (not standalone getComments) to also sync counts
 - [Phase 09]: Korean relative time helper inline in FeedItem for domain isolation (not shared util)
+- [Phase 09-01]: Duck-typed userProfile prop (nickname/profileImageUrl/avatar) accepts both UserType and MemberResponse without importing either type
+- [Phase 09-01]: Avatar fallback chain: profileImageUrl -> avatar -> /AINIINU_ROGO_B.png for cross-type compatibility
 
 ### Pending Todos
 
