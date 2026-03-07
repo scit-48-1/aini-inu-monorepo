@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { Client } from '@stomp/stompjs';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useChatStore } from '@/store/useChatStore';
+import { useUserStore } from '@/store/useUserStore';
 import { getMessages, type ChatMessageResponse } from '@/api/chat';
 
 // --- Realtime event types (from backend SSE/STOMP) ---
@@ -152,7 +153,11 @@ export function useChatWebSocket(roomId: number, enabled: boolean) {
         }
         case 'CHAT_MESSAGE_READ': {
           const data = event.data as MessageReadData;
-          updateMessageStatus(data.messageId, { status: 'READ' });
+          const currentMemberId = Number(useUserStore.getState().profile?.id) || 0;
+          // Only mark as READ when the *other* person read the message
+          if (data.memberId !== currentMemberId) {
+            updateMessageStatus(data.messageId, { status: 'READ' });
+          }
           break;
         }
       }
