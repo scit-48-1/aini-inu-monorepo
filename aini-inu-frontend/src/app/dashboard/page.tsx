@@ -1,118 +1,277 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useProfile } from '@/hooks/useProfile';
-import { threadService } from '@/services/api/threadService';
-import { memberService } from '@/services/api/memberService';
-import { getRooms, getRoom } from '@/api/chat';
+import { getWalkStats } from '@/api/members';
+import { getHotspots, getThreads } from '@/api/threads';
+import { getRooms, getRoom, getMyReview } from '@/api/chat';
 import { useUserStore } from '@/store/useUserStore';
+import { RefreshCw } from 'lucide-react';
 import { AIBanner } from '@/components/dashboard/AIBanner';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { RecentFriends } from '@/components/dashboard/RecentFriends';
 import { LocalFeedPreview } from '@/components/dashboard/LocalFeedPreview';
-import { DraftNotification } from '@/components/dashboard/DraftNotification';
-import { ThreadType } from '@/types';
+import { PendingReviewCard } from '@/components/dashboard/PendingReviewCard';
+import { PendingReviewModal, type PendingReview } from '@/components/dashboard/PendingReviewModal';
+import { Typography } from '@/components/ui/Typography';
+import { Button } from '@/components/ui/Button';
+import type { WalkStatsResponse } from '@/api/members';
+import type { ThreadHotspotResponse, ThreadSummaryResponse } from '@/api/threads';
+
+// --- Per-section state pattern ---
+
+type SectionState<T> =
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'empty' }
+  | { status: 'success'; data: T };
+
+// --- Section error fallback ---
+
+function SectionErrorFallback({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="p-12 flex flex-col items-center gap-4 bg-zinc-50/50 rounded-[32px] border border-zinc-100/50">
+      <Typography variant="body" className="text-zinc-400 text-sm">{message}</Typography>
+      <Button variant="ghost" size="sm" onClick={onRetry} className="gap-2">
+        <RefreshCw size={14} /> 다시 시도
+      </Button>
+    </div>
+  );
+}
+
+// --- Section loading skeleton ---
+
+function SectionSkeleton() {
+  return (
+    <div className="h-32 bg-zinc-50/50 rounded-[32px] border border-zinc-100/50 animate-pulse" />
+  );
+}
 
 export default function DashboardPage() {
   const { profile: userProfile } = useProfile();
-  // Safe Access: 강아지가 없어도 앱이 죽지 않도록 방어
   const mainDog = userProfile?.dogs?.[0] || {
     name: '댕댕이',
     image: '/images/dog-portraits/Mixed Breed.png',
-    breed: '믹스견'
+    breed: '믹스견',
   };
 
-  const [hotspot, setHotspot] = useState({ region: '성수동 서울숲', count: 12 });
-  const [threads, setThreads] = useState<ThreadType[]>([]);
-  const [draftCount, setDraftCount] = useState(0);
+  // Per-section states
+  const [walkStats, setWalkStats] = useState<SectionState<WalkStatsResponse>>({ status: 'loading' });
+  const [hotspots, setHotspots] = useState<SectionState<ThreadHotspotResponse[]>>({ status: 'loading' });
+  const [threads, setThreads] = useState<SectionState<ThreadSummaryResponse[]>>({ status: 'loading' });
   const [recentFriends, setRecentFriends] = useState<{ id: string; roomId: string; name: string; img: string; score: number }[]>([]);
-  const [grassData, setGrassData] = useState<number[]>(new Array(126).fill(0));
+  const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([]);
+  const [pendingReviewModalOpen, setPendingReviewModalOpen] = useState(false);
 
-  const totalWalks = useMemo(() => grassData.reduce((a, b) => a + (b > 0 ? 1 : 0), 0), [grassData]);
+  // --- Retry functions (per-section) ---
 
-  const fetchData = async () => {
+  const fetchWalkStats = useCallback(async () => {
+    setWalkStats({ status: 'loading' });
     try {
-      const [threadData, diaryRes, hotspotRes, roomsRes, walkStats] = await Promise.allSettled([
-        threadService.getThreads(),
-        threadService.getWalkDiaries(),
-        threadService.getHotspots(),
-        getRooms({ page: 0, size: 5 }),
-        memberService.getWalkStats()
-      ]);
-
-      if (threadData.status === 'fulfilled' && threadData.value) {
-        setThreads(threadData.value.slice(0, 3));
-      }
-
-      if (diaryRes.status === 'fulfilled' && diaryRes.value && typeof diaryRes.value === 'object') {
-        const count = Object.values(diaryRes.value).filter((d: any) => d?.isDraft).length;
-        setDraftCount(count);
-      }
-
-      if (hotspotRes.status === 'fulfilled' && hotspotRes.value) {
-        setHotspot(hotspotRes.value);
-      }
-
-      if (walkStats.status === 'fulfilled' && walkStats.value) {
-        setGrassData(walkStats.value);
-      }
-
-      // Recent Friends from Chat History -- fetch room details to extract partner memberId
-      if (roomsRes.status === 'fulfilled' && roomsRes.value?.content) {
-        const roomSummaries = roomsRes.value.content.slice(0, 5);
-        const detailResults = await Promise.allSettled(
-          roomSummaries.map((r) => getRoom(r.chatRoomId))
-        );
-        const currentId = Number(useUserStore.getState().profile?.id) || 0;
-        const friends = detailResults
-          .map((res, i) => {
-            if (res.status !== 'fulfilled') return null;
-            const detail = res.value;
-            const partner = detail.participants.find(
-              (p) => p.memberId !== currentId && !p.left
-            );
-            if (!partner) return null;
-            const petNames = partner.pets?.map((p) => p.name).join(', ');
-            return {
-              id: String(partner.memberId),
-              roomId: String(detail.chatRoomId),
-              name: petNames || `Member ${partner.memberId}`,
-              img: '/AINIINU_ROGO_B.png',
-              score: 7.0,
-            };
-          })
-          .filter(Boolean) as { id: string; roomId: string; name: string; img: string; score: number }[];
-        setRecentFriends(friends);
-      }
-    } catch (e) {
-      console.error('Dashboard fetchData error:', e);
+      const data = await getWalkStats();
+      setWalkStats({ status: 'success', data });
+    } catch {
+      setWalkStats({ status: 'error', message: '산책 활동을 불러오지 못했습니다.' });
     }
-  };
+  }, []);
+
+  const fetchHotspots = useCallback(async () => {
+    setHotspots({ status: 'loading' });
+    try {
+      const data = await getHotspots();
+      if (data.length === 0) {
+        setHotspots({ status: 'empty' });
+      } else {
+        setHotspots({ status: 'success', data });
+      }
+    } catch {
+      setHotspots({ status: 'error', message: '추천 정보를 불러오지 못했습니다.' });
+    }
+  }, []);
+
+  const fetchThreads = useCallback(async () => {
+    setThreads({ status: 'loading' });
+    try {
+      const res = await getThreads({ page: 0, size: 3 });
+      if (res.content.length === 0) {
+        setThreads({ status: 'empty' });
+      } else {
+        setThreads({ status: 'success', data: res.content });
+      }
+    } catch {
+      setThreads({ status: 'error', message: '동네 소식을 불러오지 못했습니다.' });
+    }
+  }, []);
+
+  // --- Pending review detection ---
+
+  const detectPendingReviews = useCallback(async () => {
+    try {
+      const roomsRes = await getRooms({ page: 0, size: 20 });
+      const rooms = roomsRes.content;
+      if (rooms.length === 0) {
+        setPendingReviews([]);
+        return;
+      }
+
+      // Check review status for each room
+      const reviewResults = await Promise.allSettled(
+        rooms.map((r) => getMyReview(r.chatRoomId)),
+      );
+
+      // Find rooms without reviews
+      const roomsWithoutReview = rooms.filter((_, i) => {
+        const result = reviewResults[i];
+        return result.status === 'fulfilled' && !result.value.exists;
+      });
+
+      if (roomsWithoutReview.length === 0) {
+        setPendingReviews([]);
+        return;
+      }
+
+      // Get room details to extract partner info
+      const detailResults = await Promise.allSettled(
+        roomsWithoutReview.map((r) => getRoom(r.chatRoomId)),
+      );
+
+      const currentId = Number(useUserStore.getState().profile?.id) || 0;
+      const pending: PendingReview[] = [];
+
+      detailResults.forEach((res, i) => {
+        if (res.status !== 'fulfilled') return;
+        const detail = res.value;
+        const partner = detail.participants.find((p) => p.memberId !== currentId && !p.left);
+        if (!partner) return;
+        pending.push({
+          chatRoomId: detail.chatRoomId,
+          displayName: roomsWithoutReview[i].displayName,
+          partnerId: partner.memberId,
+          partnerNickname: partner.nickname || `Member ${partner.memberId}`,
+        });
+      });
+
+      setPendingReviews(pending);
+    } catch {
+      // Pending review detection failure is non-critical
+      setPendingReviews([]);
+    }
+  }, []);
+
+  // --- Recent friends (keep existing pattern) ---
+
+  const fetchRecentFriends = useCallback(async () => {
+    try {
+      const roomsRes = await getRooms({ page: 0, size: 5 });
+      const roomSummaries = roomsRes.content.slice(0, 5);
+      const detailResults = await Promise.allSettled(
+        roomSummaries.map((r) => getRoom(r.chatRoomId)),
+      );
+      const currentId = Number(useUserStore.getState().profile?.id) || 0;
+      const friends = detailResults
+        .map((res) => {
+          if (res.status !== 'fulfilled') return null;
+          const detail = res.value;
+          const partner = detail.participants.find((p) => p.memberId !== currentId && !p.left);
+          if (!partner) return null;
+          const petNames = partner.pets?.map((p) => p.name).join(', ');
+          return {
+            id: String(partner.memberId),
+            roomId: String(detail.chatRoomId),
+            name: petNames || `Member ${partner.memberId}`,
+            img: '/AINIINU_ROGO_B.png',
+            score: 7.0,
+          };
+        })
+        .filter(Boolean) as { id: string; roomId: string; name: string; img: string; score: number }[];
+      setRecentFriends(friends);
+    } catch {
+      setRecentFriends([]);
+    }
+  }, []);
+
+  // --- Main data fetch (parallel with Promise.allSettled) ---
 
   useEffect(() => {
     if (!userProfile) return;
-    fetchData();
-  }, [userProfile]); // userProfile이 준비된 후에만 데이터 페칭
 
-  if (!userProfile) return <div className="flex items-center justify-center h-full"><p className="text-zinc-400">Loading...</p></div>;
+    const fetchAll = async () => {
+      await Promise.allSettled([
+        fetchWalkStats(),
+        fetchHotspots(),
+        fetchThreads(),
+        fetchRecentFriends(),
+        detectPendingReviews(),
+      ]);
+    };
+
+    fetchAll();
+  }, [userProfile, fetchWalkStats, fetchHotspots, fetchThreads, fetchRecentFriends, detectPendingReviews]);
+
+  if (!userProfile) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-zinc-400">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 md:p-10 space-y-10 animate-in fade-in duration-700 h-full overflow-y-auto no-scrollbar">
       <div className="max-w-7xl mx-auto space-y-10 pb-20">
-        <DraftNotification draftCount={draftCount} />
-
-        <AIBanner hotspot={hotspot} dogName={mainDog.name} />
-
-        <DashboardHero
-          userProfile={userProfile}
-          mainDog={mainDog}
-          grassData={grassData}
-          totalWalks={totalWalks}
+        {/* (1) Pending Review Card -- conditional */}
+        <PendingReviewCard
+          pendingCount={pendingReviews.length}
+          onClick={() => setPendingReviewModalOpen(true)}
         />
 
+        {/* (2) AI Banner -- hotspots */}
+        {hotspots.status === 'loading' && <SectionSkeleton />}
+        {hotspots.status === 'error' && (
+          <SectionErrorFallback message={hotspots.message} onRetry={fetchHotspots} />
+        )}
+        {hotspots.status === 'empty' && (
+          <AIBanner hotspots={[]} dogName={mainDog.name} />
+        )}
+        {hotspots.status === 'success' && (
+          <AIBanner hotspots={hotspots.data} dogName={mainDog.name} />
+        )}
+
+        {/* (3) Dashboard Hero -- userProfile from useProfile + walkStats */}
+        {walkStats.status === 'loading' && <SectionSkeleton />}
+        {walkStats.status === 'error' && (
+          <SectionErrorFallback message={walkStats.message} onRetry={fetchWalkStats} />
+        )}
+        {(walkStats.status === 'success' || walkStats.status === 'empty') && (
+          <DashboardHero
+            userProfile={userProfile}
+            mainDog={mainDog}
+            walkStats={walkStats.status === 'success' ? walkStats.data : null}
+          />
+        )}
+
+        {/* (4) Recent Friends -- keep existing pattern */}
         <RecentFriends friends={recentFriends} />
 
-        <LocalFeedPreview threads={threads} />
+        {/* (5) Local Feed Preview -- threads */}
+        {threads.status === 'loading' && <SectionSkeleton />}
+        {threads.status === 'error' && (
+          <LocalFeedPreview threads={[]} error={threads.message} onRetry={fetchThreads} />
+        )}
+        {threads.status === 'empty' && (
+          <LocalFeedPreview threads={[]} />
+        )}
+        {threads.status === 'success' && (
+          <LocalFeedPreview threads={threads.data} />
+        )}
+
+        {/* Pending Review Modal */}
+        <PendingReviewModal
+          isOpen={pendingReviewModalOpen}
+          onClose={() => setPendingReviewModalOpen(false)}
+          pendingReviews={pendingReviews}
+          onReviewSubmitted={detectPendingReviews}
+        />
       </div>
     </div>
   );
