@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Heart, MessageCircle } from 'lucide-react';
+import { X, Heart, MessageCircle, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -29,6 +29,8 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
   const profile = useUserStore((s) => s.profile);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
+  const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (!isOpen || !post) return null;
 
@@ -72,7 +74,7 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
           <img src={post.imageUrls?.[0]} className="w-full h-full object-cover" alt="Post content" />
           <button onClick={onClose} className="absolute top-6 left-6 md:hidden w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center"><X size={20} /></button>
         </div>
-        <div className="md:w-1/2 flex flex-col h-full overflow-hidden bg-white">
+        <div className="md:w-1/2 flex flex-col h-full overflow-hidden bg-white relative">
           <div className="p-6 border-b border-zinc-50 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
               <img src={post.author.profileImageUrl || '/AINIINU_ROGO_B.png'} className="w-10 h-10 rounded-full border border-zinc-100" alt="Author" />
@@ -80,7 +82,38 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
                 <Typography variant="body" className="font-black text-navy-900 leading-none">{post.author.nickname}</Typography>
               </div>
             </div>
-            <button onClick={onClose} className="hidden md:flex p-2 text-zinc-300 hover:text-navy-900 transition-colors"><X size={24} /></button>
+            <div className="flex items-center gap-2">
+              {isOwner && !isEditing && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowMenu(!showMenu)}
+                    className="p-2 text-zinc-400 hover:text-navy-900 transition-colors"
+                  >
+                    <MoreHorizontal size={20} />
+                  </button>
+                  {showMenu && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+                      <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-zinc-100 py-1 z-50 min-w-[120px]">
+                        <button
+                          onClick={() => { setShowMenu(false); handleEdit(); }}
+                          className="w-full px-4 py-2.5 text-left text-sm font-medium text-zinc-700 hover:bg-zinc-50 flex items-center gap-2"
+                        >
+                          <Pencil size={14} /> 수정
+                        </button>
+                        <button
+                          onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }}
+                          className="w-full px-4 py-2.5 text-left text-sm font-medium text-red-500 hover:bg-red-50 flex items-center gap-2"
+                        >
+                          <Trash2 size={14} /> 삭제
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+              <button onClick={onClose} className="hidden md:flex p-2 text-zinc-300 hover:text-navy-900 transition-colors"><X size={24} /></button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-8 space-y-8 no-scrollbar">
             <div className="space-y-4">
@@ -109,10 +142,17 @@ export const PostDetailModal: React.FC<PostDetailModalProps> = ({
               </div>
             )}
           </div>
-          {!isEditing && isOwner && (
-            <div className="p-6 border-t border-zinc-50 flex gap-3 bg-zinc-50/30 mt-auto">
-              <Button variant="outline" fullWidth className="h-14 rounded-2xl font-black border-zinc-200" onClick={handleEdit}>포스팅 수정</Button>
-              <Button variant="danger" className="h-14 w-14 p-0 rounded-2xl shrink-0 flex items-center justify-center" onClick={handleDelete}><X size={20} /></Button>
+          {showDeleteConfirm && (
+            <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4 rounded-3xl">
+              <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center">
+                <Trash2 size={24} className="text-red-500" />
+              </div>
+              <Typography variant="h3" className="text-navy-900">게시글을 삭제할까요?</Typography>
+              <Typography variant="label" className="text-zinc-400 text-xs">삭제된 게시글은 복구할 수 없습니다.</Typography>
+              <div className="flex gap-3 mt-2">
+                <button onClick={() => setShowDeleteConfirm(false)} className="px-6 py-2.5 rounded-full bg-zinc-100 text-zinc-600 text-sm font-bold hover:bg-zinc-200">취소</button>
+                <button onClick={handleDelete} className="px-6 py-2.5 rounded-full bg-red-500 text-white text-sm font-bold hover:bg-red-600">삭제</button>
+              </div>
             </div>
           )}
         </div>
