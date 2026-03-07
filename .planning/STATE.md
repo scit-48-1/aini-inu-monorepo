@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 09-03-PLAN.md
-last_updated: "2026-03-07T06:18:36.044Z"
+stopped_at: Completed 09-04-PLAN.md
+last_updated: "2026-03-07T06:44:38.310Z"
 last_activity: 2026-03-07 -- Completed plan 09-03 (profile post migration + postService deletion)
 progress:
   total_phases: 12
   completed_phases: 9
-  total_plans: 40
-  completed_plans: 40
+  total_plans: 41
+  completed_plans: 41
   percent: 97
 ---
 
@@ -88,6 +88,7 @@ Progress: [██████████] 97%
 | Phase 09 P02 | 4 | 2 tasks | 2 files |
 | Phase 09-community-feed P01 | 4 | 2 tasks | 3 files |
 | Phase 09-community-feed PP03 | 3 | 2 tasks | 5 files |
+| Phase 09-community-feed P04 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -191,6 +192,7 @@ Recent decisions affecting current work:
 - [Phase 09-community-feed]: PostDetailModal manages edit/delete internally via useUserStore + api/community.ts instead of parent-driven callbacks
 - [Phase 09-community-feed]: Edit/delete buttons shown only when post.author.id matches Number(profile?.id)
 - [Phase 09-community-feed]: Posts remain empty array in profile views since backend has no member-filtered post endpoint
+- [Phase 09-04]: Post @Version initialized to 0L in entity field declaration to prevent NPE on optimistic lock operations
 
 ### Pending Todos
 
@@ -202,6 +204,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-07T06:15:33.664Z
-Stopped at: Completed 09-03-PLAN.md
+Last session: 2026-03-07T06:44:38.307Z
+Stopped at: Completed 09-04-PLAN.md
 Resume file: None
