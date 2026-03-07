@@ -50,7 +50,7 @@ export function useChatWebSocket(roomId: number, enabled: boolean) {
   const addMessage = useChatStore((s) => s.addMessage);
   const updateMessageStatus = useChatStore((s) => s.updateMessageStatus);
   const deduplicateMessage = useChatStore((s) => s.deduplicateMessage);
-  const setMessages = useChatStore((s) => s.setMessages);
+  const mergeMessages = useChatStore((s) => s.mergeMessages);
 
   const clearPolling = useCallback(() => {
     if (pollingRef.current) {
@@ -66,12 +66,12 @@ export function useChatWebSocket(roomId: number, enabled: boolean) {
     pollingRef.current = setInterval(async () => {
       try {
         const result = await getMessages(roomId);
-        setMessages(result.content);
+        mergeMessages(result.content);
       } catch {
         // Silent — polling is fallback, don't spam errors
       }
     }, POLLING_INTERVAL);
-  }, [roomId, clearPolling, setMessages]);
+  }, [roomId, clearPolling, mergeMessages]);
 
   useEffect(() => {
     if (!enabled || !roomId) {
@@ -165,8 +165,18 @@ export function useChatWebSocket(roomId: number, enabled: boolean) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, enabled]);
 
+  const disconnect = useCallback(() => {
+    clearPolling();
+    if (clientRef.current) {
+      clientRef.current.deactivate();
+      clientRef.current = null;
+    }
+    setConnectionMode('disconnected');
+  }, [clearPolling, setConnectionMode]);
+
   return {
     connectionMode,
     isConnected: connectionMode === 'ws',
+    disconnect,
   };
 }

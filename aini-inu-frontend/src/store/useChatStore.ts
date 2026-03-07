@@ -38,6 +38,9 @@ interface ChatState {
   setRooms: (rooms: ChatRoomSummaryResponse[]) => void;
   prependMessages: (msgs: ChatMessageResponse[]) => void;
   setMessages: (msgs: ChatMessageResponse[]) => void;
+  mergeMessages: (msgs: ChatMessageResponse[]) => void;
+  removeRoom: (roomId: number) => void;
+  clearMessages: () => void;
   deduplicateMessage: (msg: ChatMessageResponse) => void;
 }
 
@@ -107,6 +110,42 @@ export const useChatStore = create<ChatState>()((set) => ({
     }),
 
   setMessages: (msgs) => set({ messages: msgs }),
+
+  mergeMessages: (msgs) =>
+    set((state) => {
+      // Shallow equality check: same length and same IDs in order → no update
+      if (
+        msgs.length === state.messages.length &&
+        msgs.every((m, i) => m.id === state.messages[i]?.id)
+      ) {
+        return state;
+      }
+
+      // Merge: keep existing messages not in incoming (e.g. optimistic sends),
+      // layer incoming on top
+      const incomingMap = new Map<number, ChatMessageResponse>();
+      for (const m of msgs) {
+        incomingMap.set(m.id, m);
+      }
+
+      const incomingIds = new Set(incomingMap.keys());
+      // Existing messages NOT in incoming batch (preserve optimistic sends)
+      const preserved = state.messages.filter((m) => !incomingIds.has(m.id));
+
+      // Build merged array: incoming + preserved, sorted by id ascending
+      const merged = [...incomingMap.values(), ...preserved].sort(
+        (a, b) => a.id - b.id,
+      );
+
+      return { messages: merged };
+    }),
+
+  removeRoom: (roomId) =>
+    set((state) => ({
+      rooms: state.rooms.filter((r) => r.chatRoomId !== roomId),
+    })),
+
+  clearMessages: () => set({ messages: [], pendingMessages: [] }),
 
   deduplicateMessage: (msg) =>
     set((state) => {
