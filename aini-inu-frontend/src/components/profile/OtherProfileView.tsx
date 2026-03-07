@@ -7,8 +7,10 @@ import type { MemberResponse, PetResponse } from '@/api/members';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileTabs } from '@/components/profile/ProfileTabs';
 import type { ProfileTab } from '@/components/profile/ProfileTabs';
+import { ProfileReviews } from '@/components/profile/ProfileReviews';
 import { NeighborsModal } from '@/components/profile/NeighborsModal';
 import { useFollowToggle } from '@/hooks/useFollowToggle';
+import { useMemberReviews } from '@/hooks/useMemberReviews';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -33,6 +35,15 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
   const [activeTab, setActiveTab] = useState<ProfileTab>('DOGS');
   const [neighborsModalOpen, setNeighborsModalOpen] = useState(false);
   const [neighborsModalType, setNeighborsModalType] = useState<'FOLLOWERS' | 'FOLLOWING'>('FOLLOWERS');
+
+  const {
+    reviews,
+    summary: reviewSummary,
+    isLoading: reviewsLoading,
+    hasNext: reviewsHasNext,
+    fetchReviews,
+    loadMore: loadMoreReviews,
+  } = useMemberReviews(memberId);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -71,7 +82,8 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
   useEffect(() => {
     fetchData();
     fetchFollowState();
-  }, [fetchData, fetchFollowState]);
+    fetchReviews(0);
+  }, [fetchData, fetchFollowState, fetchReviews]);
 
   const { isFollowing, isLoading: isFollowLoading, toggle: toggleFollow } = useFollowToggle(
     memberId,
@@ -148,6 +160,15 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
           <EmptyTabState
             message="산책 일기가 없습니다."
             subMessage="이 기능은 곧 준비될 예정입니다."
+          />
+        )}
+        {activeTab === 'REVIEWS' && (
+          <ProfileReviews
+            reviews={reviews}
+            summary={reviewSummary}
+            isLoading={reviewsLoading}
+            hasNext={reviewsHasNext}
+            onLoadMore={loadMoreReviews}
           />
         )}
       </div>

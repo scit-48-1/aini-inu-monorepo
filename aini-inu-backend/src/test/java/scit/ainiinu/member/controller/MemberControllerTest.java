@@ -67,6 +67,9 @@ class  MemberControllerTest {
     private AuthService authService;
 
     @MockitoBean
+    private scit.ainiinu.chat.service.ChatReviewService chatReviewService;
+
+    @MockitoBean
     private JwtAuthInterceptor jwtAuthInterceptor;
 
     @MockitoBean

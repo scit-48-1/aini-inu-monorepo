@@ -39,6 +39,8 @@ import scit.ainiinu.member.dto.response.MemberResponse;
 import scit.ainiinu.member.dto.response.WalkStatsResponse;
 import scit.ainiinu.member.service.AuthService;
 import scit.ainiinu.member.service.MemberService;
+import scit.ainiinu.chat.dto.response.MemberReviewSummaryResponse;
+import scit.ainiinu.chat.service.ChatReviewService;
 import scit.ainiinu.pet.dto.response.PetResponse;
 import scit.ainiinu.pet.service.PetService;
 
@@ -54,6 +56,7 @@ public class MemberController {
     private final MemberService memberService;
     private final PetService petService;
     private final AuthService authService;
+    private final ChatReviewService chatReviewService;
 
     /**
      * 회원가입 완료 (프로필 생성)
@@ -289,6 +292,54 @@ public class MemberController {
             @PathVariable("targetId") Long targetId
     ) {
         return ResponseEntity.ok(ApiResponse.success(memberService.unfollow(memberId, targetId)));
+    }
+
+    @GetMapping("/{memberId}/reviews")
+    @Operation(summary = "특정 회원 리뷰 조회", description = "memberId 회원이 받은 리뷰 목록과 요약을 조회합니다.")
+    @Parameters({
+            @Parameter(
+                    name = "page",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 번호(0부터 시작)",
+                    schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")
+            ),
+            @Parameter(
+                    name = "size",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 크기",
+                    schema = @Schema(type = "integer", defaultValue = "20", minimum = "1")
+            )
+    })
+    public ResponseEntity<ApiResponse<MemberReviewSummaryResponse>> getMemberReviews(
+            @PathVariable("memberId") Long memberId,
+            @Parameter(hidden = true)
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(chatReviewService.getMemberReviews(memberId, pageable)));
+    }
+
+    @GetMapping("/me/reviews")
+    @Operation(summary = "내 리뷰 조회", description = "현재 로그인한 회원이 받은 리뷰 목록과 요약을 조회합니다.")
+    @Parameters({
+            @Parameter(
+                    name = "page",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 번호(0부터 시작)",
+                    schema = @Schema(type = "integer", defaultValue = "0", minimum = "0")
+            ),
+            @Parameter(
+                    name = "size",
+                    in = ParameterIn.QUERY,
+                    description = "페이지 크기",
+                    schema = @Schema(type = "integer", defaultValue = "20", minimum = "1")
+            )
+    })
+    public ResponseEntity<ApiResponse<MemberReviewSummaryResponse>> getMyReviews(
+            @CurrentMember Long memberId,
+            @Parameter(hidden = true)
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(chatReviewService.getMemberReviews(memberId, pageable)));
     }
 
     @GetMapping("/me/stats/walk")

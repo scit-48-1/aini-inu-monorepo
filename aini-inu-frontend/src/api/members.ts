@@ -170,3 +170,29 @@ export async function searchMembers(q: string, params?: PaginationParams): Promi
 export async function getPersonalityTypes(): Promise<MemberPersonalityTypeResponse[]> {
   return apiClient.get<MemberPersonalityTypeResponse[]>('/member-personality-types');
 }
+
+// --- Member Reviews ---
+
+export interface MemberReviewResponse {
+  id: number;
+  reviewerId: number;
+  reviewerNickname: string;
+  reviewerProfileImageUrl: string;
+  score: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface MemberReviewSummaryResponse {
+  averageScore: number;
+  totalCount: number;
+  scoreDistribution: Record<number, number>;
+  reviews: SliceResponse<MemberReviewResponse>;
+}
+
+export async function getMemberReviews(params?: PaginationParams & { memberId?: number }): Promise<MemberReviewSummaryResponse> {
+  const { memberId, ...rest } = params ?? {};
+  const query = buildQuery({ ...rest });
+  const base = memberId != null ? `/members/${memberId}/reviews` : '/members/me/reviews';
+  return apiClient.get<MemberReviewSummaryResponse>(`${base}${query}`);
+}
