@@ -3,6 +3,7 @@
 import React, { createContext, use, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import * as authApi from '@/api/auth';
+import { setLoggingOut } from '@/api/client';
 import { getMe } from '@/api/members';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useUserStore } from '@/store/useUserStore';
@@ -102,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // --- Login action ---
 
   const login = async (email: string, password: string): Promise<void> => {
+    setLoggingOut(false);
     const response = await authApi.login({ email, password });
     setTokens(response.accessToken, response.refreshToken);
     const profile = await getMe();
@@ -112,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // --- Logout action ---
 
   const logout = async (): Promise<void> => {
+    setLoggingOut(true);
     const storedRefreshToken = getRefreshToken();
     if (storedRefreshToken) {
       try {

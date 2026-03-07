@@ -16,6 +16,12 @@ export interface ApiRequestOptions extends Omit<RequestInit, 'body' | 'method'> 
 
 // --- 401 refresh queue ---
 
+let isLoggingOut = false;
+
+export function setLoggingOut(value: boolean) {
+  isLoggingOut = value;
+}
+
 let isRefreshing = false;
 let refreshQueue: Array<{
   resolve: (token: string) => void;
@@ -175,7 +181,7 @@ async function request<T>(
 
     // ApiError — show toast with backend message
     if (error instanceof ApiError) {
-      if (!suppressToast) {
+      if (!suppressToast && !isLoggingOut) {
         toast.error(error.message || '요청에 실패했습니다', { duration: 3000 });
       }
       throw error;
@@ -183,7 +189,7 @@ async function request<T>(
 
     // Other errors — show generic toast
     if (error instanceof Error) {
-      if (!suppressToast) {
+      if (!suppressToast && !isLoggingOut) {
         toast.error(error.message || '요청에 실패했습니다', { duration: 3000 });
       }
     }
@@ -226,11 +232,12 @@ async function handle401<T>(
     isRefreshing = false;
     processQueue(error, null);
 
-    // Show session expired toast and redirect
-    toast.error('세션이 만료되었습니다', { duration: 3000 });
+    if (!isLoggingOut) {
+      toast.error('세션이 만료되었습니다', { duration: 3000 });
 
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     }
 
     throw error;
