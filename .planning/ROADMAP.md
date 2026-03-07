@@ -177,12 +177,13 @@ Plans:
   2. User can view post details, edit their own posts (content required), and delete their posts
   3. User can add, edit, and delete comments -- with comment deletion allowed for both comment author and post author
   4. User can like/unlike a post with optimistic UI update that rolls back on failure
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Post creation: rewire usePostForm + PostFormFields + CreatePostModal to presigned URL upload via api/community.ts
-- [ ] 09-02-PLAN.md — Feed page + FeedItem: infinite scroll pagination, optimistic like, comment CRUD with permission delete, post delete
-- [ ] 09-03-PLAN.md — Profile cleanup: PostDetailModal edit/delete via API, ProfileFeed/MyProfileView/ProfileView type rewire, delete postService
+- [x] 09-01-PLAN.md — Post creation: rewire usePostForm + PostFormFields + CreatePostModal to presigned URL upload via api/community.ts
+- [x] 09-02-PLAN.md — Feed page + FeedItem: infinite scroll pagination, optimistic like, comment CRUD with permission delete, post delete
+- [x] 09-03-PLAN.md — Profile cleanup: PostDetailModal edit/delete via API, ProfileFeed/MyProfileView/ProfileView type rewire, delete postService
+- [ ] 09-04-PLAN.md — UAT gap closure: fix upload purpose string, Post @Version null initialization, seed SQL version column
 
 ### Phase 10: Lost Pet
 **Goal**: Users can report lost pets, submit sightings, run AI analysis to find matches, and connect with reporters via chat
@@ -247,7 +248,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 6. Walk Threads | 6/8 | In Progress|  |
 | 7. Walk Diary + Story | 4/4 | Complete   | 2026-03-06 |
 | 8. Chat System | 5/5 | Complete   | 2026-03-07 |
-| 9. Community Feed | 0/3 | Not started | - |
+| 9. Community Feed | 3/4 | In progress | - |
 | 10. Lost Pet | 0/2 | Not started | - |
 | 11. Dashboard | 0/2 | Not started | - |
 | 12. Settings + Integration UAT | 0/3 | Not started | - |
