@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,9 +39,12 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyIterable;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 
@@ -83,7 +87,7 @@ class PostServiceTest {
             CommentCreateRequest request = new CommentCreateRequest();
             request.setContent("Nice dog!");
 
-            Comment savedComment = Comment.create(post, authorId, "Nice dog!");
+            Comment savedComment = Comment.create(postId, authorId, "Nice dog!");
             setId(savedComment, 10L);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
@@ -112,7 +116,7 @@ class PostServiceTest {
             CommentCreateRequest request = new CommentCreateRequest();
             request.setContent("Nice dog!");
 
-            Comment savedComment = Comment.create(post, authorId, "Nice dog!");
+            Comment savedComment = Comment.create(postId, authorId, "Nice dog!");
             setId(savedComment, 10L);
 
             Member author = createMember(authorId, "몽이아빠", "https://cdn.example.com/profile.jpg");
@@ -166,7 +170,7 @@ class PostServiceTest {
             setId(post, postId);
             post.increaseComment();
 
-            Comment comment = Comment.create(post, authorId, "Content");
+            Comment comment = Comment.create(postId, authorId, "Content");
             setId(comment, commentId);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
@@ -193,7 +197,7 @@ class PostServiceTest {
             setId(post, postId);
             post.increaseComment();
 
-            Comment comment = Comment.create(post, commentAuthorId, "Content");
+            Comment comment = Comment.create(postId, commentAuthorId, "Content");
             setId(comment, commentId);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
@@ -220,7 +224,7 @@ class PostServiceTest {
             Post post = Post.create(postAuthorId, "Content", Collections.emptyList());
             setId(post, postId);
 
-            Comment comment = Comment.create(post, commentAuthorId, "Content");
+            Comment comment = Comment.create(postId, commentAuthorId, "Content");
             setId(comment, commentId);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
@@ -243,10 +247,8 @@ class PostServiceTest {
             Post post = Post.create(authorId, "Content", Collections.emptyList());
             setId(post, postId);
 
-            Post anotherPost = Post.create(2L, "Another", Collections.emptyList());
-            setId(anotherPost, 2L);
-
-            Comment comment = Comment.create(anotherPost, 2L, "Content");
+            // Comment belongs to a different post (postId=2L)
+            Comment comment = Comment.create(2L, 2L, "Content");
             setId(comment, commentId);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
@@ -265,7 +267,7 @@ class PostServiceTest {
             Long postId = 1L;
             Long commentId = 999L;
             Post post = Post.create(1L, "Content", Collections.emptyList());
-            
+
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
             given(commentRepository.findById(commentId)).willReturn(Optional.empty());
 
@@ -290,7 +292,7 @@ class PostServiceTest {
             setId(post, postId);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
-            given(postLikeRepository.findByPostAndMemberId(post, memberId)).willReturn(Optional.empty());
+            given(postLikeRepository.findByPostIdAndMemberId(postId, memberId)).willReturn(Optional.empty());
 
             // when
             PostLikeResponse response = postService.toggleLike(memberId, postId);
@@ -311,9 +313,9 @@ class PostServiceTest {
             setId(post, postId);
             post.increaseLike(); // 기존 좋아요 상태 반영 (count=1)
 
-            PostLike existingLike = PostLike.create(post, memberId);
+            PostLike existingLike = PostLike.create(postId, memberId);
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
-            given(postLikeRepository.findByPostAndMemberId(post, memberId)).willReturn(Optional.of(existingLike));
+            given(postLikeRepository.findByPostIdAndMemberId(postId, memberId)).willReturn(Optional.of(existingLike));
 
             // when
             PostLikeResponse response = postService.toggleLike(memberId, postId);
@@ -328,7 +330,7 @@ class PostServiceTest {
     @Nested
     @DisplayName("게시글 수정")
     class UpdatePost {
-        
+
         @Test
         @DisplayName("작성자가 본인의 게시글을 수정하면 성공한다")
         void success() {
@@ -338,7 +340,7 @@ class PostServiceTest {
             Post post = Post.create(authorId, "Original Content", Collections.emptyList());
             setId(post, postId);
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
-            
+
             PostUpdateRequest request = new PostUpdateRequest();
             request.setContent("Updated Content");
             request.setImageUrls(List.of("new.jpg"));
@@ -401,12 +403,15 @@ class PostServiceTest {
             Long postId = 1L;
             Long authorId = 1L;
             Post post = Post.create(authorId, "삭제 대상", Collections.emptyList());
+            setId(post, postId);
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
 
             // when
             postService.deletePost(authorId, postId);
 
             // then
+            then(commentRepository).should().deleteAllByPostId(postId);
+            then(postLikeRepository).should().deleteAllByPostId(postId);
             then(postRepository).should().delete(post);
         }
 
@@ -422,6 +427,26 @@ class PostServiceTest {
             assertThatThrownBy(() -> postService.deletePost(2L, postId))
                     .isInstanceOf(BusinessException.class)
                     .hasFieldOrPropertyWithValue("errorCode", CommunityErrorCode.NOT_POST_OWNER);
+        }
+
+        @Test
+        @DisplayName("게시글 삭제 시 자식 엔티티(댓글, 좋아요)가 먼저 삭제된다")
+        void deletePost_shouldDeleteChildrenFirst() {
+            // given
+            Long postId = 1L;
+            Long authorId = 1L;
+            Post post = Post.create(authorId, "삭제 대상", Collections.emptyList());
+            setId(post, postId);
+            given(postRepository.findById(postId)).willReturn(Optional.of(post));
+
+            // when
+            postService.deletePost(authorId, postId);
+
+            // then - verify order: children deleted before parent
+            InOrder inOrder = inOrder(commentRepository, postLikeRepository, postRepository);
+            inOrder.verify(commentRepository).deleteAllByPostId(postId);
+            inOrder.verify(postLikeRepository).deleteAllByPostId(postId);
+            inOrder.verify(postRepository).delete(post);
         }
     }
 
@@ -440,15 +465,15 @@ class PostServiceTest {
             Post post = Post.create(1L, "Post Content", Collections.emptyList());
             setId(post, postId);
 
-            Comment comment1 = Comment.create(post, 2L, "Comment 1");
+            Comment comment1 = Comment.create(postId, 2L, "Comment 1");
             setId(comment1, 1L);
-            Comment comment2 = Comment.create(post, 3L, "Comment 2");
+            Comment comment2 = Comment.create(postId, 3L, "Comment 2");
             setId(comment2, 2L);
 
             Slice<Comment> commentSlice = new SliceImpl<>(List.of(comment1, comment2), pageable, false);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
-            given(commentRepository.findByPostOrderByCreatedAtAsc(post, pageable)).willReturn(commentSlice);
+            given(commentRepository.findByPostIdOrderByCreatedAtAsc(postId, pageable)).willReturn(commentSlice);
 
             // when
             SliceResponse<CommentResponse> response = postService.getComments(memberId, postId, pageable);
@@ -458,7 +483,7 @@ class PostServiceTest {
             assertThat(response.getContent().get(0).getContent()).isEqualTo("Comment 1");
             assertThat(response.getContent().get(0).getAuthor().getId()).isEqualTo(2L);
             assertThat(response.getContent().get(0).getAuthor().getNickname()).isEqualTo("이웃");
-            then(commentRepository).should(times(1)).findByPostOrderByCreatedAtAsc(post, pageable);
+            then(commentRepository).should(times(1)).findByPostIdOrderByCreatedAtAsc(postId, pageable);
         }
     }
 
@@ -479,7 +504,7 @@ class PostServiceTest {
             Slice<Post> postSlice = new SliceImpl<>(List.of(post), pageable, false);
 
             given(postRepository.findAllBy(pageable)).willReturn(postSlice);
-            given(postLikeRepository.existsByPostAndMemberId(post, memberId)).willReturn(false);
+            given(postLikeRepository.existsByPostIdAndMemberId(100L, memberId)).willReturn(false);
 
             // when
             SliceResponse<PostResponse> response = postService.getPosts(memberId, pageable);
@@ -506,7 +531,7 @@ class PostServiceTest {
             Member postAuthor = createMember(2L, "몽이아빠", "https://cdn.example.com/profile.jpg");
 
             given(postRepository.findAllBy(pageable)).willReturn(postSlice);
-            given(postLikeRepository.existsByPostAndMemberId(post, memberId)).willReturn(true);
+            given(postLikeRepository.existsByPostIdAndMemberId(100L, memberId)).willReturn(true);
             given(memberRepository.findAllById(anyIterable())).willReturn(List.of(postAuthor));
 
             // when
@@ -532,17 +557,17 @@ class PostServiceTest {
             Post post = Post.create(1L, "Post Content", Collections.emptyList());
             setId(post, postId);
 
-            Comment comment1 = Comment.create(post, 2L, "Comment 1");
+            Comment comment1 = Comment.create(postId, 2L, "Comment 1");
             setId(comment1, 1L);
-            Comment comment2 = Comment.create(post, 3L, "Comment 2");
+            Comment comment2 = Comment.create(postId, 3L, "Comment 2");
             setId(comment2, 2L);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
-            given(commentRepository.findAllByPostOrderByCreatedAtAsc(post))
+            given(commentRepository.findAllByPostIdOrderByCreatedAtAsc(postId))
                     .willReturn(List.of(comment1, comment2));
 
             // when
-            Long memberId = 1L; // 테스트용 memberId
+            Long memberId = 1L;
             PostDetailResponse response = postService.getPostDetail(memberId, postId);
 
             // then
@@ -551,7 +576,7 @@ class PostServiceTest {
             assertThat(response.getAuthor().getNickname()).isEqualTo("이웃");
             assertThat(response.getComments()).hasSize(2);
             assertThat(response.getComments().get(0).getAuthor().getNickname()).isEqualTo("이웃");
-            then(commentRepository).should(times(1)).findAllByPostOrderByCreatedAtAsc(post);
+            then(commentRepository).should(times(1)).findAllByPostIdOrderByCreatedAtAsc(postId);
         }
 
         @Test
@@ -562,14 +587,14 @@ class PostServiceTest {
             Post post = Post.create(1L, "Post Content", Collections.emptyList());
             setId(post, postId);
 
-            Comment comment = Comment.create(post, 2L, "Comment 1");
+            Comment comment = Comment.create(postId, 2L, "Comment 1");
             setId(comment, 1L);
 
             Member postAuthor = createMember(1L, "몽이아빠", "https://cdn.example.com/post-author.jpg");
             Member commentAuthor = createMember(2L, "보리누나", "https://cdn.example.com/comment-author.jpg");
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
-            given(commentRepository.findAllByPostOrderByCreatedAtAsc(post)).willReturn(List.of(comment));
+            given(commentRepository.findAllByPostIdOrderByCreatedAtAsc(postId)).willReturn(List.of(comment));
             given(memberRepository.findAllById(anyIterable())).willReturn(List.of(postAuthor, commentAuthor));
 
             // when
@@ -583,7 +608,7 @@ class PostServiceTest {
                     .isEqualTo("https://cdn.example.com/comment-author.jpg");
         }
     }
-    
+
     // ... (기타 테스트 및 헬퍼 메서드는 기존과 동일) ...
     private Member createMember(Long memberId, String nickname, String profileImageUrl) {
         Member member = Member.builder()

@@ -57,7 +57,7 @@ public class PostService {
         );
 
         return SliceResponse.of(posts.map(post -> {
-            boolean isLiked = postLikeRepository.existsByPostAndMemberId(post, memberId);
+            boolean isLiked = postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId);
             return PostResponse.from(post, resolveAuthor(post.getAuthorId(), memberMap), isLiked);
         }));
     }
@@ -73,7 +73,7 @@ public class PostService {
                 .orElseThrow(() -> new BusinessException(CommunityErrorCode.POST_NOT_FOUND));
 
         // 2. 댓글 목록 조회
-        List<Comment> comments = commentRepository.findAllByPostOrderByCreatedAtAsc(post);
+        List<Comment> comments = commentRepository.findAllByPostIdOrderByCreatedAtAsc(post.getId());
         Map<Long, Member> memberMap = loadMemberMap(
                 Stream.concat(
                                 Stream.of(post.getAuthorId()),
@@ -91,7 +91,7 @@ public class PostService {
                 .toList();
 
         // 4. 좋아요 여부 조회
-        boolean isLiked = postLikeRepository.existsByPostAndMemberId(post, memberId);
+        boolean isLiked = postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId);
 
         return PostDetailResponse.of(
                 post,
@@ -108,7 +108,7 @@ public class PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(CommunityErrorCode.POST_NOT_FOUND));
 
-        Slice<Comment> comments = commentRepository.findByPostOrderByCreatedAtAsc(post, pageable);
+        Slice<Comment> comments = commentRepository.findByPostIdOrderByCreatedAtAsc(post.getId(), pageable);
         Map<Long, Member> memberMap = loadMemberMap(
                 comments.getContent().stream()
                         .map(Comment::getAuthorId)
@@ -155,7 +155,7 @@ public class PostService {
         post.update(request.getResolvedContent(), request.getImageUrls());
 
         // 4. 좋아요 여부 조회 (수정한 사용자는 작성자이므로 memberId를 사용)
-        boolean isLiked = postLikeRepository.existsByPostAndMemberId(post, memberId);
+        boolean isLiked = postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId);
         Map<Long, Member> memberMap = loadMemberMap(List.of(post.getAuthorId()));
 
         return PostResponse.from(post, resolveAuthor(post.getAuthorId(), memberMap), isLiked);
@@ -176,7 +176,11 @@ public class PostService {
             throw new BusinessException(CommunityErrorCode.NOT_POST_OWNER);
         }
 
-        // 3. 게시글 삭제
+        // 3. 자식 엔티티 삭제 (FK 제거 후 수동 cascade)
+        commentRepository.deleteAllByPostId(postId);
+        postLikeRepository.deleteAllByPostId(postId);
+
+        // 4. 게시글 삭제
         postRepository.delete(post);
     }
 
@@ -192,7 +196,7 @@ public class PostService {
                 .orElseThrow(() -> new BusinessException(CommunityErrorCode.POST_NOT_FOUND));
 
         // 2. 좋아요 존재 여부 확인
-        Optional<PostLike> existingLike = postLikeRepository.findByPostAndMemberId(post, memberId);
+        Optional<PostLike> existingLike = postLikeRepository.findByPostIdAndMemberId(post.getId(), memberId);
 
         boolean isLiked;
         
@@ -203,7 +207,7 @@ public class PostService {
             isLiked = false;
         } else {
             // 4. 없으면 생성 (좋아요) 및 카운트 증가
-            postLikeRepository.save(PostLike.create(post, memberId));
+            postLikeRepository.save(PostLike.create(post.getId(), memberId));
             post.increaseLike();
             isLiked = true;
         }
@@ -223,7 +227,7 @@ public class PostService {
                 .orElseThrow(() -> new BusinessException(CommunityErrorCode.POST_NOT_FOUND));
 
         // 2. 댓글 엔티티 생성 및 저장 (길이 검증은 Entity 내부에서 수행)
-        Comment comment = Comment.create(post, memberId, request.getContent());
+        Comment comment = Comment.create(post.getId(), memberId, request.getContent());
         Comment savedComment = commentRepository.save(comment);
 
         // 3. 게시글 댓글 수 증가
@@ -249,7 +253,7 @@ public class PostService {
                 .orElseThrow(() -> new BusinessException(CommunityErrorCode.COMMENT_NOT_FOUND));
 
         // 3. 댓글-게시글 매칭 검증 (다른 게시글의 댓글 ID 오용 방지)
-        if (!comment.getPost().getId().equals(postId)) {
+        if (!comment.getPostId().equals(postId)) {
             throw new BusinessException(CommunityErrorCode.COMMENT_NOT_FOUND);
         }
 
