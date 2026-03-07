@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { updateMe, getPersonalityTypes } from '@/api/members';
 import type { MemberResponse, MemberPersonalityTypeResponse, MemberProfilePatchRequest } from '@/api/members';
+import { uploadImageFlow } from '@/api/upload';
 import { toast } from 'sonner';
 
 const MBTI_LIST = ['ENFP', 'ENFJ', 'ENTP', 'ENTJ', 'ESFP', 'ESFJ', 'ESTP', 'ESTJ', 'INFP', 'INFJ', 'INTP', 'INTJ', 'ISFP', 'ISFJ', 'ISTP', 'ISTJ'];
@@ -20,7 +21,6 @@ interface ProfileEditModalProps {
   onClose: () => void;
   member: MemberResponse;
   onSaved: () => Promise<void>;
-  optimizeImage: (base64: string) => Promise<string>;
 }
 
 export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
@@ -28,7 +28,6 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   onClose,
   member,
   onSaved,
-  optimizeImage,
 }) => {
   // Nickname 30-day cooldown
   const daysSinceNicknameChange = member?.nicknameChangedAt
@@ -52,6 +51,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
 
   const [personalityTypes, setPersonalityTypes] = useState<MemberPersonalityTypeResponse[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch personality types when modal opens
@@ -142,12 +142,15 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = async () => {
-                      const optimized = await optimizeImage(reader.result as string);
-                      setForm(prev => ({ ...prev, profileImageUrl: optimized }));
-                    };
-                    reader.readAsDataURL(file);
+                    setIsUploading(true);
+                    try {
+                      const imageUrl = await uploadImageFlow(file, 'PROFILE');
+                      setForm(prev => ({ ...prev, profileImageUrl: imageUrl }));
+                    } catch {
+                      toast.error('이미지 업로드에 실패했습니다.');
+                    } finally {
+                      setIsUploading(false);
+                    }
                   }
                 }}
               />
@@ -356,7 +359,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
             size="lg"
             className="py-6 shadow-xl bg-navy-900"
             onClick={handleSave}
-            disabled={isSubmitting || !form.nickname}
+            disabled={isSubmitting || isUploading || !form.nickname}
           >
             {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <Check className="mr-2" size={20} />}
             수정 완료

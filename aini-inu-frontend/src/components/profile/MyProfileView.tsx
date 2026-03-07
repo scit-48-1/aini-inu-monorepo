@@ -12,12 +12,14 @@ import type { PetResponse } from '@/api/pets';
 
 import { useUserStore } from '@/store/useUserStore';
 import { useWalkDiaries } from '@/hooks/useWalkDiaries';
+import { useMemberReviews } from '@/hooks/useMemberReviews';
 
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileTabs, ProfileTab } from '@/components/profile/ProfileTabs';
 import { ProfileFeed } from '@/components/profile/ProfileFeed';
 import { ProfileDogs } from '@/components/profile/ProfileDogs';
 import { ProfileHistory } from '@/components/profile/ProfileHistory';
+import { ProfileReviews } from '@/components/profile/ProfileReviews';
 import { ProfileEditModal } from '@/components/profile/ProfileEditModal';
 import { DogRegisterModal } from '@/components/profile/DogRegisterModal';
 import { DogDetailModal } from '@/components/profile/DogDetailModal';
@@ -187,6 +189,15 @@ export const MyProfileView: React.FC = () => {
     handleDelete,
   } = useWalkDiaries();
 
+  const {
+    reviews,
+    summary: reviewSummary,
+    isLoading: reviewsLoading,
+    hasNext: reviewsHasNext,
+    fetchReviews,
+    loadMore: loadMoreReviews,
+  } = useMemberReviews();
+
   const hasRecentDiary = useMemo(() => {
     if (!diaries || diaries.length === 0) return false;
     const now = Date.now();
@@ -216,7 +227,7 @@ export const MyProfileView: React.FC = () => {
       setPets(petsRes || []);
       setFollowerCount(followersRes?.content?.length ?? 0);
       setFollowingCount(followingRes?.content?.length ?? 0);
-      await fetchDiaries(0);
+      await Promise.all([fetchDiaries(0), fetchReviews(0)]);
     } catch (e) {
       console.error('MyProfileView fetchData error:', e);
       setHasError(true);
@@ -230,30 +241,11 @@ export const MyProfileView: React.FC = () => {
     } catch {
       // Walk stats failure is non-fatal
     }
-  }, [fetchDiaries]);
+  }, [fetchDiaries, fetchReviews]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  const optimizeImage = (base64: string): Promise<string> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX = 800;
-        let w = img.width;
-        let h = img.height;
-        if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
-        else { if (h > MAX) { w *= MAX / h; h = MAX; } }
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', 0.5));
-      };
-      img.src = base64;
-    });
-  };
 
   // --- Loading state ---
   if (isLoading && !member) {
@@ -324,6 +316,15 @@ export const MyProfileView: React.FC = () => {
             onCreateClick={() => { setEditingDiary(null); setIsDiaryCreateOpen(true); }}
           />
         )}
+        {activeTab === 'REVIEWS' && (
+          <ProfileReviews
+            reviews={reviews}
+            summary={reviewSummary}
+            isLoading={reviewsLoading}
+            hasNext={reviewsHasNext}
+            onLoadMore={loadMoreReviews}
+          />
+        )}
       </div>
 
       <NeighborsModal
@@ -340,7 +341,6 @@ export const MyProfileView: React.FC = () => {
           await fetchData();
           fetchGlobalProfile(true);
         }}
-        optimizeImage={optimizeImage}
       />
 
       <DogRegisterModal

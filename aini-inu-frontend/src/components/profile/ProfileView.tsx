@@ -118,25 +118,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
     if (memberId) fetchData();
   }, [memberId]);
 
-  const optimizeImage = (base64: string): Promise<string> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX = 800;
-        let w = img.width;
-        let h = img.height;
-        if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
-        else { if (h > MAX) { w *= MAX / h; h = MAX; } }
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', 0.5));
-      };
-      img.src = base64;
-    });
-  };
-
   const {
     isFollowing,
     isLoading: isFollowLoading,
@@ -268,7 +249,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
               await fetchData();
               fetchMyProfile();
             }}
-            optimizeImage={optimizeImage}
           />
           {/* TODO: ProfileView uses legacy DogType — rewire in future phase */}
           <DogRegisterModal
