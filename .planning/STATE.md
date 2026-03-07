@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 9 context gathered
-last_updated: "2026-03-07T05:42:32.056Z"
-last_activity: 2026-03-07 -- Completed plan 08-05 (leave room & dashboard friends bug fixes)
+stopped_at: Completed 09-02-PLAN.md
+last_updated: "2026-03-07T06:09:52.820Z"
+last_activity: 2026-03-07 -- Completed plan 09-01 (post creation presigned URL rewire)
 progress:
   total_phases: 12
   completed_phases: 8
-  total_plans: 37
-  completed_plans: 37
-  percent: 97
+  total_plans: 40
+  completed_plans: 39
+  percent: 95
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 
 ## Current Position
 
-Phase: 8 of 12 (Chat System)
-Plan: 5 of 5 in current phase (08-05 complete)
+Phase: 9 of 12 (Community Feed)
+Plan: 1 of 3 in current phase (09-01 complete)
 Status: Executing
-Last activity: 2026-03-07 -- Completed plan 08-05 (leave room & dashboard friends bug fixes)
+Last activity: 2026-03-07 -- Completed plan 09-01 (post creation presigned URL rewire)
 
-Progress: [██████████] 97%
+Progress: [█████████░] 95%
 
 ## Performance Metrics
 
@@ -85,6 +85,7 @@ Progress: [██████████] 97%
 | Phase 08-chat-system P03 | 5 | 2 tasks | 5 files |
 | Phase 08-chat-system P04 | 2 | 2 tasks | 4 files |
 | Phase 08-chat-system P05 | 3 | 2 tasks | 4 files |
+| Phase 09 P02 | 4 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -181,6 +182,8 @@ Recent decisions affecting current work:
 - [Phase 08-05]: Disconnect WS before leaveRoom API to prevent polling errors between API call and disconnect
 - [Phase 08-05]: visibilitychange listener in ChatList for cross-cutting room list refresh
 - [Phase 08-05]: getRoom per room (max 5) on dashboard to extract partner memberId from participants
+- [Phase 09]: getPost detail endpoint used for loading comments on expand (not standalone getComments) to also sync counts
+- [Phase 09]: Korean relative time helper inline in FeedItem for domain isolation (not shared util)
 
 ### Pending Todos
 
@@ -192,6 +195,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-07T05:42:32.052Z
-Stopped at: Phase 9 context gathered
-Resume file: .planning/phases/09-community-feed/09-CONTEXT.md
+Last session: 2026-03-07T06:09:52.817Z
+Stopped at: Completed 09-02-PLAN.md
+Resume file: None
