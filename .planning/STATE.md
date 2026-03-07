@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 08-03-PLAN.md
-last_updated: "2026-03-06T20:10:49.084Z"
+stopped_at: Completed 08-04-PLAN.md
+last_updated: "2026-03-07T01:06:01.763Z"
 last_activity: 2026-03-07 -- Completed plan 08-02 (chat room detail & messaging)
 progress:
   total_phases: 12
-  completed_phases: 8
-  total_plans: 35
-  completed_plans: 35
+  completed_phases: 7
+  total_plans: 37
+  completed_plans: 36
   percent: 97
 ---
 
@@ -83,6 +83,7 @@ Progress: [██████████] 97%
 | Phase 08-chat-system P01 | 3 | 2 tasks | 5 files |
 | Phase 08-chat-system P02 | 3 | 2 tasks | 4 files |
 | Phase 08-chat-system P03 | 5 | 2 tasks | 5 files |
+| Phase 08-chat-system P04 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -174,6 +175,8 @@ Recent decisions affecting current work:
 - [Phase 08-chat-system]: STOMP Client in useRef not state; polling and WS mutually exclusive; beforeConnect refreshes JWT
 - [Phase 08-chat-system]: ProfileExplorer partnerId kept as string for ProfileView compatibility
 - [Phase 08-chat-system]: WalkReviewModal tags concatenated into comment field since backend has no tags; old chatService deleted after dashboard migration
+- [Phase 08-04]: mergeMessages uses Map-based merge to preserve optimistic sends not yet confirmed by server
+- [Phase 08-04]: Mark-read effect depends on latestMessageId (number) not messages array to prevent infinite API calls
 
 ### Pending Todos
 
@@ -185,6 +188,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T20:07:22.720Z
-Stopped at: Completed 08-03-PLAN.md
+Last session: 2026-03-07T01:06:01.760Z
+Stopped at: Completed 08-04-PLAN.md
 Resume file: None
