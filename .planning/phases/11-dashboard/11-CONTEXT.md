@@ -13,44 +13,47 @@ Cross-domain composition dashboard: greeting/manner score/walk stats, walk recom
 <decisions>
 ## Implementation Decisions
 
-### Section composition
-- Keep existing 5 components but rewire all to `@/api/*` modules (remove old `threadService`, `memberService` imports)
-- Sections in order: (1) Pending Review Modal (conditional), (2) AI Coaching Banner (hotspot), (3) Hero (greeting + manner score + walk stats heatmap), (4) Recent Friends (chat history), (5) Local Feed Preview (latest threads)
-- All section data types rewired from legacy `ThreadType`/`UserType` to proper API response types (`ThreadResponse`, `MemberResponse`, `WalkStatsResponse`, `ThreadHotspotResponse`)
+### Section composition & order
+- DraftNotification 제거 (죽은 코드 — 백엔드에 isDraft 개념 없음)
+- PendingReviewCard로 교체 (최상단, 미작성 리뷰 있을 때만 표시)
+- RecentFriends 유지 (DASH 요구사항 외지만 기존 기능 보존, API만 정리)
+- 최종 렌더링 순서: (1) PendingReviewCard (conditional) → (2) AIBanner (hotspot coaching) → (3) DashboardHero (greeting + manner + stats) → (4) RecentFriends (chat history) → (5) LocalFeedPreview (latest threads)
+- 모든 컴포넌트 old service imports 제거 → `@/api/*` 모듈로 rewire
+- Legacy types (`ThreadType`, `UserType`) → proper API response types (`ThreadResponse`, `MemberResponse`, `WalkStatsResponse`, `ThreadHotspotResponse`)
+
+### Pending review UX (DASH-04)
+- 대시보드 최상단에 PendingReviewCard 알림 카드 표시 (미작성 리뷰 N건)
+- 카드 클릭 → 모달 오픈 (페이지 로드 시 자동 팝업 아님)
+- 여러 건이면 모달 내 목록 표시 → 하나 선택 → 리뷰 작성 → 다음 건
+- 제출 실패 시 모달 닫지 않고 에러 메시지 + 재시도 버튼 표시
+- 모달 닫기(dismiss) 가능 — 다음 방문 시 다시 알림 카드 노출
+- 감지 로직: `getRooms()` → 각 방 reviews/me 체크 → 미작성 방 필터
+
+### Walk stats heatmap (DASH-01)
+- `WalkStatsResponse.points` (date+count 배열) → 7행 N열 grid로 변환 (고정 126 대신 실제 windowDays 기반)
+- 빈 날짜는 count=0으로 채움
+- `totalWalks`는 API 값(`WalkStatsResponse.totalWalks`) 직접 사용
+- streak, successRate는 프론트에서 points 배열 기반으로 계산 (현재 로직 유지)
+
+### Hotspot recommendation (DASH-02)
+- `getHotspots()` 결과에서 count가 가장 높은 hotspot 선택
+- AI coaching 배너에 해당 region과 추천 메시지 표시
 
 ### Data fetching strategy
-- 4 parallel API calls via `Promise.allSettled`: `getMe()` + `getWalkStats()` + `getHotspots()` + `getThreads()` + `getRooms()`
-- Each section wrapped in independent error boundary / Suspense-like pattern for isolated loading states
-- Per-section 5-state guarantee: default / loading / empty / error / success
+- 4+ 병렬 API 호출: `Promise.allSettled` — `getMe()` + `getWalkStats()` + `getHotspots()` + `getThreads()` + `getRooms()`
+- 각 섹션 독립적 error boundary / loading 처리
+- 섹션별 5-state guarantee: default / loading / empty / error / success
 
-### FR-DASH-001: Greeting + stats
-- API: `GET /api/v1/members/me` (manner score, nickname) + `GET /api/v1/members/me/stats/walk` (walk activity)
-- Display: greeting with pet name, manner score gauge, walk activity heatmap (grass grid)
-
-### FR-DASH-002: Walk recommendations
-- API: `GET /api/v1/threads/hotspot`
-- Display: AI coaching banner with highest-count hotspot region and recommendation message
-
-### FR-DASH-003: Neighborhood threads
-- API: `GET /api/v1/threads` (latest, small page size)
-- Display: up to 3 thread cards with author, location, time, title, description
-
-### FR-DASH-004: Pending review modal
-- API: `GET /api/v1/chat-rooms` to get rooms, then check `reviews/me` per room to find unwritten reviews
-- Modal appears when unwritten reviews detected
-- Submit via `POST .../reviews` with retry on failure
-- User can dismiss modal without writing review
-
-### FR-DASH-005: Partial failure fallback
-- Each section independently handles API failure — failed section shows error fallback with retry button
-- Other sections remain fully functional
-- No full-page error for individual section failures
+### Partial failure fallback (DASH-05)
+- 한 섹션 API 실패 시 해당 섹션만 에러 fallback (retry 버튼 포함)
+- 다른 섹션은 정상 표시
+- 전체 페이지 에러 없음 (개별 섹션 단위)
 
 ### Claude's Discretion
-- Exact Suspense boundary implementation vs custom loading state per component
-- Error fallback card visual design
-- Whether to use React ErrorBoundary class or custom try/catch pattern per section
-- Loading skeleton vs spinner choice per section
+- Suspense boundary vs custom loading state 구현 방식
+- Error fallback 카드 비주얼 디자인
+- Loading skeleton vs spinner 선택
+- PendingReviewCard 비주얼 디자인 (DraftNotification 스타일 참고 가능)
 
 </decisions>
 
@@ -58,43 +61,43 @@ Cross-domain composition dashboard: greeting/manner score/walk stats, walk recom
 ## Existing Code Insights
 
 ### Reusable Assets
-- `DashboardHero`: Existing component with greeting, manner score, walk grass grid — needs type rewire from `UserType` to `MemberResponse`
-- `AIBanner`: Hotspot coaching banner — needs rewire from hardcoded data to `ThreadHotspotResponse`
-- `RecentFriends`: Chat-based friend cards — already wired to `@/api/chat` (`getRooms`, `getRoom`)
-- `LocalFeedPreview`: Thread cards — needs rewire from `ThreadType` to `ThreadResponse`
-- `DraftNotification`: Draft diary notification — needs evaluation against pending review requirement
-- `Card`, `Typography`, `Badge`, `Button`: UI primitives used across all dashboard components
-- `MannerScoreGauge`: Manner score display component already used in LocalFeedPreview
+- `DashboardHero`: greeting, manner score, walk grass grid — type rewire 필요 (UserType → MemberResponse, number[] → WalkStatsResponse)
+- `AIBanner`: hotspot coaching banner — rewire to ThreadHotspotResponse
+- `RecentFriends`: chat-based friend cards — already wired to @/api/chat
+- `LocalFeedPreview`: thread cards — rewire ThreadType → ThreadResponse
+- `DraftNotification`: 제거 대상 (isDraft 개념 백엔드에 없음)
+- `Card`, `Typography`, `Badge`, `Button`: UI primitives
+- `MannerScoreGauge`: manner score display
 
 ### Established Patterns
-- `Promise.allSettled` already used in current `page.tsx` for parallel data fetching
+- `Promise.allSettled` already used in current page.tsx
 - Centralized API modules: `@/api/members`, `@/api/threads`, `@/api/chat`
-- Placeholder avatar: `/AINIINU_ROGO_B.png` for missing images
-- Zustand store: `useUserStore` for current user profile access
+- Placeholder avatar: `/AINIINU_ROGO_B.png`
+- `useUserStore` for current user profile access
+- `createReview()` in `@/api/chat.ts` — Phase 8에서 구현 완료
 
 ### Integration Points
-- `@/api/members.ts`: `getMe()`, `getWalkStats()` — already implemented
-- `@/api/threads.ts`: `getHotspots()`, `getThreads()` — already implemented
-- `@/api/chat.ts`: `getRooms()`, `getRoom()` — already implemented
-- Review API: `createReview()` in `@/api/chat.ts` — already implemented from Phase 8
-- Old services to remove: `threadService`, `memberService` imports in dashboard page
+- `@/api/members.ts`: `getMe()`, `getWalkStats()` — WalkStatsResponse { windowDays, startDate, endDate, timezone, totalWalks, points: { date, count }[] }
+- `@/api/threads.ts`: `getHotspots()`, `getThreads()` — ThreadHotspotResponse[], ThreadResponse
+- `@/api/chat.ts`: `getRooms()`, `getRoom()`, `createReview()`, `getMyReviews()`
+- Old services to remove: `threadService`, `memberService` imports in dashboard
 
 </code_context>
 
 <specifics>
 ## Specific Ideas
 
-- React best practices: `async-parallel` pattern for 4+ API calls, consider `async-suspense-boundaries` for per-section independence
-- Walk stats heatmap (grass grid) should use `WalkStatsResponse` shape from `getWalkStats()` instead of arbitrary `number[]`
-- Hotspot recommendation: show the hotspot with highest count as the AI coaching message
-- Pending review detection: iterate chat rooms and check review status per room — surface rooms where current user hasn't written a review
+- React best practices: async-parallel for 4+ API calls, per-section independent error handling
+- PendingReviewCard는 DraftNotification의 다크 배경 스타일 참고 — 같은 위치, 같은 행동 유도 역할
+- Hotspot 추천: count 최대인 hotspot의 region을 코칭 메시지에 삽입
+- WalkStatsResponse.points → heatmap grid 변환 유틸 함수로 분리
 
 </specifics>
 
 <deferred>
 ## Deferred Ideas
 
-None — discussion stayed within phase scope
+- 산책 완료 + 일기 미작성 감지 알림 — 백엔드에 해당 엔드포인트 없음. 백엔드 API 추가 후 구현 가능.
 
 </deferred>
 
