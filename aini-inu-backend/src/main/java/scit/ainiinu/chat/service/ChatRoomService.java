@@ -37,6 +37,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import scit.ainiinu.member.entity.Member;
 
 @Service
 @RequiredArgsConstructor
@@ -58,7 +61,28 @@ public class ChatRoomService {
         List<Long> roomIds = rooms.getContent().stream().map(ChatRoom::getId).toList();
         Map<Long, Message> lastMessages = messageRepository.findLastMessagesByRoomIds(roomIds);
 
-        Slice<ChatRoomSummaryResponse> mapped = rooms.map(room -> toSummaryResponse(room, lastMessages.get(room.getId())));
+        // Batch-fetch participants and member nicknames for display name
+        List<ChatParticipant> allParticipants = roomIds.isEmpty()
+                ? Collections.emptyList()
+                : chatParticipantRepository.findAllByChatRoomIdIn(roomIds);
+
+        List<Long> memberIds = allParticipants.stream()
+                .map(ChatParticipant::getMemberId)
+                .distinct()
+                .toList();
+        Map<Long, String> nicknamesByMemberId = memberIds.isEmpty()
+                ? Collections.emptyMap()
+                : memberRepository.findAllById(memberIds).stream()
+                        .collect(Collectors.toMap(Member::getId, Member::getNickname));
+
+        Map<Long, List<ChatParticipant>> participantsByRoom = allParticipants.stream()
+                .collect(Collectors.groupingBy(ChatParticipant::getChatRoomId));
+
+        Slice<ChatRoomSummaryResponse> mapped = rooms.map(room -> {
+            List<ChatParticipant> roomParticipants = participantsByRoom.getOrDefault(room.getId(), List.of());
+            String displayName = computeDisplayName(memberId, roomParticipants, nicknamesByMemberId);
+            return toSummaryResponse(room, lastMessages.get(room.getId()), displayName);
+        });
         return SliceResponse.of(mapped);
     }
 
@@ -145,13 +169,29 @@ public class ChatRoomService {
         }
     }
 
-    private ChatRoomSummaryResponse toSummaryResponse(ChatRoom room, Message lastMsg) {
+    private String computeDisplayName(Long memberId, List<ChatParticipant> participants, Map<Long, String> nicknamesByMemberId) {
+        List<String> otherNames = participants.stream()
+                .filter(p -> !p.getMemberId().equals(memberId) && !p.isLeft())
+                .map(p -> nicknamesByMemberId.getOrDefault(p.getMemberId(), "Member " + p.getMemberId()))
+                .toList();
+
+        if (otherNames.isEmpty()) {
+            return "알 수 없음";
+        }
+        if (otherNames.size() <= 2) {
+            return String.join(", ", otherNames);
+        }
+        return otherNames.get(0) + ", " + otherNames.get(1) + " 외 " + (otherNames.size() - 2) + "명";
+    }
+
+    private ChatRoomSummaryResponse toSummaryResponse(ChatRoom room, Message lastMsg, String displayName) {
         ChatMessageResponse lastMessage = lastMsg != null ? toMessageResponse(lastMsg) : null;
 
         return ChatRoomSummaryResponse.builder()
                 .chatRoomId(room.getId())
                 .chatType(room.getChatType().name())
                 .status(room.getStatus().name())
+                .displayName(displayName)
                 .lastMessage(lastMessage)
                 .updatedAt(room.getUpdatedAt())
                 .build();
@@ -160,6 +200,13 @@ public class ChatRoomService {
     private ChatRoomDetailResponse toDetailResponse(ChatRoom room) {
         List<ChatParticipant> participants = new ArrayList<>(chatParticipantRepository.findAllByChatRoomId(room.getId()));
         participants.sort(Comparator.comparing(ChatParticipant::getId));
+
+        // Batch-fetch member nicknames
+        List<Long> memberIds = participants.stream().map(ChatParticipant::getMemberId).distinct().toList();
+        Map<Long, String> nicknamesByMemberId = memberIds.isEmpty()
+                ? Collections.emptyMap()
+                : memberRepository.findAllById(memberIds).stream()
+                        .collect(Collectors.toMap(Member::getId, Member::getNickname));
 
         List<Long> participantIds = participants.stream().map(ChatParticipant::getId).toList();
         List<ChatParticipantPet> participantPets = participantIds.isEmpty()
@@ -189,6 +236,7 @@ public class ChatRoomService {
         List<ChatParticipantResponse> participantResponses = participants.stream()
                 .map(participant -> ChatParticipantResponse.builder()
                         .memberId(participant.getMemberId())
+                        .nickname(nicknamesByMemberId.getOrDefault(participant.getMemberId(), null))
                         .walkConfirmState(participant.getWalkConfirmState().name())
                         .left(participant.isLeft())
                         .pets(petResponseByParticipant.getOrDefault(participant.getId(), List.of()))

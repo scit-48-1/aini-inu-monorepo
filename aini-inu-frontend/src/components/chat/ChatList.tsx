@@ -81,10 +81,11 @@ export function ChatList() {
 
   // Derive display name from room
   function getRoomDisplayName(room: ChatRoomSummaryResponse): string {
+    if (room.displayName) {
+      return room.displayName;
+    }
     if (room.chatType === 'INDIVIDUAL') {
-      return room.lastMessage?.sender
-        ? `1:1 채팅`
-        : '1:1 채팅';
+      return '1:1 채팅';
     }
     return '그룹';
   }

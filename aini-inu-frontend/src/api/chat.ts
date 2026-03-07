@@ -7,6 +7,7 @@ export interface ChatRoomSummaryResponse {
   chatRoomId: number;
   chatType: string;
   status: string;
+  displayName: string;
   lastMessage: ChatMessageResponse | null;
   updatedAt: string;
 }
@@ -22,6 +23,7 @@ export interface ChatRoomDetailResponse {
 
 export interface ChatParticipantResponse {
   memberId: number;
+  nickname: string | null;
   walkConfirmState: string;
   left: boolean;
   pets: ChatParticipantPetResponse[];

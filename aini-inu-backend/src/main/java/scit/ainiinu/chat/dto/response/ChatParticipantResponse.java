@@ -12,6 +12,8 @@ import java.util.List;
 public class ChatParticipantResponse {
     @Schema(description = "회원 ID입니다.", example = "101")
     private Long memberId;
+    @Schema(description = "회원 닉네임입니다.", example = "홍길동")
+    private String nickname;
     @Schema(description = "참여자의 산책 확정 상태입니다.", example = "UNCONFIRMED", allowableValues = {"UNCONFIRMED", "CONFIRMED"})
     private String walkConfirmState;
     @Schema(description = "left 값입니다.", example = "true")

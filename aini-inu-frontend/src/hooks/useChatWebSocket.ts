@@ -65,6 +65,8 @@ export function useChatWebSocket(roomId: number, enabled: boolean) {
 
     pollingRef.current = setInterval(async () => {
       try {
+        const currentRoom = useChatStore.getState().currentRoomId;
+        if (currentRoom !== roomId) return;
         const result = await getMessages(roomId);
         mergeMessages(result.content);
       } catch {

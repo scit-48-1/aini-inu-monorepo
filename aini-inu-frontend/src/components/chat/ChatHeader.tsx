@@ -31,17 +31,20 @@ function getPartnerDisplay(
   if (room.chatType === 'INDIVIDUAL' || others.length === 1) {
     const partner = others[0];
     const petNames = partner?.pets?.map((p) => p.name) ?? [];
+    const nickname = partner?.nickname;
     return {
-      label: petNames.length > 0 ? petNames.join(', ') : `Member ${partner?.memberId ?? ''}`,
+      label: nickname || `Member ${partner?.memberId ?? ''}`,
       petNames,
     };
   }
 
-  // GROUP rooms: show first 2-3 pet names across all other participants
+  // GROUP rooms: show nicknames of other participants
+  const nicknames = others
+    .map((p) => p.nickname || `Member ${p.memberId}`)
+    .slice(0, 3);
   const allPets = others.flatMap((p) => p.pets.map((pet) => pet.name));
-  const display = allPets.slice(0, 3).join(', ');
   return {
-    label: display || `Group (${others.length})`,
+    label: nicknames.join(', ') || `Group (${others.length})`,
     petNames: allPets,
   };
 }

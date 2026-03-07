@@ -66,6 +66,7 @@ export default function ChatRoomPage() {
   // Store actions for leave cleanup
   const removeRoom = useChatStore((s) => s.removeRoom);
   const clearMessages = useChatStore((s) => s.clearMessages);
+  const setCurrentRoomId = useChatStore((s) => s.setCurrentRoomId);
 
   // WebSocket hook -- enables once room is loaded
   const { connectionMode, disconnect } = useChatWebSocket(roomId, !!room);
@@ -81,8 +82,9 @@ export default function ChatRoomPage() {
       return;
     }
 
-    // Clear previous room's messages when switching rooms
+    // Clear previous room's messages and set current room
     clearMessages();
+    setCurrentRoomId(roomId);
 
     let cancelled = false;
 
@@ -291,8 +293,7 @@ export default function ChatRoomPage() {
     // For GROUP rooms: select first other (future: picker)
     const target = others[0];
     setReviewTargetId(target.memberId);
-    const petNames = target.pets?.map((p) => p.name).join(', ');
-    setReviewTargetName(petNames || `Member ${target.memberId}`);
+    setReviewTargetName(target.nickname || `Member ${target.memberId}`);
     setIsReviewModalOpen(true);
   }, [room, currentMemberId]);
 

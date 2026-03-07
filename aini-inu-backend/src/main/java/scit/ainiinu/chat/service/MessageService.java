@@ -22,6 +22,7 @@ import scit.ainiinu.common.response.CursorResponse;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -60,14 +61,18 @@ public class MessageService {
             contentRows = new ArrayList<>(rows);
         }
 
-        List<ChatMessageResponse> content = contentRows.stream()
-                .map(this::toResponse)
-                .toList();
-
+        // nextCursor는 DESC 순서의 마지막(=가장 오래된) 메시지 ID → reverse 전에 추출
         String nextCursor = null;
         if (hasMore && !contentRows.isEmpty()) {
             nextCursor = String.valueOf(contentRows.get(contentRows.size() - 1).getId());
         }
+
+        // 클라이언트 표시용 시간순(ASC) 정렬
+        Collections.reverse(contentRows);
+
+        List<ChatMessageResponse> content = contentRows.stream()
+                .map(this::toResponse)
+                .toList();
 
         return new CursorResponse<>(content, nextCursor, hasMore);
     }

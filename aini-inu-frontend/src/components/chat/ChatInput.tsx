@@ -60,7 +60,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && onSend()}
+              onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && onSend()}
               maxLength={500}
               placeholder="따뜻한 메시지를 남겨주세요..."
               className="w-full bg-zinc-50 border-none rounded-[32px] py-6 pl-8 pr-20 font-bold focus:outline-none focus:ring-8 ring-navy-900/5 transition-all text-navy-900 shadow-inner"

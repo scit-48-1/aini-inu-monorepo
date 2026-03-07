@@ -16,6 +16,8 @@ public class ChatRoomSummaryResponse {
     private String chatType;
     @Schema(description = "상태 코드입니다.", example = "ACTIVE", allowableValues = {"ACTIVE", "CLOSED"})
     private String status;
+    @Schema(description = "채팅방 표시 이름입니다 (상대방 닉네임).", example = "홍길동")
+    private String displayName;
     @Schema(description = "lastMessage 값입니다.", example = "강아지와 즐거운 산책을 했어요.")
     private ChatMessageResponse lastMessage;
     @Schema(description = "수정 시각(UTC)입니다.", example = "2026-03-05T01:20:00Z")

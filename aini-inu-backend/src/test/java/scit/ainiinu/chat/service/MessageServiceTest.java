@@ -192,15 +192,16 @@ class MessageServiceTest {
 
             given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, memberId)).willReturn(true);
 
-            Message msg1 = Message.create(chatRoomId, 2L, "메시지1", ChatMessageType.USER, "c1");
-            ReflectionTestUtils.setField(msg1, "id", 1L);
-            Message msg2 = Message.create(chatRoomId, 2L, "메시지2", ChatMessageType.USER, "c2");
-            ReflectionTestUtils.setField(msg2, "id", 2L);
-            Message msg3 = Message.create(chatRoomId, 2L, "메시지3", ChatMessageType.USER, "c3");
-            ReflectionTestUtils.setField(msg3, "id", 3L);
+            // 리포지토리는 DESC 순서로 반환 (id: 30 → 20 → 10)
+            Message msg30 = Message.create(chatRoomId, 2L, "최신메시지", ChatMessageType.USER, "c3");
+            ReflectionTestUtils.setField(msg30, "id", 30L);
+            Message msg20 = Message.create(chatRoomId, 2L, "중간메시지", ChatMessageType.USER, "c2");
+            ReflectionTestUtils.setField(msg20, "id", 20L);
+            Message msg10 = Message.create(chatRoomId, 2L, "오래된메시지", ChatMessageType.USER, "c1");
+            ReflectionTestUtils.setField(msg10, "id", 10L);
 
             given(messageRepository.findByRoomIdWithCursor(chatRoomId, null, 3, "before"))
-                    .willReturn(List.of(msg1, msg2, msg3));
+                    .willReturn(List.of(msg30, msg20, msg10));
 
             // when
             CursorResponse<ChatMessageResponse> response = messageService.getMessages(memberId, chatRoomId, null, size, null);
@@ -208,7 +209,106 @@ class MessageServiceTest {
             // then
             assertThat(response.getContent()).hasSize(2);
             assertThat(response.isHasMore()).isTrue();
-            assertThat(response.getNextCursor()).isEqualTo("2");
+            // nextCursor는 DESC 순서에서 마지막(=가장 오래된) 메시지 ID
+            assertThat(response.getNextCursor()).isEqualTo("20");
+        }
+
+        @Test
+        @DisplayName("DESC로 조회된 메시지를 ASC(시간순)으로 뒤집어 반환한다")
+        void returnsMessagesInAscOrder() {
+            // given
+            Long memberId = 1L;
+            Long chatRoomId = 10L;
+
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, memberId)).willReturn(true);
+
+            // 리포지토리는 DESC 순서로 반환 (id: 30 → 20 → 10)
+            Message msg30 = Message.create(chatRoomId, 2L, "최신메시지", ChatMessageType.USER, "c3");
+            ReflectionTestUtils.setField(msg30, "id", 30L);
+            Message msg20 = Message.create(chatRoomId, 2L, "중간메시지", ChatMessageType.USER, "c2");
+            ReflectionTestUtils.setField(msg20, "id", 20L);
+            Message msg10 = Message.create(chatRoomId, 2L, "오래된메시지", ChatMessageType.USER, "c1");
+            ReflectionTestUtils.setField(msg10, "id", 10L);
+
+            given(messageRepository.findByRoomIdWithCursor(chatRoomId, null, 51, "before"))
+                    .willReturn(List.of(msg30, msg20, msg10));
+
+            // when
+            CursorResponse<ChatMessageResponse> response = messageService.getMessages(memberId, chatRoomId, null, null, null);
+
+            // then — 클라이언트에는 ASC(시간순: 10 → 20 → 30) 순서로 반환
+            List<ChatMessageResponse> content = response.getContent();
+            assertThat(content).hasSize(3);
+            assertThat(content.get(0).getId()).isEqualTo(10L);
+            assertThat(content.get(1).getId()).isEqualTo(20L);
+            assertThat(content.get(2).getId()).isEqualTo(30L);
+            assertThat(content.get(0).getContent()).isEqualTo("오래된메시지");
+            assertThat(content.get(2).getContent()).isEqualTo("최신메시지");
+        }
+
+        @Test
+        @DisplayName("hasMore일 때도 ASC 순서로 반환하고 nextCursor는 가장 오래된 메시지 ID이다")
+        void hasMore_returnsAscOrderAndCorrectCursor() {
+            // given
+            Long memberId = 1L;
+            Long chatRoomId = 10L;
+            int size = 2;
+
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, memberId)).willReturn(true);
+
+            // 리포지토리는 DESC 순서로 3건 반환 (pageSize+1로 hasMore 감지)
+            Message msg30 = Message.create(chatRoomId, 2L, "최신", ChatMessageType.USER, "c3");
+            ReflectionTestUtils.setField(msg30, "id", 30L);
+            Message msg20 = Message.create(chatRoomId, 2L, "중간", ChatMessageType.USER, "c2");
+            ReflectionTestUtils.setField(msg20, "id", 20L);
+            Message msg10 = Message.create(chatRoomId, 2L, "오래된", ChatMessageType.USER, "c1");
+            ReflectionTestUtils.setField(msg10, "id", 10L);
+
+            given(messageRepository.findByRoomIdWithCursor(chatRoomId, null, 3, "before"))
+                    .willReturn(List.of(msg30, msg20, msg10));
+
+            // when
+            CursorResponse<ChatMessageResponse> response = messageService.getMessages(memberId, chatRoomId, null, size, null);
+
+            // then — contentRows는 [msg30, msg20] → reverse → [msg20, msg30]
+            List<ChatMessageResponse> content = response.getContent();
+            assertThat(content).hasSize(2);
+            assertThat(content.get(0).getId()).isEqualTo(20L);
+            assertThat(content.get(1).getId()).isEqualTo(30L);
+
+            // nextCursor는 reverse 전 DESC 순서의 마지막 = msg20 (id=20)
+            assertThat(response.getNextCursor()).isEqualTo("20");
+            assertThat(response.isHasMore()).isTrue();
+        }
+
+        @Test
+        @DisplayName("참여자가 아니면 ROOM_ACCESS_DENIED 예외가 발생한다")
+        void nonParticipant_throwsException() {
+            // given
+            Long memberId = 1L;
+            Long chatRoomId = 10L;
+
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, memberId)).willReturn(false);
+
+            // when & then
+            assertThatThrownBy(() -> messageService.getMessages(memberId, chatRoomId, null, null, null))
+                    .isInstanceOf(ChatException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ChatErrorCode.ROOM_ACCESS_DENIED);
+        }
+
+        @Test
+        @DisplayName("유효하지 않은 커서 값이면 INVALID_CURSOR 예외가 발생한다")
+        void invalidCursor_throwsException() {
+            // given
+            Long memberId = 1L;
+            Long chatRoomId = 10L;
+
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, memberId)).willReturn(true);
+
+            // when & then
+            assertThatThrownBy(() -> messageService.getMessages(memberId, chatRoomId, "abc", null, null))
+                    .isInstanceOf(ChatException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ChatErrorCode.INVALID_CURSOR);
         }
     }
 
