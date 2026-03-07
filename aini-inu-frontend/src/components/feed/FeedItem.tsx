@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Share2, ChevronDown, ChevronUp, MoreHorizontal, Send, Trash2, X } from 'lucide-react';
+import { Heart, MessageCircle, Share2, ChevronDown, ChevronUp, MoreHorizontal, Send, Trash2, X, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
@@ -35,10 +35,11 @@ interface FeedItemProps {
   post: PostResponse;
   currentUserId?: number;
   onDelete?: (postId: number) => void;
+  onEdit?: (post: PostResponse) => void;
   onLikeUpdate?: (postId: number, liked: boolean, likeCount: number) => void;
 }
 
-export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost, currentUserId, onDelete, onLikeUpdate }) => {
+export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost, currentUserId, onDelete, onEdit, onLikeUpdate }) => {
   const [post, setPost] = useState<PostResponse>(initialPost);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLiked, setIsLiked] = useState(initialPost.liked);
@@ -47,6 +48,7 @@ export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   const resolvedUserId = currentUserId ?? Number(useUserStore.getState().profile?.id);
   const isMyPost = !!(resolvedUserId && post.author?.id === resolvedUserId);
@@ -288,12 +290,42 @@ export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost
             </div>
             <div className="flex items-center gap-2">
               {isMyPost && (
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                >
-                  <MoreHorizontal size={16} />
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
+                    className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 hover:bg-zinc-200 transition-colors"
+                  >
+                    <MoreHorizontal size={16} />
+                  </button>
+                  {showMenu && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setShowMenu(false); }} />
+                      <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-zinc-100 py-1 z-50 min-w-[120px]">
+                        {onEdit ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setShowMenu(false); onEdit(post); }}
+                            className="w-full px-4 py-2.5 text-left text-sm font-medium text-zinc-700 hover:bg-zinc-50 flex items-center gap-2"
+                          >
+                            <Pencil size={14} /> 수정
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setShowMenu(false); toast('수정 기능 준비 중'); }}
+                            className="w-full px-4 py-2.5 text-left text-sm font-medium text-zinc-400 hover:bg-zinc-50 flex items-center gap-2"
+                          >
+                            <Pencil size={14} /> 수정
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setShowMenu(false); setShowDeleteConfirm(true); }}
+                          className="w-full px-4 py-2.5 text-left text-sm font-medium text-red-500 hover:bg-red-50 flex items-center gap-2"
+                        >
+                          <Trash2 size={14} /> 삭제
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
               <button onClick={() => setIsExpanded(false)} className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 hover:bg-zinc-200">
                 <ChevronUp size={16} />

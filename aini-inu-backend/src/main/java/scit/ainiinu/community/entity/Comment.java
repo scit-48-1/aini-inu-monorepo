@@ -18,10 +18,9 @@ public class Comment extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 게시글 (N:1 관계)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+    // 게시글 ID (FK 제거 -- 삭제 시 cascade 충돌 방지)
+    @Column(name = "post_id", nullable = false)
+    private Long postId;
 
     // 작성자 ID (회원 컨텍스트 분리를 위해 ID 참조 유지)
     @Column(nullable = false)
@@ -32,10 +31,10 @@ public class Comment extends BaseTimeEntity {
     private String content;
 
     // 생성 메서드
-    public static Comment create(Post post, Long authorId, String content) {
+    public static Comment create(Long postId, Long authorId, String content) {
         validateContent(content);
         Comment comment = new Comment();
-        comment.post = post;
+        comment.postId = postId;
         comment.authorId = authorId;
         comment.content = content;
         return comment;
