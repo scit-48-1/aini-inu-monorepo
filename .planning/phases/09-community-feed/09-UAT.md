@@ -1,9 +1,9 @@
 ---
-status: complete
+status: diagnosed
 phase: 09-community-feed
 source: [09-01-SUMMARY.md, 09-02-SUMMARY.md, 09-03-SUMMARY.md, 09-04-SUMMARY.md]
 started: 2026-03-07T06:50:00Z
-updated: 2026-03-07T07:00:00Z
+updated: 2026-03-07T07:05:00Z
 ---
 
 ## Current Test
@@ -56,14 +56,31 @@ skipped: 0
   reason: "User reported: 삭제하는 버튼은 점점점 모양의 이미지가 있는데 수정 버튼은 안보여. 점점점을 누르면 삭제 또는 수정 2가지의 기능을 선택해서 할 수 있도록 뜨게 할 수 있어?"
   severity: major
   test: 5
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Neither PostDetailModal nor FeedItem has a dropdown menu. PostDetailModal has edit/delete as bare footer buttons (edit works but not discoverable). FeedItem three-dot button hardcodes onClick to setShowDeleteConfirm(true) — no dropdown, no edit option."
+  artifacts:
+    - path: "aini-inu-frontend/src/components/profile/PostDetailModal.tsx"
+      issue: "Edit/delete are bare buttons in footer, no three-dot dropdown menu"
+    - path: "aini-inu-frontend/src/components/feed/FeedItem.tsx"
+      issue: "Three-dot button onClick hardcoded to delete confirmation, no dropdown, no edit"
+  missing:
+    - "Add dropdown/popover menu on three-dot click with edit and delete options in both components"
+  debug_session: ".planning/debug/post-detail-modal-missing-edit.md"
 - truth: "Post is deleted successfully and removed from profile feed grid"
   status: failed
   reason: "User reported: 삭제가 안됨. FK constraint violation - comment 테이블이 post를 참조하여 삭제 불가. 외래키 제거하고 인덱스+참조값만 유지하라"
   severity: blocker
   test: 6
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Comment.java and PostLike.java have @ManyToOne @JoinColumn to Post, causing Hibernate to auto-generate FK constraints. PostService.deletePost() calls postRepository.delete(post) without deleting child rows first."
+  artifacts:
+    - path: "aini-inu-backend/src/main/java/scit/ainiinu/community/entity/Comment.java"
+      issue: "@ManyToOne @JoinColumn(name='post_id') generates FK constraint blocking post deletion"
+    - path: "aini-inu-backend/src/main/java/scit/ainiinu/community/entity/PostLike.java"
+      issue: "@ManyToOne @JoinColumn(name='post_id') generates second FK constraint"
+    - path: "aini-inu-backend/src/main/java/scit/ainiinu/community/service/PostService.java"
+      issue: "deletePost() does not delete comments/likes before deleting post"
+  missing:
+    - "Replace @ManyToOne Post with @Column Long postId in Comment.java and PostLike.java"
+    - "Add deleteAllByPostId() to CommentRepository and PostLikeRepository"
+    - "Update PostService.deletePost() to bulk-delete children before parent"
+    - "Add DDL migration to drop existing FK constraints"
+  debug_session: ".planning/debug/post-delete-fk-violation.md"
