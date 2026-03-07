@@ -65,11 +65,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-                "http://localhost:3000",     // Next.js 개발 서버
-                "http://localhost:5173"      // Vite 개발 서버
-                // Production: "https://ainiinu.com" 추가
-        ));
+        config.setAllowedOriginPatterns(List.of("*"));  // 모든 origin 허용
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));
