@@ -245,15 +245,16 @@ SET lost_pet_id = EXCLUDED.lost_pet_id,
 
 -- Community edges: zero-content interaction + max image count
 INSERT INTO post (
-    id, author_id, content, like_count, comment_count, created_at, updated_at
+    id, author_id, content, like_count, comment_count, version, created_at, updated_at
 ) VALUES
-    (9801, 7, '상호작용 없는 기본 게시글입니다.', 0, 0, NOW() - INTERVAL '4 hour', NOW()),
-    (9802, 6, '이미지 5장 경계 테스트 게시글입니다.', 5, 1, NOW() - INTERVAL '3 hour', NOW())
+    (9801, 7, '상호작용 없는 기본 게시글입니다.', 0, 0, 0, NOW() - INTERVAL '4 hour', NOW()),
+    (9802, 6, '이미지 5장 경계 테스트 게시글입니다.', 5, 1, 0, NOW() - INTERVAL '3 hour', NOW())
 ON CONFLICT (id) DO UPDATE
 SET author_id = EXCLUDED.author_id,
     content = EXCLUDED.content,
     like_count = EXCLUDED.like_count,
     comment_count = EXCLUDED.comment_count,
+    version = EXCLUDED.version,
     updated_at = NOW();
 
 DELETE FROM post_image_url WHERE post_id BETWEEN 9801 AND 9802;

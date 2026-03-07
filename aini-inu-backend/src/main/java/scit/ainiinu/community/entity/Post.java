@@ -41,7 +41,7 @@ public class Post extends BaseTimeEntity {
 
     //동시성처리방향
     @Version
-    private Long version;
+    private Long version = 0L;
 
     public static Post create(Long authorId, String content, List<String> imageUrls) {
         Post post = new Post();

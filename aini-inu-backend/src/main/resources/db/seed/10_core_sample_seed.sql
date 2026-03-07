@@ -398,21 +398,22 @@ SET lost_pet_id = EXCLUDED.lost_pet_id,
 
 -- Community
 INSERT INTO post (
-    id, author_id, content, like_count, comment_count, created_at, updated_at
+    id, author_id, content, like_count, comment_count, version, created_at, updated_at
 ) VALUES
-    (3501, 1, '오늘 한강 산책 다녀왔어요. 날씨가 정말 좋네요!', 4, 3, NOW() - INTERVAL '9 hour', NOW()),
-    (3502, 2, '아침 산책 메이트 구해요. 내일 7시 가능하신 분?', 3, 2, NOW() - INTERVAL '8 hour', NOW()),
-    (3503, 3, '강아지 발 관리 팁 공유합니다.', 3, 2, NOW() - INTERVAL '7 hour', NOW()),
-    (3504, 5, '실종견 제보 받았습니다. 주변 확인 부탁드려요.', 2, 2, NOW() - INTERVAL '6 hour', NOW()),
-    (3505, 7, '반려견 없는 분도 산책 동행 괜찮을까요?', 2, 2, NOW() - INTERVAL '5 hour', NOW()),
-    (3506, 6, '오늘 산책 코스 추천 부탁드립니다.', 2, 1, NOW() - INTERVAL '4 hour', NOW()),
-    (3507, 1, '우리 몽이 최근 사진 올려봐요!', 1, 0, NOW() - INTERVAL '3 hour', NOW()),
-    (3508, 2, '간식 추천 리스트 공유합니다.', 1, 0, NOW() - INTERVAL '2 hour', NOW())
+    (3501, 1, '오늘 한강 산책 다녀왔어요. 날씨가 정말 좋네요!', 4, 3, 0, NOW() - INTERVAL '9 hour', NOW()),
+    (3502, 2, '아침 산책 메이트 구해요. 내일 7시 가능하신 분?', 3, 2, 0, NOW() - INTERVAL '8 hour', NOW()),
+    (3503, 3, '강아지 발 관리 팁 공유합니다.', 3, 2, 0, NOW() - INTERVAL '7 hour', NOW()),
+    (3504, 5, '실종견 제보 받았습니다. 주변 확인 부탁드려요.', 2, 2, 0, NOW() - INTERVAL '6 hour', NOW()),
+    (3505, 7, '반려견 없는 분도 산책 동행 괜찮을까요?', 2, 2, 0, NOW() - INTERVAL '5 hour', NOW()),
+    (3506, 6, '오늘 산책 코스 추천 부탁드립니다.', 2, 1, 0, NOW() - INTERVAL '4 hour', NOW()),
+    (3507, 1, '우리 몽이 최근 사진 올려봐요!', 1, 0, 0, NOW() - INTERVAL '3 hour', NOW()),
+    (3508, 2, '간식 추천 리스트 공유합니다.', 1, 0, 0, NOW() - INTERVAL '2 hour', NOW())
 ON CONFLICT (id) DO UPDATE
 SET author_id = EXCLUDED.author_id,
     content = EXCLUDED.content,
     like_count = EXCLUDED.like_count,
     comment_count = EXCLUDED.comment_count,
+    version = EXCLUDED.version,
     updated_at = NOW();
 
 DELETE FROM post_image_url WHERE post_id BETWEEN 3501 AND 3508;
