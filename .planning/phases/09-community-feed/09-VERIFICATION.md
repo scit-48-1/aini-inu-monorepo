@@ -1,16 +1,22 @@
 ---
 phase: 09-community-feed
-verified: 2026-03-07T15:30:00Z
+verified: 2026-03-07T18:45:00Z
 status: passed
 score: 12/12 must-haves verified
+re_verification:
+  previous_status: passed
+  previous_score: 12/12
+  gaps_closed: []
+  gaps_remaining: []
+  regressions: []
 ---
 
 # Phase 9: Community Feed Verification Report
 
-**Phase Goal:** Rewire community feed frontend to centralized API layer with presigned uploads, infinite scroll, and legacy cleanup
-**Verified:** 2026-03-07T15:30:00Z
+**Phase Goal:** Rewire community feed features (post CRUD, image upload, likes, comments, profile feed) to use the centralized api/community.ts layer and PostResponse types, with infinite scroll, optimistic updates, and legacy service removal.
+**Verified:** 2026-03-07T18:45:00Z
 **Status:** passed
-**Re-verification:** No -- initial verification
+**Re-verification:** Yes -- regression check against previous passing verification
 
 ## Goal Achievement
 
@@ -18,18 +24,18 @@ score: 12/12 must-haves verified
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | User can create a post with image uploaded via presigned URL and body text | VERIFIED | `usePostForm.ts` calls `uploadImageFlow(f, 'COMMUNITY_POST')` then `createPost({ content, imageUrls })` |
-| 2 | Image upload uses uploadImageFlow with COMMUNITY_POST purpose, not base64 FileReader | VERIFIED | No FileReader in any modified file; `uploadImageFlow` imported from `@/api/upload` in usePostForm.ts:5 |
-| 3 | Both image and content are required before submission is allowed | VERIFIED | usePostForm.ts:30-37 validates `imageFiles.length === 0` and `!content.trim()` with toast warnings |
-| 4 | User can browse posts with infinite scroll pagination loading next page on scroll bottom | VERIFIED | feed/page.tsx uses `IntersectionObserver` on sentinel div (line 98), calls `fetchPosts(page + 1)` when `hasNext && !isLoadingMore` |
-| 5 | User can like/unlike a post with immediate optimistic UI update and rollback on failure | VERIFIED | FeedItem.tsx:84-108 saves prev state, optimistically updates, calls `likePost()`, syncs server truth on success, rolls back on catch |
-| 6 | User can expand a post to see comments, add a comment, and delete comments they authored or on their own posts | VERIFIED | FeedItem.tsx:111-153 loads comments via `getPost()`, submits via `createComment()`, deletes via `deleteComment()` with `canDeleteComment` checking both comment author and post author |
-| 7 | User can delete their own posts with confirmation dialog | VERIFIED | FeedItem.tsx:305-328 shows delete confirmation overlay with cancel/delete buttons; calls `deletePost(post.id)` |
-| 8 | Feed shows loading, empty, and error states | VERIFIED | feed/page.tsx:127-169 has loading spinner, error with retry button, empty state, success with posts, and loading-more spinner |
-| 9 | PostDetailModal displays post detail with PostResponse types and allows edit/delete via api/community.ts | VERIFIED | PostDetailModal.tsx imports `updatePost, deletePost` from `@/api/community`, handles edit/delete internally with owner check |
-| 10 | ProfileFeed grid renders PostResponse with correct field names | VERIFIED | ProfileFeed.tsx uses `post.imageUrls[0]`, `post.likeCount`, `post.commentCount` |
-| 11 | MyProfileView and ProfileView no longer import FeedPostType or postService | VERIFIED | grep confirms only `PostResponse` from `@/api/community` in both files, zero FeedPostType/postService imports |
-| 12 | postService.ts is deleted -- zero consumers remain | VERIFIED | File does not exist on disk; grep for "postService" across src/ returns zero matches |
+| 1 | User can create a post with image uploaded via presigned URL and body text | VERIFIED | `usePostForm.ts` calls `uploadImageFlow(f, 'POST')` then `createPost({ content, imageUrls })` -- 71 lines, full implementation |
+| 2 | Image upload uses uploadImageFlow, not base64 FileReader | VERIFIED | No FileReader in any feed-related file; FileReader only exists in unrelated files (ProfileEditModal, ManagerStep, DogFormFields, EmergencyReportForm) |
+| 3 | Both image and content are required before submission | VERIFIED | usePostForm.ts lines 30-37: validates `imageFiles.length === 0` and `!content.trim()` with toast warnings |
+| 4 | Feed supports infinite scroll pagination | VERIFIED | feed/page.tsx uses `IntersectionObserver` on sentinel, calls `fetchPosts(page + 1)` when `hasNext && !isLoadingMore` |
+| 5 | Like/unlike has optimistic UI with rollback on failure | VERIFIED | FeedItem.tsx line 89 comment "Optimistic update", line 98 `likePost(post.id)`, line 104 "Rollback" on catch |
+| 6 | Comment CRUD with permission-based delete (comment author OR post author) | VERIFIED | FeedItem.tsx: `createComment`, `deleteComment` imported and called; `canDeleteComment` checks both comment author and post author |
+| 7 | Post deletion with confirmation dialog | VERIFIED | FeedItem.tsx has delete confirmation overlay with cancel/delete buttons, calls `deletePost(post.id)` |
+| 8 | Feed shows loading, empty, and error states | VERIFIED | feed/page.tsx has loading spinner, error with retry button, empty state, success with posts |
+| 9 | PostDetailModal uses api/community.ts for edit/delete | VERIFIED | PostDetailModal.tsx imports `updatePost, deletePost` from `@/api/community`, calls them at lines 48 and 59 |
+| 10 | ProfileFeed uses PostResponse field names | VERIFIED | ProfileFeed.tsx uses `post.imageUrls[0]`, `post.likeCount`, `post.commentCount` |
+| 11 | MyProfileView and ProfileView no longer import FeedPostType or postService | VERIFIED | grep for FeedPostType/postService in components/ returns zero matches; both files import PostResponse from `@/api/community` |
+| 12 | postService.ts is deleted with zero consumers | VERIFIED | File does not exist; grep for "postService" across src/ returns zero matches |
 
 **Score:** 12/12 truths verified
 
@@ -37,53 +43,55 @@ score: 12/12 must-haves verified
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `aini-inu-frontend/src/hooks/forms/usePostForm.ts` | Post creation hook using api/community.ts + uploadImageFlow | VERIFIED | 71 lines, imports createPost + uploadImageFlow, File[] state, validation, reset |
-| `aini-inu-frontend/src/components/shared/forms/PostFormFields.tsx` | Form fields with content/previewUrls props | VERIFIED | 126 lines, File-based onChange, multi-image thumbnails, no base64 |
-| `aini-inu-frontend/src/components/common/CreatePostModal.tsx` | Modal wired to usePostForm | VERIFIED | 76 lines, uses usePostForm hook, passes props to PostFormFields |
-| `aini-inu-frontend/src/app/feed/page.tsx` | Feed page with infinite scroll via getPosts + SliceResponse | VERIFIED | 191 lines, getPosts with pagination, IntersectionObserver, 5-state UI |
-| `aini-inu-frontend/src/components/feed/FeedItem.tsx` | Feed card with optimistic like, comment CRUD, delete | VERIFIED | 392 lines, PostResponse types, optimistic like with rollback, comment CRUD, permission-based delete |
-| `aini-inu-frontend/src/components/profile/PostDetailModal.tsx` | Post detail view/edit/delete via api/community.ts | VERIFIED | 124 lines, updatePost + deletePost imports, internal edit state, owner check |
-| `aini-inu-frontend/src/components/profile/ProfileFeed.tsx` | Profile post grid using PostResponse | VERIFIED | 31 lines, PostResponse type, correct field names |
-| `aini-inu-frontend/src/services/api/postService.ts` | DELETED | VERIFIED | File does not exist |
+| `src/hooks/forms/usePostForm.ts` | Post creation hook using api/community + uploadImageFlow | VERIFIED | 71 lines, substantive implementation |
+| `src/components/shared/forms/PostFormFields.tsx` | Form fields component | VERIFIED | Exists, File-based onChange |
+| `src/components/common/CreatePostModal.tsx` | Modal wired to usePostForm | VERIFIED | Exists, imports usePostForm |
+| `src/app/feed/page.tsx` | Feed page with infinite scroll | VERIFIED | 191 lines, IntersectionObserver, getPosts |
+| `src/components/feed/FeedItem.tsx` | Feed card with optimistic like, comment CRUD | VERIFIED | 392 lines, full implementation |
+| `src/components/profile/PostDetailModal.tsx` | Detail view/edit/delete via api/community | VERIFIED | 124 lines, updatePost + deletePost |
+| `src/components/profile/ProfileFeed.tsx` | Profile post grid using PostResponse | VERIFIED | 31 lines, correct field names |
+| `src/services/api/postService.ts` | DELETED | VERIFIED | File does not exist |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |------|----|-----|--------|---------|
-| usePostForm.ts | api/community.ts | `import { createPost } from '@/api/community'` | WIRED | Line 4 |
-| usePostForm.ts | api/upload.ts | `import { uploadImageFlow } from '@/api/upload'` | WIRED | Line 5 |
-| feed/page.tsx | api/community.ts | `import { getPosts, getStories } from '@/api/community'` | WIRED | Line 6 |
-| FeedItem.tsx | api/community.ts | `import { likePost, getPost, createComment, deleteComment, deletePost } from '@/api/community'` | WIRED | Lines 8-16 |
-| PostDetailModal.tsx | api/community.ts | `import { updatePost, deletePost } from '@/api/community'` | WIRED | Line 10 |
-| ProfileFeed.tsx | api/community.ts | `import type { PostResponse } from '@/api/community'` | WIRED | Line 5 |
+| usePostForm.ts | api/community.ts | `import { createPost }` | WIRED | Line 4 |
+| usePostForm.ts | api/upload.ts | `import { uploadImageFlow }` | WIRED | Line 5 |
+| feed/page.tsx | api/community.ts | `import { getPosts, getStories }` | WIRED | Line 6 |
+| FeedItem.tsx | api/community.ts | `import { likePost, createComment, deleteComment, deletePost }` | WIRED | Lines 11-14 |
+| PostDetailModal.tsx | api/community.ts | `import { updatePost, deletePost }` | WIRED | Line 10 |
+| ProfileFeed.tsx | api/community.ts | `import type { PostResponse }` | WIRED | Line 5 |
+| MyProfileView.tsx | api/community.ts | `import type { PostResponse }` | WIRED | Line 35 |
+| ProfileView.tsx | api/community.ts | `import type { PostResponse }` | WIRED | Line 9 |
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 |-------------|-----------|-------------|--------|----------|
-| FEED-01 | 09-01 | Post creation with image/content required | SATISFIED | usePostForm validates both, uploads via presigned URL, creates via createPost |
-| FEED-02 | 09-02 | Post list retrieval | SATISFIED | feed/page.tsx calls getPosts with pagination params |
+| FEED-01 | 09-01 | Post creation -- image/content required | SATISFIED | usePostForm validates both, uploads via presigned URL, creates via createPost |
+| FEED-02 | 09-02 | Post list retrieval | SATISFIED | feed/page.tsx calls getPosts with pagination |
 | FEED-03 | 09-02, 09-03 | Post detail retrieval | SATISFIED | FeedItem calls getPost for comments; PostDetailModal displays detail |
-| FEED-04 | 09-03 | Post update (content required) | SATISFIED | PostDetailModal.tsx validates editContent.trim() and calls updatePost |
-| FEED-05 | 09-02, 09-03 | Post deletion | SATISFIED | FeedItem has delete with confirmation; PostDetailModal has delete for owner |
-| FEED-06 | 09-02 | Comment CRUD with permission-based delete | SATISFIED | FeedItem createComment, deleteComment; canDeleteComment checks comment author OR post author |
-| FEED-07 | 09-02 | Like with optimistic update + rollback | SATISFIED | FeedItem handleLike saves prev state, optimistic update, API call, rollback on catch |
-| FEED-08 | 09-01 | Presigned URL image upload | SATISFIED | usePostForm uses uploadImageFlow with COMMUNITY_POST purpose |
+| FEED-04 | 09-03 | Post update -- content required | SATISFIED | PostDetailModal validates editContent.trim() and calls updatePost |
+| FEED-05 | 09-02, 09-03 | Post deletion | SATISFIED | FeedItem + PostDetailModal both have delete via api/community |
+| FEED-06 | 09-02 | Comment CRUD with permission-based delete | SATISFIED | createComment, deleteComment; canDeleteComment checks comment author OR post author |
+| FEED-07 | 09-02 | Like with optimistic update + rollback | SATISFIED | FeedItem saves prev state, optimistic update, API call, rollback on catch |
+| FEED-08 | 09-01 | Presigned URL image upload | SATISFIED | usePostForm uses uploadImageFlow with 'POST' purpose |
 
-No orphaned requirements found.
+No orphaned requirements found. All 8 FEED requirements mapped to Phase 9 in REQUIREMENTS.md are accounted for.
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 |------|------|---------|----------|--------|
-| feed/page.tsx | 177 | `userProfile={profile as any}` | Info | Type cast to bridge Zustand profile to CreatePostModal duck-typed prop; functional but loses type safety |
-| constants/index.ts | 1 | `FeedPostType` import remains | Info | Only used for MOCK_FEEDS constant data; no live component references; cleanup candidate for future |
+| feed/page.tsx | 177 | `userProfile={profile as any}` | Info | Type cast for Zustand profile prop; functional but loses type safety |
+| types/index.ts | 171 | `FeedPostType` definition remains | Info | Only used for MOCK_FEEDS constant in constants/index.ts; no live component consumers; cleanup candidate |
 
-No blockers or warnings found.
+No blockers or warnings.
 
 ### Human Verification Required
 
-### 1. Post Creation End-to-End Flow
+### 1. Post Creation End-to-End
 
 **Test:** Open the feed page, click add button, upload an image, type content, submit.
 **Expected:** Image uploads via presigned URL, post appears in feed after refresh.
@@ -92,24 +100,26 @@ No blockers or warnings found.
 ### 2. Infinite Scroll Pagination
 
 **Test:** Ensure more than 10 posts exist. Scroll to bottom of feed.
-**Expected:** More posts load automatically with a brief loading spinner; scrolling stops when no more pages.
-**Why human:** Requires populated backend and visual scroll behavior verification.
+**Expected:** More posts load automatically; stops when no more pages.
+**Why human:** Requires populated backend and visual scroll behavior.
 
 ### 3. Optimistic Like Toggle
 
 **Test:** Click like on a post, then quickly click again.
-**Expected:** Heart fills/unfills immediately; count updates instantly; syncs with server truth after API response.
-**Why human:** Timing-dependent behavior and visual feedback need real interaction.
+**Expected:** Heart fills/unfills immediately; count updates instantly; syncs after API response.
+**Why human:** Timing-dependent behavior and visual feedback.
 
 ### 4. Comment Permission-Based Delete
 
-**Test:** As post author, view comments by another user and try to delete. As comment author, try to delete own comment on someone else's post.
+**Test:** As post author, try to delete another user's comment. As comment author, try to delete own comment on someone else's post.
 **Expected:** Delete button visible in both cases; comment removed on click.
-**Why human:** Requires multiple user accounts and permission context.
+**Why human:** Requires multiple user accounts.
 
 ### Gaps Summary
 
-No gaps found. All 12 observable truths are verified. All 8 requirement IDs (FEED-01 through FEED-08) are satisfied with implementation evidence. The legacy postService.ts has been deleted with zero remaining references. All key links from components to api/community.ts are wired and functional.
+No gaps found. All 12 observable truths verified. All 8 requirement IDs (FEED-01 through FEED-08) satisfied. Legacy postService.ts deleted with zero remaining references. All key links from components to api/community.ts are wired.
+
+**Correction from previous verification:** The upload purpose string is `'POST'` (not `'COMMUNITY_POST'` as previously documented). This matches the backend enum and is correct behavior.
 
 Minor notes:
 - The `as any` cast in feed/page.tsx line 177 is a type-safety gap but does not affect functionality.
@@ -117,5 +127,5 @@ Minor notes:
 
 ---
 
-_Verified: 2026-03-07T15:30:00Z_
+_Verified: 2026-03-07T18:45:00Z_
 _Verifier: Claude (gsd-verifier)_
