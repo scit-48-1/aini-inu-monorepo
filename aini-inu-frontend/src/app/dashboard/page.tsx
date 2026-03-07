@@ -4,7 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useProfile } from '@/hooks/useProfile';
 import { threadService } from '@/services/api/threadService';
 import { memberService } from '@/services/api/memberService';
-import { getRooms } from '@/api/chat';
+import { getRooms, getRoom } from '@/api/chat';
+import { useUserStore } from '@/store/useUserStore';
 import { AIBanner } from '@/components/dashboard/AIBanner';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { RecentFriends } from '@/components/dashboard/RecentFriends';
@@ -56,16 +57,31 @@ export default function DashboardPage() {
         setGrassData(walkStats.value);
       }
 
-      // Recent Friends from Chat History -- ChatRoomSummaryResponse lacks partner details,
-      // so we show room IDs as placeholder friends for now
+      // Recent Friends from Chat History -- fetch room details to extract partner memberId
       if (roomsRes.status === 'fulfilled' && roomsRes.value?.content) {
-        const friends = roomsRes.value.content.slice(0, 5).map((r) => ({
-          id: String(r.chatRoomId),
-          roomId: String(r.chatRoomId),
-          name: `Chat ${r.chatRoomId}`,
-          img: '/AINIINU_ROGO_B.png',
-          score: 7.0,
-        }));
+        const roomSummaries = roomsRes.value.content.slice(0, 5);
+        const detailResults = await Promise.allSettled(
+          roomSummaries.map((r) => getRoom(r.chatRoomId))
+        );
+        const currentId = Number(useUserStore.getState().profile?.id) || 0;
+        const friends = detailResults
+          .map((res, i) => {
+            if (res.status !== 'fulfilled') return null;
+            const detail = res.value;
+            const partner = detail.participants.find(
+              (p) => p.memberId !== currentId && !p.left
+            );
+            if (!partner) return null;
+            const petNames = partner.pets?.map((p) => p.name).join(', ');
+            return {
+              id: String(partner.memberId),
+              roomId: String(detail.chatRoomId),
+              name: petNames || `Member ${partner.memberId}`,
+              img: '/AINIINU_ROGO_B.png',
+              score: 7.0,
+            };
+          })
+          .filter(Boolean) as { id: string; roomId: string; name: string; img: string; score: number }[];
         setRecentFriends(friends);
       }
     } catch (e) {

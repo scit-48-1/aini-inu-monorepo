@@ -52,7 +52,7 @@ export const RecentFriends: React.FC<RecentFriendsProps> = ({ friends }) => {
         <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4 -mx-2 px-2">
           {friends.map((friend) => (
             <Link key={friend.id} href={`/profile/${friend.id}`}>
-              <Card interactive className="min-w-[160px] p-5">
+              <Card interactive className="min-w-[160px] max-w-[200px] flex-shrink-0 p-5">
                 <div className="relative mb-4">
                   <img src={friend.img} alt={friend.name} className="w-full aspect-square rounded-[32px] object-cover shadow-lg transition-transform" />
                   <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center text-red-500 shadow-md">
@@ -69,7 +69,7 @@ export const RecentFriends: React.FC<RecentFriendsProps> = ({ friends }) => {
 
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="min-w-[160px] flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 rounded-[40px] text-zinc-300 hover:border-amber-500 hover:text-amber-500 transition-all"
+            className="min-w-[160px] max-w-[200px] flex-shrink-0 flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 rounded-[40px] text-zinc-300 hover:border-amber-500 hover:text-amber-500 transition-all"
           >
             <PlusCircle size={32} className="mb-2" />
             <Typography variant="label">친구 추가</Typography>
