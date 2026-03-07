@@ -368,6 +368,7 @@ export default function ChatRoomPage() {
           messages={messages}
           pendingMessages={pendingMessages}
           currentMemberId={currentMemberId}
+          participants={room.participants}
           onLoadOlder={handleLoadOlder}
           hasMore={hasMore}
           isLoadingOlder={isLoadingOlder}

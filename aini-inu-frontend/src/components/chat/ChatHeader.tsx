@@ -6,6 +6,8 @@ import { Typography } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 import type { ChatRoomDetailResponse, WalkConfirmResponse } from '@/api/chat';
+import { UserAvatar } from '@/components/common/UserAvatar';
+import { GroupAvatar } from '@/components/common/GroupAvatar';
 
 interface ChatHeaderProps {
   room: ChatRoomDetailResponse;
@@ -23,7 +25,7 @@ interface ChatHeaderProps {
 function getPartnerDisplay(
   room: ChatRoomDetailResponse,
   currentMemberId: number,
-): { label: string; petNames: string[] } {
+): { label: string; petNames: string[]; profileImages: (string | null)[]; isGroup: boolean } {
   const others = room.participants.filter(
     (p) => p.memberId !== currentMemberId && !p.left,
   );
@@ -35,6 +37,8 @@ function getPartnerDisplay(
     return {
       label: nickname || `Member ${partner?.memberId ?? ''}`,
       petNames,
+      profileImages: [partner?.profileImageUrl ?? null],
+      isGroup: false,
     };
   }
 
@@ -46,6 +50,8 @@ function getPartnerDisplay(
   return {
     label: nicknames.join(', ') || `Group (${others.length})`,
     petNames: allPets,
+    profileImages: others.slice(0, 4).map((p) => p.profileImageUrl),
+    isGroup: true,
   };
 }
 
@@ -67,7 +73,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onCancelConfirm,
   onLeave,
 }) => {
-  const { label, petNames } = getPartnerDisplay(room, currentMemberId);
+  const { label, petNames, profileImages, isGroup } = getPartnerDisplay(room, currentMemberId);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -103,12 +109,16 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           onClick={onShowInfoToggle}
         >
           <div className="relative">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-[16px] shadow-lg group-hover:scale-105 transition-transform duration-500 p-0">
-              <img
-                src="/AINIINU_ROGO_B.png"
-                alt={label}
-                className="w-full h-full object-cover rounded-[16px]"
-              />
+            <div className="w-10 h-10 md:w-12 md:h-12 shadow-lg group-hover:scale-105 transition-transform duration-500">
+              {isGroup ? (
+                <GroupAvatar images={profileImages} size="md" className="w-full h-full" />
+              ) : (
+                <img
+                  src={profileImages[0] || '/AINIINU_ROGO_B.png'}
+                  alt={label}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              )}
             </div>
             {/* Connection mode indicator */}
             <div

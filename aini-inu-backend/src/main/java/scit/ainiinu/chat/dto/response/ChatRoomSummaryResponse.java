@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -24,6 +25,8 @@ public class ChatRoomSummaryResponse {
     private String displayName;
     @Schema(description = "lastMessage 값입니다.", example = "강아지와 즐거운 산책을 했어요.")
     private ChatMessageResponse lastMessage;
+    @Schema(description = "참여자 프로필 이미지 목록입니다 (본인 제외, 최대 4명).", example = "[\"https://example.com/profile.jpg\"]")
+    private List<String> participantProfileImages;
     @Schema(description = "수정 시각(UTC)입니다.", example = "2026-03-05T01:20:00Z")
     private LocalDateTime updatedAt;
 }

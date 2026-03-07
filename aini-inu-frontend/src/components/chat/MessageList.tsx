@@ -1,15 +1,17 @@
 'use client';
 
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { RefreshCw, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { ChatMessageResponse } from '@/api/chat';
+import type { ChatMessageResponse, ChatParticipantResponse } from '@/api/chat';
 import type { PendingMessage } from '@/store/useChatStore';
+import { UserAvatar } from '@/components/common/UserAvatar';
 
 interface MessageListProps {
   messages: ChatMessageResponse[];
   pendingMessages: PendingMessage[];
   currentMemberId: number;
+  participants: ChatParticipantResponse[];
   onLoadOlder: () => Promise<void>;
   hasMore: boolean;
   isLoadingOlder: boolean;
@@ -41,11 +43,19 @@ export const MessageList: React.FC<MessageListProps> = ({
   messages,
   pendingMessages,
   currentMemberId,
+  participants,
   onLoadOlder,
   hasMore,
   isLoadingOlder,
   onRetry,
 }) => {
+  const participantMap = useMemo(() => {
+    const map = new Map<number, ChatParticipantResponse>();
+    for (const p of participants) {
+      map.set(p.memberId, p);
+    }
+    return map;
+  }, [participants]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const isInitialLoad = useRef(true);
@@ -133,22 +143,43 @@ export const MessageList: React.FC<MessageListProps> = ({
         const isSameSender =
           prevMsg?.sender.memberId === msg.sender.memberId;
         const timeStr = formatTime(msg.sentAt);
+        const sender = !isMe ? participantMap.get(msg.sender.memberId) : undefined;
+        const showAvatar = !isMe && !isSameSender;
 
         return (
           <div
             key={msg.id}
             className={cn(
-              'flex gap-3 max-w-[85%] md:max-w-[70%] animate-in fade-in slide-in-from-bottom-2 duration-300',
+              'flex gap-2 max-w-[85%] md:max-w-[70%] animate-in fade-in slide-in-from-bottom-2 duration-300',
               isMe ? 'ml-auto flex-row-reverse' : 'mr-auto',
               isSameSender ? 'mt-1' : 'mt-4',
             )}
           >
+            {/* Avatar column for other's messages */}
+            {!isMe && (
+              <div className="w-8 shrink-0 flex flex-col items-center justify-end">
+                {showAvatar && (
+                  <UserAvatar
+                    src={sender?.profileImageUrl || '/AINIINU_ROGO_B.png'}
+                    alt={sender?.nickname || ''}
+                    size="sm"
+                    className="shadow-md"
+                  />
+                )}
+              </div>
+            )}
             <div
               className={cn(
                 'flex flex-col',
                 isMe ? 'items-end' : 'items-start',
               )}
             >
+              {/* Nickname label when sender changes */}
+              {showAvatar && sender && (
+                <span className="text-[10px] font-bold text-zinc-400 mb-1 ml-1">
+                  {sender.nickname || `Member ${sender.memberId}`}
+                </span>
+              )}
               <div
                 className={cn(
                   'flex items-end gap-1.5',

@@ -8,11 +8,12 @@ interface UserAvatarProps {
   alt?: string;
   /** 24시간 이내 다이어리 작성 여부 — true일 때만 amber ring 표시 */
   hasRecentDiary?: boolean;
-  size?: 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
 
 const sizeConfig = {
+  sm: { wrapper: 'w-8 h-8', imgBorder: 'border' },
   md: { wrapper: 'w-16 h-16', imgBorder: 'border-2' },
   lg: { wrapper: 'w-24 h-24', imgBorder: 'border-[3px]' },
   xl: { wrapper: 'w-24 h-24 lg:w-44 lg:h-44', imgBorder: 'border-4' },

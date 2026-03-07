@@ -14,6 +14,8 @@ public class ChatParticipantResponse {
     private Long memberId;
     @Schema(description = "회원 닉네임입니다.", example = "홍길동")
     private String nickname;
+    @Schema(description = "회원 프로필 이미지 URL입니다.", example = "https://example.com/profile.jpg")
+    private String profileImageUrl;
     @Schema(description = "참여자의 산책 확정 상태입니다.", example = "UNCONFIRMED", allowableValues = {"UNCONFIRMED", "CONFIRMED"})
     private String walkConfirmState;
     @Schema(description = "left 값입니다.", example = "true")

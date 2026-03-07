@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getRooms, type ChatRoomSummaryResponse } from '@/api/chat';
 import { ChatStartModal } from '@/components/chat/ChatStartModal';
+import { GroupAvatar } from '@/components/common/GroupAvatar';
 
 type ChatTab = 'DM' | 'WALK' | 'LOST_PET';
 
@@ -208,17 +209,25 @@ export function ChatList() {
                   <div className="relative shrink-0">
                     <div
                       className={cn(
-                        'w-12 h-12 rounded-[18px] p-0.5 shadow-md transition-transform duration-500',
+                        'w-12 h-12 rounded-full p-0.5 shadow-md transition-transform duration-500',
                         currentId === room.chatRoomId
                           ? 'bg-white/20'
                           : 'bg-white',
                       )}
                     >
-                      <img
-                        src="/AINIINU_ROGO_B.png"
-                        alt={getRoomDisplayName(room)}
-                        className="w-full h-full rounded-[16px] object-cover"
-                      />
+                      {room.participantProfileImages?.length > 1 ? (
+                        <GroupAvatar
+                          images={room.participantProfileImages}
+                          size="md"
+                          className="w-full h-full"
+                        />
+                      ) : (
+                        <img
+                          src={room.participantProfileImages?.[0] || '/AINIINU_ROGO_B.png'}
+                          alt={getRoomDisplayName(room)}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      )}
                     </div>
                   </div>
 

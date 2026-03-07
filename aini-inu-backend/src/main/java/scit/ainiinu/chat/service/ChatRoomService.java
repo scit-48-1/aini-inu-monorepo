@@ -72,10 +72,12 @@ public class ChatRoomService {
                 .map(ChatParticipant::getMemberId)
                 .distinct()
                 .toList();
-        Map<Long, String> nicknamesByMemberId = memberIds.isEmpty()
+        Map<Long, Member> membersById = memberIds.isEmpty()
                 ? Collections.emptyMap()
                 : memberRepository.findAllById(memberIds).stream()
-                        .collect(Collectors.toMap(Member::getId, Member::getNickname));
+                        .collect(Collectors.toMap(Member::getId, m -> m));
+        Map<Long, String> nicknamesByMemberId = membersById.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getNickname()));
 
         Map<Long, List<ChatParticipant>> participantsByRoom = allParticipants.stream()
                 .collect(Collectors.groupingBy(ChatParticipant::getChatRoomId));
@@ -83,7 +85,15 @@ public class ChatRoomService {
         Slice<ChatRoomSummaryResponse> mapped = rooms.map(room -> {
             List<ChatParticipant> roomParticipants = participantsByRoom.getOrDefault(room.getId(), List.of());
             String displayName = computeDisplayName(memberId, roomParticipants, nicknamesByMemberId);
-            return toSummaryResponse(room, lastMessages.get(room.getId()), displayName);
+            List<String> profileImages = roomParticipants.stream()
+                    .filter(p -> !p.getMemberId().equals(memberId) && !p.isLeft())
+                    .limit(4)
+                    .map(p -> {
+                        Member m = membersById.get(p.getMemberId());
+                        return m != null ? m.getProfileImageUrl() : null;
+                    })
+                    .toList();
+            return toSummaryResponse(room, lastMessages.get(room.getId()), displayName, profileImages);
         });
         return SliceResponse.of(mapped);
     }
@@ -189,7 +199,7 @@ public class ChatRoomService {
         return otherNames.get(0) + ", " + otherNames.get(1) + " 외 " + (otherNames.size() - 2) + "명";
     }
 
-    private ChatRoomSummaryResponse toSummaryResponse(ChatRoom room, Message lastMsg, String displayName) {
+    private ChatRoomSummaryResponse toSummaryResponse(ChatRoom room, Message lastMsg, String displayName, List<String> participantProfileImages) {
         ChatMessageResponse lastMessage = lastMsg != null ? toMessageResponse(lastMsg) : null;
 
         return ChatRoomSummaryResponse.builder()
@@ -199,6 +209,7 @@ public class ChatRoomService {
                 .origin(room.getOrigin().name())
                 .roomTitle(room.getRoomTitle())
                 .displayName(displayName)
+                .participantProfileImages(participantProfileImages)
                 .lastMessage(lastMessage)
                 .updatedAt(room.getUpdatedAt())
                 .build();
@@ -208,12 +219,12 @@ public class ChatRoomService {
         List<ChatParticipant> participants = new ArrayList<>(chatParticipantRepository.findAllByChatRoomId(room.getId()));
         participants.sort(Comparator.comparing(ChatParticipant::getId));
 
-        // Batch-fetch member nicknames
+        // Batch-fetch members
         List<Long> memberIds = participants.stream().map(ChatParticipant::getMemberId).distinct().toList();
-        Map<Long, String> nicknamesByMemberId = memberIds.isEmpty()
+        Map<Long, Member> membersById = memberIds.isEmpty()
                 ? Collections.emptyMap()
                 : memberRepository.findAllById(memberIds).stream()
-                        .collect(Collectors.toMap(Member::getId, Member::getNickname));
+                        .collect(Collectors.toMap(Member::getId, m -> m));
 
         List<Long> participantIds = participants.stream().map(ChatParticipant::getId).toList();
         List<ChatParticipantPet> participantPets = participantIds.isEmpty()
@@ -241,13 +252,17 @@ public class ChatRoomService {
         }
 
         List<ChatParticipantResponse> participantResponses = participants.stream()
-                .map(participant -> ChatParticipantResponse.builder()
-                        .memberId(participant.getMemberId())
-                        .nickname(nicknamesByMemberId.getOrDefault(participant.getMemberId(), null))
-                        .walkConfirmState(participant.getWalkConfirmState().name())
-                        .left(participant.isLeft())
-                        .pets(petResponseByParticipant.getOrDefault(participant.getId(), List.of()))
-                        .build())
+                .map(participant -> {
+                    Member member = membersById.get(participant.getMemberId());
+                    return ChatParticipantResponse.builder()
+                            .memberId(participant.getMemberId())
+                            .nickname(member != null ? member.getNickname() : null)
+                            .profileImageUrl(member != null ? member.getProfileImageUrl() : null)
+                            .walkConfirmState(participant.getWalkConfirmState().name())
+                            .left(participant.isLeft())
+                            .pets(petResponseByParticipant.getOrDefault(participant.getId(), List.of()))
+                            .build();
+                })
                 .toList();
 
         ChatMessageResponse lastMessage = messageRepository.findTopByChatRoomIdOrderByIdDesc(room.getId())
