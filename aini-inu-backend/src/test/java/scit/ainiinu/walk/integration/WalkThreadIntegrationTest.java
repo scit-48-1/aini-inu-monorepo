@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -196,6 +197,151 @@ class WalkThreadIntegrationTest {
                 .collect(Collectors.toSet());
         assertThat(activeMemberIds)
                 .containsExactlyInAnyOrder(author.getId(), applicant.getId());
+    }
+
+    @Test
+    @DisplayName("스레드 신청 후 /threads/my/joined에서 참여 중인 산책이 조회된다")
+    void applyThread_thenGetMyJoined_returnsSingleThread() throws Exception {
+        // given — create author + applicant
+        Member author = memberRepository.save(Member.builder()
+                .email("joined-author@test.com")
+                .nickname("jnauthor")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+        Member applicant = memberRepository.save(Member.builder()
+                .email("joined-applicant@test.com")
+                .nickname("jnapply")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+
+        String authorToken = jwtTokenProvider.generateAccessToken(author.getId());
+        String applicantToken = jwtTokenProvider.generateAccessToken(applicant.getId());
+
+        // create thread
+        ThreadCreateRequest createRequest = new ThreadCreateRequest();
+        createRequest.setTitle("참여 테스트 산책");
+        createRequest.setDescription("참여 확인용");
+        createRequest.setWalkDate(LocalDate.now().plusDays(1));
+        createRequest.setStartTime(LocalDateTime.now().plusDays(1));
+        createRequest.setEndTime(LocalDateTime.now().plusDays(1).plusHours(1));
+        createRequest.setChatType("GROUP");
+        createRequest.setMaxParticipants(5);
+        createRequest.setAllowNonPetOwner(true);
+        createRequest.setIsVisibleAlways(true);
+        ThreadCreateRequest.LocationRequest location = new ThreadCreateRequest.LocationRequest();
+        location.setPlaceName("보라매공원");
+        location.setLatitude(37.49);
+        location.setLongitude(126.93);
+        location.setAddress("동작구");
+        createRequest.setLocation(location);
+        createRequest.setPetIds(List.of(1L));
+
+        String createBody = mockMvc.perform(post("/api/v1/threads")
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + authorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        Long threadId = objectMapper.readTree(createBody).path("data").path("id").asLong();
+
+        // apply
+        ThreadApplyRequest applyRequest = new ThreadApplyRequest();
+        applyRequest.setPetIds(List.of(2L));
+        mockMvc.perform(post("/api/v1/threads/{threadId}/apply", threadId)
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + applicantToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(applyRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.applicationStatus").value("JOINED"));
+
+        // when — get my joined threads
+        mockMvc.perform(get("/api/v1/threads/my/joined")
+                        .header("Authorization", "Bearer " + applicantToken))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].id").value(threadId))
+                .andExpect(jsonPath("$.data[0].title").value("참여 테스트 산책"))
+                .andExpect(jsonPath("$.data[0].isApplied").value(true));
+
+        // author should NOT see this in their joined list (they are the author)
+        mockMvc.perform(get("/api/v1/threads/my/joined")
+                        .header("Authorization", "Bearer " + authorToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("스레드 신청 취소 후 /threads/my/joined에서 사라진다")
+    void cancelApply_thenGetMyJoined_empty() throws Exception {
+        // given
+        Member author = memberRepository.save(Member.builder()
+                .email("cancel-author@test.com")
+                .nickname("cnauthor")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+        Member applicant = memberRepository.save(Member.builder()
+                .email("cancel-applicant@test.com")
+                .nickname("cnapply")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+
+        String authorToken = jwtTokenProvider.generateAccessToken(author.getId());
+        String applicantToken = jwtTokenProvider.generateAccessToken(applicant.getId());
+
+        ThreadCreateRequest createRequest = new ThreadCreateRequest();
+        createRequest.setTitle("취소 테스트 산책");
+        createRequest.setDescription("취소 확인용");
+        createRequest.setWalkDate(LocalDate.now().plusDays(1));
+        createRequest.setStartTime(LocalDateTime.now().plusDays(1));
+        createRequest.setEndTime(LocalDateTime.now().plusDays(1).plusHours(1));
+        createRequest.setChatType("GROUP");
+        createRequest.setMaxParticipants(5);
+        createRequest.setAllowNonPetOwner(true);
+        createRequest.setIsVisibleAlways(true);
+        ThreadCreateRequest.LocationRequest loc = new ThreadCreateRequest.LocationRequest();
+        loc.setPlaceName("양재천");
+        loc.setLatitude(37.47);
+        loc.setLongitude(127.04);
+        loc.setAddress("서초구");
+        createRequest.setLocation(loc);
+        createRequest.setPetIds(List.of(1L));
+
+        String createBody = mockMvc.perform(post("/api/v1/threads")
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + authorToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        Long threadId = objectMapper.readTree(createBody).path("data").path("id").asLong();
+
+        // apply
+        ThreadApplyRequest applyRequest = new ThreadApplyRequest();
+        applyRequest.setPetIds(List.of(2L));
+        mockMvc.perform(post("/api/v1/threads/{threadId}/apply", threadId)
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + applicantToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(applyRequest)))
+                .andExpect(status().isOk());
+
+        // cancel
+        mockMvc.perform(delete("/api/v1/threads/{threadId}/apply", threadId)
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + applicantToken))
+                .andExpect(status().isOk());
+
+        // when — get my joined threads after cancellation
+        mockMvc.perform(get("/api/v1/threads/my/joined")
+                        .header("Authorization", "Bearer " + applicantToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(0));
     }
 
     @Test

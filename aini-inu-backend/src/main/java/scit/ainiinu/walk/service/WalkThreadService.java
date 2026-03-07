@@ -330,6 +330,24 @@ public class WalkThreadService {
         return toBatchSummaryResponses(activeThreads, memberId);
     }
 
+    public List<ThreadSummaryResponse> getMyJoinedThreads(Long memberId) {
+        List<WalkThreadApplication> applications = walkThreadApplicationRepository.findAllByMemberIdAndStatus(
+                memberId, WalkThreadApplicationStatus.JOINED);
+        List<Long> threadIds = applications.stream().map(WalkThreadApplication::getThreadId).toList();
+        if (threadIds.isEmpty()) {
+            return List.of();
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        List<WalkThread> threads = walkThreadRepository.findAllById(threadIds).stream()
+                .filter(thread -> thread.getStatus() == WalkThreadStatus.RECRUITING)
+                .filter(thread -> !thread.isExpired(now))
+                .filter(thread -> !thread.isAuthor(memberId))
+                .toList();
+
+        return toBatchSummaryResponses(threads, memberId);
+    }
+
     private List<ThreadSummaryResponse> toBatchSummaryResponses(List<WalkThread> threads, Long memberId) {
         if (threads.isEmpty()) {
             return List.of();

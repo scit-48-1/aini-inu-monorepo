@@ -175,6 +175,10 @@ export async function getMyActiveThread(): Promise<ThreadSummaryResponse[]> {
   return apiClient.get<ThreadSummaryResponse[]>('/threads/my/active');
 }
 
+export async function getMyJoinedThreads(): Promise<ThreadSummaryResponse[]> {
+  return apiClient.get<ThreadSummaryResponse[]>('/threads/my/joined');
+}
+
 export async function getThreadMap(params: {
   latitude: number;
   longitude: number;

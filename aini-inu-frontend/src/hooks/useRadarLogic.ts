@@ -9,6 +9,7 @@ import {
   getThread,
   deleteThread,
   getMyActiveThread,
+  getMyJoinedThreads,
 } from '@/api/threads';
 import type {
   ThreadSummaryResponse,
@@ -67,6 +68,9 @@ export function useRadarLogic() {
 
   // My active thread
   const [myActiveThread, setMyActiveThread] = useState<ThreadSummaryResponse | null>(null);
+
+  // My joined threads
+  const [myJoinedThreads, setMyJoinedThreads] = useState<ThreadSummaryResponse[]>([]);
 
   // Date filter (default: from today)
   const [dateFrom, setDateFrom] = useState<string>(() => new Date().toISOString().slice(0, 10));
@@ -143,6 +147,9 @@ export function useRadarLogic() {
     getMyActiveThread()
       .then(list => setMyActiveThread(list.length > 0 ? list[0] : null))
       .catch(() => {});
+    getMyJoinedThreads()
+      .then(setMyJoinedThreads)
+      .catch(() => {});
   }, []);
 
   // ---------------------------------------------------------------
@@ -198,6 +205,9 @@ export function useRadarLogic() {
     await fetchThreadData(coords, dateFrom, dateTo, radius);
     getMyActiveThread()
       .then(list => setMyActiveThread(list.length > 0 ? list[0] : null))
+      .catch(() => {});
+    getMyJoinedThreads()
+      .then(setMyJoinedThreads)
       .catch(() => {});
     setIsRefreshing(false);
   }, [fetchThreadData, coordinates, searchCoordinates, dateFrom, dateTo, radius]);
@@ -271,6 +281,8 @@ export function useRadarLogic() {
     startEdit,
     // My active thread
     myActiveThread,
+    // My joined threads
+    myJoinedThreads,
     // Date filter
     dateFrom,
     dateTo,

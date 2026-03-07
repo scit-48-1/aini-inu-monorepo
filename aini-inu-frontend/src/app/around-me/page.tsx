@@ -45,6 +45,7 @@ export default function AroundMePage() {
     editingThreadId, startEdit,
     handleDeleteThread, handleRefresh,
     myActiveThread,
+    myJoinedThreads,
     dateFrom, dateTo, setDateFrom, setDateTo,
     radius, setRadius,
     searchCoordinates, setSearchCoordinates,
@@ -112,6 +113,7 @@ export default function AroundMePage() {
             radius={radius}
             onMoveEnd={handleMapMoveEnd}
             myActiveThread={myActiveThread}
+            myJoinedThreads={myJoinedThreads}
           />
         )}
 
@@ -129,6 +131,7 @@ export default function AroundMePage() {
             onDeleteThread={handleDeleteThread}
             onEditThread={startEdit}
             myActiveThread={myActiveThread}
+            myJoinedThreads={myJoinedThreads}
           />
         )}
 

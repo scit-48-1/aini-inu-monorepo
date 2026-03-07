@@ -301,6 +301,49 @@ class WalkThreadControllerTest {
     }
 
     @Nested
+    @DisplayName("내 참여 중인 산책 조회 API")
+    class GetMyJoinedThreads {
+
+        @Test
+        @WithMockUser
+        @DisplayName("성공: 참여 중인 산책 목록을 반환한다")
+        void getMyJoinedThreads_success() throws Exception {
+            // given
+            ThreadSummaryResponse summary = ThreadSummaryResponse.builder()
+                    .id(10L)
+                    .title("서울숲 산책")
+                    .isApplied(true)
+                    .build();
+            given(walkThreadService.getMyJoinedThreads(anyLong())).willReturn(List.of(summary));
+
+            // when & then
+            mockMvc.perform(get("/api/v1/threads/my/joined"))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data[0].id").value(10L))
+                    .andExpect(jsonPath("$.data[0].title").value("서울숲 산책"))
+                    .andExpect(jsonPath("$.data[0].isApplied").value(true));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("성공: 참여 중인 산책이 없으면 빈 배열을 반환한다")
+        void getMyJoinedThreads_empty() throws Exception {
+            // given
+            given(walkThreadService.getMyJoinedThreads(anyLong())).willReturn(List.of());
+
+            // when & then
+            mockMvc.perform(get("/api/v1/threads/my/joined"))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data").isArray())
+                    .andExpect(jsonPath("$.data").isEmpty());
+        }
+    }
+
+    @Nested
     @DisplayName("스레드 수정 API")
     class PatchThread {
 

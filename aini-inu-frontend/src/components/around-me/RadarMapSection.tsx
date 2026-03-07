@@ -87,6 +87,7 @@ interface RadarMapSectionProps {
   radius?: number;
   onMoveEnd?: (lat: number, lng: number) => void;
   myActiveThread?: ThreadSummaryResponse | null;
+  myJoinedThreads?: ThreadSummaryResponse[];
 }
 
 export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
@@ -105,6 +106,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
   radius,
   onMoveEnd,
   myActiveThread,
+  myJoinedThreads,
 }) => {
   const router = useRouter();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -137,6 +139,13 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
       lat: myActiveThread.latitude,
       lng: myActiveThread.longitude,
     });
+  }
+
+  // Always include my joined thread markers on the map (even if outside search area)
+  for (const jt of (myJoinedThreads ?? [])) {
+    if (!threadMarkers.some((m) => m.id === String(jt.id))) {
+      threadMarkers.push({ id: String(jt.id), lat: jt.latitude, lng: jt.longitude });
+    }
   }
 
   // Convert hotspots to map markers using Seoul district coordinate lookup

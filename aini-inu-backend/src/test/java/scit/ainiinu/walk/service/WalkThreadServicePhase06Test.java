@@ -550,6 +550,116 @@ class WalkThreadServicePhase06Test {
         }
     }
 
+    @Nested
+    @DisplayName("내 참여 중인 산책 조회")
+    class GetMyJoinedThreads {
+
+        @Test
+        @DisplayName("JOINED 상태의 RECRUITING 스레드만 반환한다")
+        void getMyJoinedThreads_returnsOnlyRecruitingJoinedThreads() {
+            // given
+            Long memberId = 5L;
+            WalkThread recruitingThread = buildFutureThread(10L, 1L); // author=1, not memberId
+            WalkThread completedThread = buildFutureThread(20L, 2L);
+            ReflectionTestUtils.setField(completedThread, "status", WalkThreadStatus.COMPLETED);
+
+            WalkThreadApplication app1 = WalkThreadApplication.joined(10L, memberId, 100L);
+            WalkThreadApplication app2 = WalkThreadApplication.joined(20L, memberId, 200L);
+
+            given(walkThreadApplicationRepository.findAllByMemberIdAndStatus(memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of(app1, app2));
+            given(walkThreadRepository.findAllById(List.of(10L, 20L)))
+                    .willReturn(List.of(recruitingThread, completedThread));
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(10L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.<Object[]>of(new Object[]{10L, 1L}));
+            given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(10L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of(app1));
+
+            // when
+            List<ThreadSummaryResponse> result = walkThreadService.getMyJoinedThreads(memberId);
+
+            // then
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).getId()).isEqualTo(10L);
+            assertThat(result.get(0).isApplied()).isTrue();
+        }
+
+        @Test
+        @DisplayName("만료된 스레드는 제외한다")
+        void getMyJoinedThreads_excludesExpired() {
+            // given
+            Long memberId = 5L;
+            WalkThread expiredThread = WalkThread.builder()
+                    .authorId(1L)
+                    .title("만료된 모집")
+                    .description("이미 지난 모집")
+                    .walkDate(LocalDate.now().minusDays(1))
+                    .startTime(LocalDateTime.now().minusHours(3))
+                    .endTime(LocalDateTime.now().minusHours(2))
+                    .chatType(WalkChatType.GROUP)
+                    .maxParticipants(5)
+                    .allowNonPetOwner(true)
+                    .isVisibleAlways(true)
+                    .placeName("서울숲")
+                    .latitude(BigDecimal.valueOf(37.5445))
+                    .longitude(BigDecimal.valueOf(127.0445))
+                    .address("성동구")
+                    .status(WalkThreadStatus.RECRUITING)
+                    .build();
+            ReflectionTestUtils.setField(expiredThread, "id", 10L);
+
+            WalkThreadApplication app = WalkThreadApplication.joined(10L, memberId, 100L);
+
+            given(walkThreadApplicationRepository.findAllByMemberIdAndStatus(memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of(app));
+            given(walkThreadRepository.findAllById(List.of(10L)))
+                    .willReturn(List.of(expiredThread));
+
+            // when
+            List<ThreadSummaryResponse> result = walkThreadService.getMyJoinedThreads(memberId);
+
+            // then
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("자신이 작성한 스레드는 제외한다")
+        void getMyJoinedThreads_excludesOwnThreads() {
+            // given
+            Long memberId = 5L;
+            WalkThread ownThread = buildFutureThread(10L, memberId); // author == memberId
+
+            WalkThreadApplication app = WalkThreadApplication.joined(10L, memberId, 100L);
+
+            given(walkThreadApplicationRepository.findAllByMemberIdAndStatus(memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of(app));
+            given(walkThreadRepository.findAllById(List.of(10L)))
+                    .willReturn(List.of(ownThread));
+
+            // when
+            List<ThreadSummaryResponse> result = walkThreadService.getMyJoinedThreads(memberId);
+
+            // then
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("참여 신청이 없으면 빈 리스트를 반환한다")
+        void getMyJoinedThreads_noApplications_emptyList() {
+            // given
+            Long memberId = 5L;
+            given(walkThreadApplicationRepository.findAllByMemberIdAndStatus(memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+
+            // when
+            List<ThreadSummaryResponse> result = walkThreadService.getMyJoinedThreads(memberId);
+
+            // then
+            assertThat(result).isEmpty();
+            then(walkThreadRepository).should(never()).findAllById(any());
+        }
+    }
+
     // --- Helper methods ---
 
     private WalkThread buildThread(Long threadId, Long authorId) {

@@ -21,6 +21,7 @@ interface RadarSidebarProps {
   onDeleteThread: (threadId: number) => void;
   onEditThread: (threadId: number) => void;
   myActiveThread?: ThreadSummaryResponse | null;
+  myJoinedThreads?: ThreadSummaryResponse[];
 }
 
 function getRemainingBadge(startTime: string, currentTime: Date): { label: string; expired: boolean } {
@@ -53,13 +54,17 @@ export const RadarSidebar: React.FC<RadarSidebarProps> = ({
   onDeleteThread: _onDeleteThread,
   onEditThread: _onEditThread,
   myActiveThread,
+  myJoinedThreads,
 }) => {
   const [sortBy, setSortBy] = useState<'DISTANCE' | 'TIME'>('DISTANCE');
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // Exclude my active thread from main list (it's pinned at top separately)
-  const filteredThreads = myActiveThread
-    ? threads.filter((t) => t.id !== myActiveThread.id)
+  // Exclude my active thread and joined threads from main list (they're pinned at top separately)
+  const excludedIds = new Set<number>();
+  if (myActiveThread) excludedIds.add(myActiveThread.id);
+  for (const jt of (myJoinedThreads ?? [])) excludedIds.add(jt.id);
+  const filteredThreads = excludedIds.size > 0
+    ? threads.filter((t) => !excludedIds.has(t.id))
     : threads;
 
   const sortedThreads = [...filteredThreads].sort((a, b) => {
@@ -156,6 +161,53 @@ export const RadarSidebar: React.FC<RadarSidebarProps> = ({
               </div>
             </div>
           </Card>
+        </div>
+      )}
+
+      {/* My joined threads — pinned below my active thread */}
+      {myJoinedThreads && myJoinedThreads.length > 0 && (
+        <div className="px-1 space-y-4">
+          {myJoinedThreads.map((jt) => (
+            <Card
+              key={jt.id}
+              interactive
+              className="relative p-6 bg-gradient-to-br from-emerald-50 to-white border-2 border-emerald-300 shadow-xl rounded-[48px] ring-2 ring-emerald-200/50"
+              onClick={() => onCardClick(jt.id)}
+            >
+              {/* Joined badge */}
+              <div className="absolute top-4 right-4 flex items-center gap-1 bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-md">
+                <Footprints size={10} /> 참여 중
+              </div>
+
+              {/* Content */}
+              <div className="flex gap-5">
+                <div className="relative shrink-0">
+                  <div className="w-20 h-20 rounded-[32px] bg-emerald-100 flex items-center justify-center border-4 border-white shadow-xl overflow-hidden">
+                    <Footprints size={28} className="text-emerald-400" />
+                  </div>
+                </div>
+                <div className="flex-1 space-y-2 pt-1 pr-16">
+                  <Typography variant="h3" className="text-lg font-black text-navy-900 line-clamp-1">
+                    {jt.title}
+                  </Typography>
+                  <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-bold">
+                    <MapPin size={10} className="text-emerald-500 shrink-0" />
+                    <span className="truncate max-w-[140px]">{jt.placeName}</span>
+                    <span className="text-emerald-500/40 mx-1">|</span>
+                    <span className="text-emerald-600 font-black">
+                      {formatDistance(calculateDistance(coordinates[0], coordinates[1], jt.latitude, jt.longitude))}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs font-black text-zinc-300 uppercase tracking-widest">
+                    <Users size={13} /> {jt.currentParticipants}/{jt.maxParticipants}
+                    <Badge variant="amber" className="bg-zinc-50 text-zinc-500 border-none text-[10px] px-2">
+                      {jt.chatType === 'INDIVIDUAL' ? '1:1' : '그룹'}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       )}
 
