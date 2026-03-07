@@ -135,10 +135,10 @@ export async function analyzeLostPet(
 
 export async function getMatches(
   lostPetId: number,
-  params: { sessionId: number } & PaginationParams,
+  params: { sessionId?: number } & PaginationParams,
 ): Promise<SliceResponse<LostPetMatchCandidateResponse>> {
   const query = new URLSearchParams();
-  query.set('sessionId', String(params.sessionId));
+  if (params.sessionId !== undefined) query.set('sessionId', String(params.sessionId));
   if (params.page !== undefined) query.set('page', String(params.page));
   if (params.size !== undefined) query.set('size', String(params.size));
   if (params.sort) query.set('sort', params.sort);
