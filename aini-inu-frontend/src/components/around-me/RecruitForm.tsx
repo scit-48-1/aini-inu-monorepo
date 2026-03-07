@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
+import { TimePickerInput } from '@/components/ui/TimePickerInput';
 import { toast } from 'sonner';
 import DaumPostcode from 'react-daum-postcode';
 import { createThread, updateThread, getThread } from '@/api/threads';
@@ -336,11 +337,10 @@ export const RecruitForm: React.FC<RecruitFormProps> = ({
             <Typography variant="label" className="text-navy-900 flex items-center gap-2">
               <Clock size={14} className="text-amber-500" /> 시작 시간 *
             </Typography>
-            <input
-              type="time"
+            <TimePickerInput
               value={form.startTime}
-              onChange={(e) => setForm({ ...form, startTime: e.target.value })}
-              className="w-full bg-white border border-zinc-200 rounded-2xl py-3 px-5 text-sm font-bold text-navy-900 focus:outline-none focus:border-amber-500 focus:ring-4 ring-amber-500/10 transition-all"
+              onChange={(v) => setForm({ ...form, startTime: v })}
+              placeholder="시작 시간 선택"
             />
           </div>
 
@@ -349,11 +349,10 @@ export const RecruitForm: React.FC<RecruitFormProps> = ({
             <Typography variant="label" className="text-navy-900 flex items-center gap-2">
               <Clock size={14} className="text-amber-500" /> 종료 시간
             </Typography>
-            <input
-              type="time"
+            <TimePickerInput
               value={form.endTime}
-              onChange={(e) => setForm({ ...form, endTime: e.target.value })}
-              className="w-full bg-white border border-zinc-200 rounded-2xl py-3 px-5 text-sm font-bold text-navy-900 focus:outline-none focus:border-amber-500 focus:ring-4 ring-amber-500/10 transition-all"
+              onChange={(v) => setForm({ ...form, endTime: v })}
+              placeholder="종료 시간 선택"
             />
           </div>
         </div>
