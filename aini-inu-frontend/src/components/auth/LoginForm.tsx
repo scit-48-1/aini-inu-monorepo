@@ -51,7 +51,7 @@ export function LoginForm() {
           type="email"
           required
           autoComplete="username"
-          className="w-full bg-zinc-50 border border-zinc-100 rounded-[24px] py-5 px-8 font-bold text-navy-900 focus:ring-8 ring-amber-500/5 outline-none transition-all"
+          className="w-full bg-zinc-50 border border-zinc-100 rounded-[24px] py-5 px-8 font-bold text-navy-900 text-base focus:ring-8 ring-amber-500/5 outline-none transition-all"
           placeholder="example@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -66,7 +66,7 @@ export function LoginForm() {
           type="password"
           required
           autoComplete="current-password"
-          className="w-full bg-zinc-50 border border-zinc-100 rounded-[24px] py-5 px-8 font-bold text-navy-900 focus:ring-8 ring-amber-500/5 outline-none transition-all"
+          className="w-full bg-zinc-50 border border-zinc-100 rounded-[24px] py-5 px-8 font-bold text-navy-900 text-base focus:ring-8 ring-amber-500/5 outline-none transition-all"
           placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

@@ -61,6 +61,18 @@
   }
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--navy-900);
+  -webkit-background-clip: text;
+  background-clip: text;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
