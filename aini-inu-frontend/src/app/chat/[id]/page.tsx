@@ -81,6 +81,9 @@ export default function ChatRoomPage() {
       return;
     }
 
+    // Clear previous room's messages when switching rooms
+    clearMessages();
+
     let cancelled = false;
 
     async function fetchInitial() {
@@ -180,7 +183,7 @@ export default function ChatRoomPage() {
     try {
       const serverMsg = await sendMessage(roomId, {
         content,
-        messageType: 'TEXT',
+        messageType: 'USER',
         clientMessageId,
       });
       removePendingMessage(clientMessageId);
@@ -219,7 +222,7 @@ export default function ChatRoomPage() {
       try {
         const serverMsg = await sendMessage(roomId, {
           content: pending.content,
-          messageType: 'TEXT',
+          messageType: 'USER',
           clientMessageId,
         });
         useChatStore.getState().removePendingMessage(clientMessageId);
