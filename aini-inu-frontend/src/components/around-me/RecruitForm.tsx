@@ -360,7 +360,7 @@ export const RecruitForm: React.FC<RecruitFormProps> = ({
         {/* ---- Description ---- */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Typography variant="label" className="text-navy-900">상세 설명</Typography>
+            <Typography variant="label" className="text-navy-900">상세 설명 *</Typography>
             <span
               className={cn(
                 'text-[11px] font-bold',
