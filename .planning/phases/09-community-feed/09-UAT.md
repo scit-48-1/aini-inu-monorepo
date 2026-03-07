@@ -1,86 +1,109 @@
 ---
 status: resolved
 phase: 09-community-feed
-source: [09-01-SUMMARY.md, 09-02-SUMMARY.md, 09-03-SUMMARY.md, 09-04-SUMMARY.md]
-started: 2026-03-07T06:50:00Z
-updated: 2026-03-07T07:30:00Z
+source: [09-01-SUMMARY.md, 09-02-SUMMARY.md, 09-03-SUMMARY.md, 09-04-SUMMARY.md, 09-05-SUMMARY.md, 09-06-SUMMARY.md]
+started: 2026-03-07T08:00:00Z
+updated: 2026-03-07T09:00:00Z
 ---
 
 ## Current Test
-<!-- OVERWRITE each test - shows where we are -->
 
 [testing complete]
 
 ## Tests
 
-### 1. Create a Post with Images
-expected: Open the create post modal. Select images — thumbnails appear as previews. Write content and submit. Post is created successfully (no upload purpose error) and appears in the feed with uploaded images displayed.
+### 1. Cold Start Smoke Test
+expected: Kill any running server/service. Clear ephemeral state. Start the application from scratch. Server boots without errors, seed/migration completes, and a primary query returns live data.
 result: pass
 
-### 2. Like a Post
-expected: Click the like button on a post. The like count increments immediately (optimistic update). No transaction error from the server. If the API call fails, the count rolls back to the previous value.
+### 2. Create a Post with Images
+expected: Open the create post modal. Select images -- thumbnails appear as previews. Write content and submit. Post is created successfully and appears in the feed with uploaded images displayed.
 result: pass
 
-### 3. Add a Comment
-expected: Expand a post's comment section. Type a comment and submit. The comment appears in the list with your author info (no NPE from server). The comment count on the post increments.
+### 3. Feed Infinite Scroll
+expected: Navigate to the feed page. Posts load with a loading spinner. Scroll to the bottom -- more posts load automatically via infinite scroll. The loading-more spinner appears briefly at the bottom.
 result: pass
 
-### 4. Delete a Comment (Permission-based)
+### 4. Like a Post
+expected: Click the like button on a post. The like count increments immediately (optimistic update). If you click again, the count decrements (unlike). No transaction errors from the server.
+result: pass
+
+### 5. Add a Comment
+expected: Expand a post's comment section. Type a comment and submit. The comment appears in the list with your author info. The comment count on the post increments.
+result: pass
+
+### 6. Delete a Comment (Permission-based)
 expected: On a comment you authored, a delete option is visible. On comments by others, delete is only visible if you are the post author. Clicking delete removes the comment from the list.
 result: pass
 
-### 5. Edit Own Post from Detail Modal
-expected: Navigate to your profile. Click on a post you created. In PostDetailModal, edit and delete buttons are visible. Click edit, modify content, save. The post updates with new content. On someone else's post, edit/delete buttons are not shown.
+### 7. Three-dot Dropdown Menu on FeedItem
+expected: On a post you authored in the feed, click the three-dot button. A dropdown menu appears with "edit" and "delete" options. On posts by others, the three-dot button is not shown.
 result: issue
-reported: "삭제하는 버튼은 점점점 모양의 이미지가 있는데 수정 버튼은 안보여. 점점점을 누르면 삭제 또는 수정 2가지의 기능을 선택해서 할 수 있도록 뜨게 할 수 있어?"
+reported: "2개의 옵션이 보이긴해. delete는 정상작동 하는데 edit은 클릭하면 '수정 기능 준비 중' 이렇게 알림이 나타나."
 severity: major
 
-### 6. Delete Own Post from Detail Modal
-expected: In PostDetailModal for your own post, click delete. The post is removed. The profile feed grid updates to reflect the deletion.
+### 8. Edit Own Post via Dropdown
+expected: On your own post, open the three-dot dropdown and click edit. An edit interface appears. Modify the content and save. The post updates with new content.
 result: issue
-reported: "삭제가 안되고 있어. 외래키 제약조건 위반 - post 테이블 삭제 시 comment 테이블에서 참조하고 있어서 FK constraint violation. 외래키 제거하고 인덱스와 참조값만 유지하라"
-severity: blocker
+reported: "edit은 클릭하면 '수정 기능 준비 중' 이렇게 알림이 나타나고 Modify 폼이 안나타나."
+severity: major
+
+### 9. Delete Own Post via Dropdown
+expected: On your own post, open the three-dot dropdown and click delete. A confirmation dialog appears. Confirm deletion. The post is removed from the feed/profile grid. No FK constraint errors.
+result: pass
+
+### 10. PostDetailModal Three-dot Menu
+expected: Open a post you authored in PostDetailModal (from profile). A three-dot dropdown in the header provides edit and delete options. Edit updates the post. Delete shows confirmation and removes the post.
+result: issue
+reported: "three-dot에서 수정과 삭제 버튼은 보이고, 삭제는 되는데 수정은 버튼 활성화가 안되어서 '수정 기능 준비 중' 입니다 라고 나타나."
+severity: major
 
 ## Summary
 
-total: 6
-passed: 4
-issues: 2
+total: 10
+passed: 7
+issues: 3
 pending: 0
 skipped: 0
 
 ## Gaps
 
-- truth: "Edit and delete buttons visible in PostDetailModal for own post, accessible via three-dot menu"
+- truth: "Edit option in FeedItem dropdown opens edit interface"
   status: resolved
-  reason: "User reported: 삭제하는 버튼은 점점점 모양의 이미지가 있는데 수정 버튼은 안보여. 점점점을 누르면 삭제 또는 수정 2가지의 기능을 선택해서 할 수 있도록 뜨게 할 수 있어?"
+  reason: "User reported: 2개의 옵션이 보이긴해. delete는 정상작동 하는데 edit은 클릭하면 '수정 기능 준비 중' 이렇게 알림이 나타나."
   severity: major
-  test: 5
-  root_cause: "Neither PostDetailModal nor FeedItem has a dropdown menu. PostDetailModal has edit/delete as bare footer buttons (edit works but not discoverable). FeedItem three-dot button hardcodes onClick to setShowDeleteConfirm(true) — no dropdown, no edit option."
+  test: 7
+  root_cause: "feed/page.tsx does not pass onEdit prop to FeedItem. FeedItem edit handler falls back to toast stub when onEdit is undefined (line 313)."
+  artifacts:
+    - path: "aini-inu-frontend/src/app/feed/page.tsx"
+      issue: "Missing onEdit prop on <FeedItem> (line 147-153)"
+    - path: "aini-inu-frontend/src/components/feed/FeedItem.tsx"
+      issue: "Toast stub at line 313 when onEdit is undefined"
+  missing:
+    - "Pass onEdit handler from feed/page.tsx to FeedItem"
+    - "Add inline edit UI or edit modal trigger in FeedItem"
+  debug_session: ".planning/debug/post-edit-stub.md"
+- truth: "Edit own post via dropdown shows edit form, saves updated content"
+  status: resolved
+  reason: "User reported: edit은 클릭하면 '수정 기능 준비 중' 이렇게 알림이 나타나고 Modify 폼이 안나타나."
+  severity: major
+  test: 8
+  root_cause: "Same as test 7 — FeedItem has no inline edit capability; relies on parent callback which is never provided."
+  artifacts:
+    - path: "aini-inu-frontend/src/components/feed/FeedItem.tsx"
+      issue: "No inline edit UI exists, only callback delegation"
+  missing:
+    - "Add inline editing (textarea + save/cancel) to FeedItem using updatePost API"
+  debug_session: ".planning/debug/post-edit-stub.md"
+- truth: "Edit option in PostDetailModal three-dot menu updates the post"
+  status: resolved
+  reason: "User reported: three-dot에서 수정과 삭제 버튼은 보이고, 삭제는 되는데 수정은 버튼 활성화가 안되어서 '수정 기능 준비 중' 입니다 라고 나타나."
+  severity: major
+  test: 10
+  root_cause: "PostDetailModal three-dot dropdown edit button likely fires toast stub instead of triggering the existing isEditing state. The inline edit implementation exists but the dropdown handler doesn't activate it."
   artifacts:
     - path: "aini-inu-frontend/src/components/profile/PostDetailModal.tsx"
-      issue: "Edit/delete are bare buttons in footer, no three-dot dropdown menu"
-    - path: "aini-inu-frontend/src/components/feed/FeedItem.tsx"
-      issue: "Three-dot button onClick hardcoded to delete confirmation, no dropdown, no edit"
+      issue: "Three-dot dropdown edit handler fires toast instead of setIsEditing(true)"
   missing:
-    - "Add dropdown/popover menu on three-dot click with edit and delete options in both components"
-  debug_session: ".planning/debug/post-detail-modal-missing-edit.md"
-- truth: "Post is deleted successfully and removed from profile feed grid"
-  status: resolved
-  reason: "User reported: 삭제가 안됨. FK constraint violation - comment 테이블이 post를 참조하여 삭제 불가. 외래키 제거하고 인덱스+참조값만 유지하라"
-  severity: blocker
-  test: 6
-  root_cause: "Comment.java and PostLike.java have @ManyToOne @JoinColumn to Post, causing Hibernate to auto-generate FK constraints. PostService.deletePost() calls postRepository.delete(post) without deleting child rows first."
-  artifacts:
-    - path: "aini-inu-backend/src/main/java/scit/ainiinu/community/entity/Comment.java"
-      issue: "@ManyToOne @JoinColumn(name='post_id') generates FK constraint blocking post deletion"
-    - path: "aini-inu-backend/src/main/java/scit/ainiinu/community/entity/PostLike.java"
-      issue: "@ManyToOne @JoinColumn(name='post_id') generates second FK constraint"
-    - path: "aini-inu-backend/src/main/java/scit/ainiinu/community/service/PostService.java"
-      issue: "deletePost() does not delete comments/likes before deleting post"
-  missing:
-    - "Replace @ManyToOne Post with @Column Long postId in Comment.java and PostLike.java"
-    - "Add deleteAllByPostId() to CommentRepository and PostLikeRepository"
-    - "Update PostService.deletePost() to bulk-delete children before parent"
-    - "Add DDL migration to drop existing FK constraints"
-  debug_session: ".planning/debug/post-delete-fk-violation.md"
+    - "Wire three-dot dropdown edit option to setIsEditing(true) to activate existing edit UI"
+  debug_session: ".planning/debug/post-edit-stub.md"
