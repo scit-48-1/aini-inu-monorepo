@@ -74,7 +74,7 @@ export const MessageList: React.FC<MessageListProps> = ({
     if (isNearBottom) {
       el.scrollTop = el.scrollHeight;
     }
-  }, [messages, pendingMessages]);
+  }, [messages.length, pendingMessages.length]);
 
   // Scroll position preservation after prepending older messages
   const preserveScrollOnPrepend = useCallback(() => {

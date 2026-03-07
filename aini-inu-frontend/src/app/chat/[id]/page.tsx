@@ -112,18 +112,19 @@ export default function ChatRoomPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
+  // Derive latest message ID as primitive to avoid re-firing on array ref changes
+  const latestMessageId =
+    messages.length > 0 ? messages[messages.length - 1]?.id : null;
+
   // Mark messages as read on mount and when new messages arrive
   useEffect(() => {
-    if (!room || messages.length === 0) return;
-
-    const latestMessage = messages[messages.length - 1];
-    if (!latestMessage) return;
+    if (!room || !latestMessageId) return;
 
     // Debounce 2 seconds
     if (markReadTimer.current) clearTimeout(markReadTimer.current);
     markReadTimer.current = setTimeout(() => {
       markMessagesRead(roomId, {
-        messageId: latestMessage.id,
+        messageId: latestMessageId,
         readAt: new Date().toISOString(),
       }).catch(() => {
         // Silent -- mark-read failure is non-critical
@@ -133,7 +134,7 @@ export default function ChatRoomPage() {
     return () => {
       if (markReadTimer.current) clearTimeout(markReadTimer.current);
     };
-  }, [room, messages, roomId]);
+  }, [room, latestMessageId, roomId]);
 
   // Load older messages (cursor pagination)
   const handleLoadOlder = useCallback(async () => {
