@@ -32,7 +32,7 @@ import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
 import type { WalkDiaryResponse, WalkDiaryCreateRequest } from '@/api/diaries';
-import { FeedPostType } from '@/types';
+import type { PostResponse } from '@/api/community';
 
 // --- Walk Stats helpers ---
 
@@ -150,7 +150,7 @@ export const MyProfileView: React.FC = () => {
   // Data state
   const [member, setMember] = useState<MemberResponse | null>(null);
   const [pets, setPets] = useState<PetResponse[]>([]);
-  const [posts, setPosts] = useState<FeedPostType[]>([]);
+  const [posts, setPosts] = useState<PostResponse[]>([]);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [walkStats, setWalkStats] = useState<WalkStatsResponse | null>(null);
@@ -168,9 +168,7 @@ export const MyProfileView: React.FC = () => {
   const [neighborsModalType, setNeighborsModalType] = useState<'FOLLOWERS' | 'FOLLOWING'>('FOLLOWERS');
   const [selectedPet, setSelectedPet] = useState<PetResponse | null>(null);
   const [selectedHistory, setSelectedHistory] = useState<WalkDiaryResponse | null>(null);
-  const [selectedPost, setSelectedPost] = useState<FeedPostType | null>(null);
-  const [isEditingPost, setIsEditingPost] = useState(false);
-  const [editCaption, setEditCaption] = useState('');
+  const [selectedPost, setSelectedPost] = useState<PostResponse | null>(null);
   const [zoomedPhoto, setZoomedPhoto] = useState<string | null>(null);
 
   // Diary CRUD modal state
@@ -306,7 +304,7 @@ export const MyProfileView: React.FC = () => {
         {activeTab === 'FEED' && (
           <ProfileFeed
             posts={posts}
-            onPostClick={(p) => { setSelectedPost(p); setEditCaption(p.caption); setIsEditingPost(false); }}
+            onPostClick={(p) => setSelectedPost(p)}
           />
         )}
         {activeTab === 'DOGS' && (
@@ -376,33 +374,14 @@ export const MyProfileView: React.FC = () => {
         isOpen={!!selectedPost}
         onClose={() => setSelectedPost(null)}
         post={selectedPost}
-        user={member ? {
-          id: String(member.id),
-          email: member.email,
-          nickname: member.nickname,
-          handle: member.linkedNickname || member.nickname,
-          avatar: member.profileImageUrl || '',
-          mannerScore: member.mannerTemperature || 0,
-          isOwner: member.memberType === 'OWNER',
-          birthDate: '',
-          age: member.age || 0,
-          gender: (member.gender as 'M' | 'F') || 'M',
-          mbti: member.mbti,
-          phone: member.phone,
-          nicknameChangedAt: member.nicknameChangedAt,
-          about: member.selfIntroduction || '',
-          location: '',
-          dogs: [],
-          followerCount,
-          followingCount,
-          tendencies: member.personalityTypes?.map(pt => pt.name) || [],
-        } : null}
-        isEditing={isEditingPost}
-        setIsEditing={setIsEditingPost}
-        editCaption={editCaption}
-        setEditCaption={setEditCaption}
-        onUpdate={async () => { await fetchData(); setIsEditingPost(false); }}
-        onDelete={async () => { await fetchData(); setSelectedPost(null); }}
+        onUpdated={(updatedPost) => {
+          setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
+          setSelectedPost(updatedPost);
+        }}
+        onDeleted={(postId) => {
+          setPosts(prev => prev.filter(p => p.id !== postId));
+          setSelectedPost(null);
+        }}
       />
 
       <DiaryBookModal
