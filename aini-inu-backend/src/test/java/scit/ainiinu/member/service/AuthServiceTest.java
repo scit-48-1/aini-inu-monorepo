@@ -17,6 +17,7 @@ import scit.ainiinu.member.dto.response.LoginResponse;
 import scit.ainiinu.member.entity.Member;
 import scit.ainiinu.member.entity.RefreshToken;
 import scit.ainiinu.member.entity.enums.MemberType;
+import scit.ainiinu.member.exception.MemberErrorCode;
 import scit.ainiinu.member.exception.MemberException;
 import scit.ainiinu.member.repository.MemberRepository;
 import scit.ainiinu.member.repository.RefreshTokenRepository;
@@ -98,6 +99,45 @@ class AuthServiceTest {
             assertThatThrownBy(() -> authService.loginWithEmail(request))
                     .isInstanceOf(MemberException.class);
         }
+
+        @Test
+        @DisplayName("존재하지 않는 이메일로 로그인하면 INVALID_CREDENTIALS 예외가 발생한다")
+        void login_withNonExistentEmail_throwsException() {
+            // given
+            AuthLoginRequest request = new AuthLoginRequest();
+            request.setEmail("unknown@example.com");
+            request.setPassword("Abcd1234!");
+
+            given(memberRepository.findByEmail(request.getEmail())).willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> authService.loginWithEmail(request))
+                    .isInstanceOf(MemberException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", MemberErrorCode.INVALID_CREDENTIALS);
+        }
+
+        @Test
+        @DisplayName("비밀번호가 null인 회원이 로그인하면 INVALID_CREDENTIALS 예외가 발생한다")
+        void login_withNullPassword_throwsException() {
+            // given
+            AuthLoginRequest request = new AuthLoginRequest();
+            request.setEmail("user@example.com");
+            request.setPassword("Abcd1234!");
+
+            Member memberWithNullPw = Member.builder()
+                    .email("user@example.com")
+                    .password(null)
+                    .nickname("유저")
+                    .build();
+            ReflectionTestUtils.setField(memberWithNullPw, "id", 1L);
+
+            given(memberRepository.findByEmail(request.getEmail())).willReturn(Optional.of(memberWithNullPw));
+
+            // when & then
+            assertThatThrownBy(() -> authService.loginWithEmail(request))
+                    .isInstanceOf(MemberException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", MemberErrorCode.INVALID_CREDENTIALS);
+        }
     }
 
     @Nested
@@ -161,6 +201,48 @@ class AuthServiceTest {
 
             assertThat(response.isNewMember()).isTrue();
             then(memberRepository).should().save(any(Member.class));
+        }
+
+        @Test
+        @DisplayName("이미 존재하는 이메일로 회원가입하면 예외가 발생한다")
+        void signup_withDuplicateEmail_throwsException() {
+            // given
+            MemberSignupRequest request = new MemberSignupRequest();
+            request.setEmail("existing@test.com");
+            request.setPassword("Abcd1234!");
+            request.setNickname("새유저");
+            request.setMemberType(MemberType.NON_PET_OWNER);
+
+            Member existingMember = Member.builder()
+                    .email("existing@test.com")
+                    .nickname("기존유저")
+                    .build();
+
+            given(memberRepository.findByEmail(request.getEmail())).willReturn(Optional.of(existingMember));
+
+            // when & then
+            assertThatThrownBy(() -> authService.signup(request))
+                    .isInstanceOf(MemberException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", MemberErrorCode.DUPLICATE_EMAIL);
+        }
+
+        @Test
+        @DisplayName("이미 존재하는 닉네임으로 회원가입하면 예외가 발생한다")
+        void signup_withDuplicateNickname_throwsException() {
+            // given
+            MemberSignupRequest request = new MemberSignupRequest();
+            request.setEmail("new@test.com");
+            request.setPassword("Abcd1234!");
+            request.setNickname("중복닉네임");
+            request.setMemberType(MemberType.NON_PET_OWNER);
+
+            given(memberRepository.findByEmail(request.getEmail())).willReturn(Optional.empty());
+            given(memberRepository.existsByNickname(request.getNickname())).willReturn(true);
+
+            // when & then
+            assertThatThrownBy(() -> authService.signup(request))
+                    .isInstanceOf(MemberException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", MemberErrorCode.DUPLICATE_NICKNAME);
         }
     }
 
