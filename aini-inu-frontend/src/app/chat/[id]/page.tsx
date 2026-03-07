@@ -27,6 +27,7 @@ import { WalkReviewModal } from '@/components/shared/modals/WalkReviewModal';
 import { Loader2, ArrowLeft, PenLine } from 'lucide-react';
 import { toast } from 'sonner';
 import { Typography } from '@/components/ui/Typography';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 
 export default function ChatRoomPage() {
   const params = useParams();
@@ -46,6 +47,7 @@ export default function ChatRoomPage() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewTargetId, setReviewTargetId] = useState<number>(0);
   const [reviewTargetName, setReviewTargetName] = useState('');
+  const [isLeaveConfirmOpen, setIsLeaveConfirmOpen] = useState(false);
 
   // Cursor pagination state
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -61,8 +63,12 @@ export default function ChatRoomPage() {
   const removePendingMessage = useChatStore((s) => s.removePendingMessage);
   const markPendingFailed = useChatStore((s) => s.markPendingFailed);
 
+  // Store actions for leave cleanup
+  const removeRoom = useChatStore((s) => s.removeRoom);
+  const clearMessages = useChatStore((s) => s.clearMessages);
+
   // WebSocket hook -- enables once room is loaded
-  const { connectionMode } = useChatWebSocket(roomId, !!room);
+  const { connectionMode, disconnect } = useChatWebSocket(roomId, !!room);
 
   // Mark-read debounce ref
   const markReadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -247,18 +253,28 @@ export default function ChatRoomPage() {
     }
   }, [roomId]);
 
-  // Leave room handler
-  const handleLeave = useCallback(async () => {
-    const confirmed = window.confirm('채팅방을 나가시겠습니까?');
-    if (!confirmed) return;
+  // Leave room handler -- opens confirm modal
+  const handleLeave = useCallback(() => {
+    setIsLeaveConfirmOpen(true);
+  }, []);
 
+  // Actual leave logic after confirmation
+  const handleLeaveConfirm = useCallback(async () => {
+    setIsLeaveConfirmOpen(false);
     try {
+      // 1. Disconnect WebSocket FIRST to stop polling/reconnect
+      disconnect();
+      // 2. Call leave API
       await leaveRoom(roomId);
+      // 3. Clean up store
+      clearMessages();
+      removeRoom(roomId);
+      // 4. Navigate
       router.push('/chat');
     } catch {
       toast.error('채팅방 나가기에 실패했습니다.');
     }
-  }, [roomId, router]);
+  }, [roomId, router, disconnect, clearMessages, removeRoom]);
 
   // Open review modal
   const handleOpenReview = useCallback(() => {
@@ -377,6 +393,18 @@ export default function ChatRoomPage() {
         revieweeName={reviewTargetName}
         chatRoomId={roomId}
         onReviewSubmitted={handleReviewSubmitted}
+      />
+
+      {/* Leave Room Confirm Modal */}
+      <ConfirmModal
+        isOpen={isLeaveConfirmOpen}
+        title="채팅방 나가기"
+        message="채팅방을 나가면 대화 내용이 삭제됩니다.\n정말 나가시겠습니까?"
+        confirmLabel="나가기"
+        cancelLabel="취소"
+        onConfirm={handleLeaveConfirm}
+        onCancel={() => setIsLeaveConfirmOpen(false)}
+        variant="danger"
       />
     </div>
   );

@@ -44,6 +44,14 @@ export function ChatList() {
 
   useEffect(() => {
     fetchRooms();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchRooms();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [fetchRooms]);
 
   // Client-side filtering by tab and search
