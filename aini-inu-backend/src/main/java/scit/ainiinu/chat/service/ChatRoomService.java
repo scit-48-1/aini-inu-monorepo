@@ -53,7 +53,12 @@ public class ChatRoomService {
     public SliceResponse<ChatRoomSummaryResponse> getRooms(Long memberId, String status, Pageable pageable) {
         ChatRoomStatus parsedStatus = parseStatus(status);
         Slice<ChatRoom> rooms = chatRoomRepository.findAccessibleRoomsByMemberId(memberId, parsedStatus, pageable);
-        Slice<ChatRoomSummaryResponse> mapped = rooms.map(this::toSummaryResponse);
+
+        // Batch-fetch last messages for all rooms (N+1 prevention)
+        List<Long> roomIds = rooms.getContent().stream().map(ChatRoom::getId).toList();
+        Map<Long, Message> lastMessages = messageRepository.findLastMessagesByRoomIds(roomIds);
+
+        Slice<ChatRoomSummaryResponse> mapped = rooms.map(room -> toSummaryResponse(room, lastMessages.get(room.getId())));
         return SliceResponse.of(mapped);
     }
 
@@ -140,10 +145,8 @@ public class ChatRoomService {
         }
     }
 
-    private ChatRoomSummaryResponse toSummaryResponse(ChatRoom room) {
-        ChatMessageResponse lastMessage = messageRepository.findTopByChatRoomIdOrderByIdDesc(room.getId())
-                .map(this::toMessageResponse)
-                .orElse(null);
+    private ChatRoomSummaryResponse toSummaryResponse(ChatRoom room, Message lastMsg) {
+        ChatMessageResponse lastMessage = lastMsg != null ? toMessageResponse(lastMsg) : null;
 
         return ChatRoomSummaryResponse.builder()
                 .chatRoomId(room.getId())

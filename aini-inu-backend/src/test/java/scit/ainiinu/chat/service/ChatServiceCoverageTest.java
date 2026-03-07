@@ -88,12 +88,48 @@ class ChatServiceCoverageTest {
             ReflectionTestUtils.setField(room, "id", 10L);
             Slice<ChatRoom> slice = new SliceImpl<>(List.of(room), PageRequest.of(0, 20), false);
             given(chatRoomRepository.findAccessibleRoomsByMemberId(1L, null, PageRequest.of(0, 20))).willReturn(slice);
-            given(messageRepository.findTopByChatRoomIdOrderByIdDesc(10L)).willReturn(Optional.empty());
+            given(messageRepository.findLastMessagesByRoomIds(List.of(10L))).willReturn(java.util.Collections.emptyMap());
 
             SliceResponse<ChatRoomSummaryResponse> response = chatRoomService.getRooms(1L, null, PageRequest.of(0, 20));
 
             assertThat(response.getContent()).hasSize(1);
             assertThat(response.getContent().get(0).getChatRoomId()).isEqualTo(10L);
+        }
+
+        @Test
+        @DisplayName("채팅방 목록 조회 시 배치 쿼리로 마지막 메시지를 가져온다 (N+1 방지)")
+        void getRooms_batchFetchesLastMessages() {
+            // given: 3개의 채팅방
+            ChatRoom room1 = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ReflectionTestUtils.setField(room1, "id", 1L);
+            ChatRoom room2 = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ReflectionTestUtils.setField(room2, "id", 2L);
+            ChatRoom room3 = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ReflectionTestUtils.setField(room3, "id", 3L);
+
+            Slice<ChatRoom> slice = new SliceImpl<>(List.of(room1, room2, room3), PageRequest.of(0, 20), false);
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(1L, null, PageRequest.of(0, 20))).willReturn(slice);
+
+            // 방 1, 3에만 메시지 존재
+            Message msg1 = Message.create(1L, 10L, "안녕", ChatMessageType.USER, "c1");
+            ReflectionTestUtils.setField(msg1, "id", 100L);
+            Message msg3 = Message.create(3L, 11L, "반가워", ChatMessageType.USER, "c3");
+            ReflectionTestUtils.setField(msg3, "id", 300L);
+            given(messageRepository.findLastMessagesByRoomIds(List.of(1L, 2L, 3L)))
+                    .willReturn(java.util.Map.of(1L, msg1, 3L, msg3));
+
+            // when
+            SliceResponse<ChatRoomSummaryResponse> response = chatRoomService.getRooms(1L, null, PageRequest.of(0, 20));
+
+            // then: 3개 방 모두 반환, 각각 올바른 last message
+            assertThat(response.getContent()).hasSize(3);
+            assertThat(response.getContent().get(0).getLastMessage().getContent()).isEqualTo("안녕");
+            assertThat(response.getContent().get(1).getLastMessage()).isNull(); // 방 2는 메시지 없음
+            assertThat(response.getContent().get(2).getLastMessage().getContent()).isEqualTo("반가워");
+
+            // N+1 방지: findTopByChatRoomIdOrderByIdDesc가 호출되지 않아야 함
+            org.mockito.Mockito.verify(messageRepository, org.mockito.Mockito.never())
+                    .findTopByChatRoomIdOrderByIdDesc(anyLong());
         }
 
         @Test

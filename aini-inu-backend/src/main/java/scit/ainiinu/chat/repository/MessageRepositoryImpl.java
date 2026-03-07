@@ -6,7 +6,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import scit.ainiinu.chat.entity.Message;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 @RequiredArgsConstructor
@@ -35,5 +38,34 @@ public class MessageRepositoryImpl implements MessageRepositoryCustom {
                 .setMaxResults(size);
 
         return query.getResultList();
+    }
+
+    @Override
+    public Map<Long, Message> findLastMessagesByRoomIds(List<Long> chatRoomIds) {
+        if (chatRoomIds == null || chatRoomIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        // Subquery: max message ID per room → single query instead of N
+        String jpql = """
+                select m
+                from Message m
+                where m.id in (
+                    select max(m2.id)
+                    from Message m2
+                    where m2.chatRoomId in :roomIds
+                    group by m2.chatRoomId
+                )
+                """;
+
+        List<Message> lastMessages = entityManager.createQuery(jpql, Message.class)
+                .setParameter("roomIds", chatRoomIds)
+                .getResultList();
+
+        Map<Long, Message> result = new LinkedHashMap<>();
+        for (Message m : lastMessages) {
+            result.put(m.getChatRoomId(), m);
+        }
+        return result;
     }
 }
