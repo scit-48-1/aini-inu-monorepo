@@ -213,11 +213,11 @@ Plans:
   2. Walk recommendation cards appear based on hotspot data, and latest neighborhood threads are summarized
   3. Pending review modal appears for rooms with unwritten reviews, with submit and failure retry working
   4. If any individual section's API call fails, only that section shows an error fallback -- other sections remain functional
-**Plans**: 3 plans
+**Plans**: 2 plans
 
 Plans:
-- [ ] 11-01: TBD
-- [ ] 11-02: TBD
+- [ ] 11-01-PLAN.md — Rewire DashboardHero, AIBanner, LocalFeedPreview to canonical API types + walkStatsGrid utility + delete DraftNotification
+- [ ] 11-02-PLAN.md — PendingReviewCard + PendingReviewModal + page.tsx orchestrator rewire with per-section state management
 
 ### Phase 12: Settings + Integration UAT
 **Goal**: Settings screen works, and the entire frontend passes full integration verification against all 73 endpoints, 34 FR requirements, and 31 DEC policies with zero runtime errors
