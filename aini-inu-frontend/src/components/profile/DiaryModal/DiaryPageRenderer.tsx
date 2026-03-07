@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { X, Image as ImageIcon, AlignLeft, Plus, Trash2 } from 'lucide-react';
 import { Typography } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
@@ -32,11 +32,11 @@ interface DiaryPageRendererProps {
   isReadOnly: boolean;
   editMode: 'NONE' | 'CONTENT' | 'PHOTOS';
   diaryForm: DiaryFormValues;
-  setDiaryForm: (form: DiaryFormValues) => void;
+  setDiaryForm: React.Dispatch<React.SetStateAction<DiaryFormValues>>;
   onClose: () => void;
   onZoom: (photo: string) => void;
   setEditMode: (mode: 'NONE' | 'CONTENT' | 'PHOTOS') => void;
-  onSave: () => void;
+  onSave: (localValues: { title: string; content: string }) => void;
   onImageUpload: (imageUrl: string) => void;
   onDelete?: () => void;
   storyHeader?: StoryHeader;
@@ -47,6 +47,19 @@ export const DiaryPageRenderer: React.FC<DiaryPageRendererProps> = ({
   data, side, isCurrent, isReadOnly, editMode, diaryForm, setDiaryForm, onClose, onZoom, setEditMode, onSave, onImageUpload, onDelete, storyHeader, onToggleVisibility
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Local state for edit inputs to avoid react-pageflip DOM management interference.
+  // react-pageflip manages child DOM internally, preventing React from updating
+  // controlled input values properly. Local state keeps inputs responsive.
+  const [localTitle, setLocalTitle] = useState(diaryForm.title);
+  const [localContent, setLocalContent] = useState(diaryForm.content);
+
+  // Sync local state only when entering edit mode or switching diary (data.id change)
+  useEffect(() => {
+    setLocalTitle(diaryForm.title);
+    setLocalContent(diaryForm.content);
+  }, [editMode, data.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!data) return null;
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,13 +110,13 @@ export const DiaryPageRenderer: React.FC<DiaryPageRendererProps> = ({
             {isCurrent && !isReadOnly && editMode === 'CONTENT' ? (
               <input
                 type="text"
-                value={diaryForm.title}
-                onChange={(e) => setDiaryForm({ ...diaryForm, title: e.target.value })}
+                value={localTitle}
+                onChange={(e) => setLocalTitle(e.target.value)}
                 className="w-full bg-white border-2 border-amber-100 rounded-2xl px-4 py-2 text-lg text-navy-900 font-serif italic focus:outline-none"
               />
             ) : (
               <Typography variant="h2" className="text-navy-900 font-serif lowercase italic leading-tight text-2xl md:text-3xl">
-                {isCurrent && editMode !== 'NONE' ? diaryForm.title : (data.title || '즐거운 산책')}
+                {isCurrent && editMode !== 'NONE' ? localTitle : (data.title || '즐거운 산책')}
               </Typography>
             )}
             <div className="h-1 w-16 bg-amber-500 rounded-full" />
@@ -155,7 +168,7 @@ export const DiaryPageRenderer: React.FC<DiaryPageRendererProps> = ({
                   <button
                     onClick={() => {
                       if (editMode !== 'NONE') {
-                        setDiaryForm({ ...diaryForm, isPublic: !diaryForm.isPublic });
+                        setDiaryForm(prev => ({ ...prev, isPublic: !prev.isPublic }));
                       } else if (onToggleVisibility) {
                         onToggleVisibility(data.id, !data.isPublic);
                       }
@@ -191,7 +204,7 @@ export const DiaryPageRenderer: React.FC<DiaryPageRendererProps> = ({
                   <div className={cn("w-28 h-28 md:w-36 md:h-36 bg-white p-1 shadow-md border border-zinc-200/50 transition-all cursor-zoom-in", i % 2 === 0 ? "rotate-[-2deg]" : "rotate-[2deg]", "hover:rotate-0")} onClick={() => onZoom(photo)}>
                     <img src={photo} className="w-full h-full object-cover" alt="Moment" />
                     {isCurrent && !isReadOnly && editMode === 'PHOTOS' ? (
-                      <button onClick={(e) => { e.stopPropagation(); setDiaryForm({...diaryForm, photoUrls: diaryForm.photoUrls.filter((_, idx: number) => idx !== i)}); }} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"><X size={14} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); setDiaryForm(prev => ({...prev, photoUrls: prev.photoUrls.filter((_, idx: number) => idx !== i)})); }} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"><X size={14} /></button>
                     ) : null}
                   </div>
                 </div>
@@ -202,8 +215,8 @@ export const DiaryPageRenderer: React.FC<DiaryPageRendererProps> = ({
             </div>
             {isCurrent && !isReadOnly && editMode === 'PHOTOS' ? (
               <div className="flex gap-2 pt-2">
-                <Button variant="primary" size="sm" className="bg-navy-900 rounded-xl px-6" onClick={onSave}>사진 저장</Button>
-                <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setEditMode('NONE')}>취소</Button>
+                <Button variant="primary" size="sm" className="bg-navy-900 rounded-xl px-6" onClick={() => onSave({ title: localTitle, content: localContent })}>사진 저장</Button>
+                <Button variant="outline" size="sm" className="rounded-xl" onClick={() => { setDiaryForm(prev => ({ ...prev, photoUrls: data.photoUrls || [] })); setEditMode('NONE'); }}>취소</Button>
               </div>
             ) : null}
           </div>
@@ -220,19 +233,19 @@ export const DiaryPageRenderer: React.FC<DiaryPageRendererProps> = ({
             {isCurrent && !isReadOnly && editMode === 'CONTENT' ? (
               <div className="space-y-4 animate-in slide-in-from-top-2">
                 <div className="relative">
-                  <textarea className="w-full bg-white/80 border-2 border-amber-100 rounded-[32px] p-6 text-sm font-serif min-h-[200px]" value={diaryForm.content} maxLength={300} onChange={(e) => setDiaryForm({...diaryForm, content: e.target.value})} />
-                  <span className="absolute bottom-3 right-6 text-[10px] text-zinc-400">{diaryForm.content.length}/300</span>
+                  <textarea className="w-full bg-white/80 border-2 border-amber-100 rounded-[32px] p-6 text-sm font-serif min-h-[200px]" value={localContent} maxLength={300} onChange={(e) => setLocalContent(e.target.value)} />
+                  <span className="absolute bottom-3 right-6 text-[10px] text-zinc-400">{localContent.length}/300</span>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button variant="primary" size="sm" className="rounded-xl px-6 bg-navy-900" onClick={onSave}>저장하기</Button>
-                  <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setEditMode('NONE')}>취소</Button>
+                  <Button variant="primary" size="sm" className="rounded-xl px-6 bg-navy-900" onClick={() => onSave({ title: localTitle, content: localContent })}>저장하기</Button>
+                  <Button variant="outline" size="sm" className="rounded-xl" onClick={() => { setLocalTitle(data.title || ''); setLocalContent(data.content || ''); setDiaryForm(prev => ({ ...prev, title: data.title || '', content: data.content || '', isPublic: !!data.isPublic })); setEditMode('NONE'); }}>취소</Button>
                 </div>
               </div>
             ) : (
               <div className="relative min-h-[150px]">
                 <div className="absolute inset-0 bg-[linear-gradient(transparent_31px,#eee_32px)] bg-[length:100%_32px] pointer-events-none opacity-50" />
                 <Typography variant="body" className="text-zinc-700 font-serif text-base leading-[32px] pt-1 italic relative z-10 px-2">
-                  {(isCurrent && editMode === 'CONTENT' ? diaryForm.content : (data.content || '')) || '아직 작성된 이야기가 없습니다.'}
+                  {(isCurrent && editMode === 'CONTENT' ? localContent : (data.content || '')) || '아직 작성된 이야기가 없습니다.'}
                 </Typography>
               </div>
             )}

@@ -142,15 +142,17 @@ export const DiaryBookModal: React.FC<DiaryBookModalProps> = ({
     isPublic: false,
   });
 
-  const handleSave = useCallback(async (id: number) => {
+  const handleSave = useCallback(async (id: number, localValues: { title: string; content: string }) => {
+    const merged = { ...diaryForm, ...localValues };
     try {
       await updateDiary(id, {
-        title: diaryForm.title,
-        content: diaryForm.content,
-        photoUrls: diaryForm.photoUrls,
-        walkDate: diaryForm.walkDate,
-        isPublic: diaryForm.isPublic,
+        title: merged.title,
+        content: merged.content,
+        photoUrls: merged.photoUrls,
+        walkDate: merged.walkDate,
+        isPublic: merged.isPublic,
       });
+      setDiaryForm(merged);
       setEditMode('NONE');
       toast.success('저장되었습니다.');
       onSaveSuccess?.();
@@ -277,7 +279,7 @@ export const DiaryBookModal: React.FC<DiaryBookModalProps> = ({
       <DiaryPageRenderer
         data={data} side={side} isCurrent={isCurrent} isReadOnly={isReadOnly} editMode={editMode}
         diaryForm={diaryForm} setDiaryForm={setDiaryForm} onClose={onClose}
-        onSave={() => handleSave(data.id)} setEditMode={setEditMode}
+        onSave={(localValues) => handleSave(data.id, localValues)} setEditMode={setEditMode}
         onZoom={(photo) => setZoomedPhoto(photo)}
         onImageUpload={async (imageUrl: string) => setDiaryForm((prev: any) => ({ ...prev, photoUrls: [...prev.photoUrls, imageUrl] }))}
         onDelete={mode === 'profile' && onDelete && !isReadOnly ? (() => onDelete(data.id)) : undefined}
