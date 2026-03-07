@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { getFollowers, getFollowing } from '@/api/members';
 import type { MemberFollowResponse } from '@/api/members';
+import { createDirectRoom } from '@/api/chat';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -32,6 +33,7 @@ export const NeighborsModal: React.FC<NeighborsModalProps> = ({
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [startingChatId, setStartingChatId] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -189,12 +191,27 @@ export const NeighborsModal: React.FC<NeighborsModalProps> = ({
                       variant="ghost"
                       size="sm"
                       className="w-10 h-10 p-0 rounded-xl text-zinc-300 hover:text-amber-500 hover:bg-amber-50"
-                      onClick={(e) => {
+                      disabled={startingChatId !== null}
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        toast.info('준비 중인 기능입니다.');
+                        if (startingChatId !== null) return;
+                        setStartingChatId(user.id);
+                        try {
+                          const room = await createDirectRoom({ partnerId: user.id });
+                          onClose();
+                          router.push(`/chat/${room.chatRoomId}`);
+                        } catch {
+                          toast.error('채팅방을 만들 수 없습니다.');
+                        } finally {
+                          setStartingChatId(null);
+                        }
                       }}
                     >
-                      <MessageSquare size={18} />
+                      {startingChatId === user.id ? (
+                        <Loader2 size={18} className="animate-spin" />
+                      ) : (
+                        <MessageSquare size={18} />
+                      )}
                     </Button>
                   </div>
                 </div>

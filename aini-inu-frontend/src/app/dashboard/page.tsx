@@ -90,12 +90,9 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    // 렌더링 이후 비동기로 데이터 페칭 시작
-    const init = async () => {
-      await fetchData();
-    };
-    init();
-  }, []); // fetchData를 의존성에서 제거하거나 useCallback 처리 필요 (현재는 빈 배열로 초기 1회 보장)
+    if (!userProfile) return;
+    fetchData();
+  }, [userProfile]); // userProfile이 준비된 후에만 데이터 페칭
 
   if (!userProfile) return <div className="flex items-center justify-center h-full"><p className="text-zinc-400">Loading...</p></div>;
 
