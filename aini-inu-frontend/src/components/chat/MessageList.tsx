@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useCallback } from 'react';
-import { Check, CheckCheck, RefreshCw, Loader2 } from 'lucide-react';
+import { RefreshCw, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ChatMessageResponse } from '@/api/chat';
 import type { PendingMessage } from '@/store/useChatStore';
@@ -27,18 +27,13 @@ function formatTime(iso: string): string {
   }
 }
 
-function StatusIcon({ status }: { status: string }) {
+function StatusText({ status }: { status: string }) {
   switch (status) {
     case 'READ':
     case 'read':
-      return <CheckCheck size={12} className="text-blue-500" />;
-    case 'DELIVERED':
-    case 'delivered':
-      return <CheckCheck size={12} className="text-zinc-400" />;
-    case 'CREATED':
-    case 'created':
+      return <span className="text-[9px] text-blue-500 font-bold">읽음</span>;
     default:
-      return <Check size={12} className="text-zinc-300" />;
+      return <span className="text-[9px] text-zinc-400 font-bold">전송완료</span>;
   }
 }
 
@@ -110,6 +105,14 @@ export const MessageList: React.FC<MessageListProps> = ({
     return () => observer.disconnect();
   }, [hasMore, isLoadingOlder, onLoadOlder, preserveScrollOnPrepend]);
 
+  const lastMyMsgIndex = pendingMessages.length === 0
+    ? messages.findLastIndex(m => m.sender.memberId === currentMemberId)
+    : -1;
+
+  const lastPendingIndex = pendingMessages.length > 0
+    ? pendingMessages.findLastIndex(pm => pm.status === 'pending')
+    : -1;
+
   return (
     <div
       ref={scrollRef}
@@ -171,7 +174,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                   <span className="text-[9px] text-zinc-300 font-bold">
                     {timeStr}
                   </span>
-                  {isMe && <StatusIcon status={msg.status} />}
+                  {isMe && i === lastMyMsgIndex && <StatusText status={msg.status} />}
                 </div>
               </div>
             </div>
@@ -180,7 +183,7 @@ export const MessageList: React.FC<MessageListProps> = ({
       })}
 
       {/* Pending messages */}
-      {pendingMessages.map((pm) => (
+      {pendingMessages.map((pm, pi) => (
         <div
           key={pm.clientMessageId}
           className="flex gap-3 max-w-[85%] md:max-w-[70%] ml-auto flex-row-reverse"
@@ -200,12 +203,9 @@ export const MessageList: React.FC<MessageListProps> = ({
                 <span className="text-[9px] text-zinc-300 font-bold">
                   {formatTime(pm.sentAt)}
                 </span>
-                {pm.status === 'pending' ? (
-                  <Loader2
-                    size={12}
-                    className="animate-spin text-zinc-300"
-                  />
-                ) : (
+                {pm.status === 'pending' && pi === lastPendingIndex ? (
+                  <StatusText status="CREATED" />
+                ) : pm.status === 'failed' ? (
                   <button
                     onClick={() => onRetry(pm.clientMessageId)}
                     className="p-0.5 text-red-500 hover:text-red-600 transition-colors"
@@ -213,7 +213,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                   >
                     <RefreshCw size={12} />
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           </div>
