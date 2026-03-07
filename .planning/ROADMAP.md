@@ -198,11 +198,11 @@ Plans:
   3. User can approve a match, which creates a direct chat room with the sighting reporter
   4. AI analysis failure (500 / L500_AI_ANALYZE_FAILED) shows a clear error message and does not create a session
   5. Around-me page includes a sighting/report tab with the full image analysis flow accessible
-**Plans**: 3 plans
+**Plans**: 2 plans
 
 Plans:
-- [ ] 10-01: TBD
-- [ ] 10-02: TBD
+- [ ] 10-01-PLAN.md — EMERGENCY tab activation: sub-tabs, lost pet report form + sighting form with presigned upload + DaumPostcode
+- [ ] 10-02-PLAN.md — Lost pet list, AI analysis flow, candidate modal with score display, match approval + chat navigation
 
 ### Phase 11: Dashboard
 **Goal**: The home dashboard composes data from multiple domains into a single cohesive view with graceful partial-failure handling
@@ -258,4 +258,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 
 ---
 *Roadmap created: 2026-03-06*
-*Last updated: 2026-03-07*
+*Last updated: 2026-03-08*
