@@ -109,6 +109,7 @@ class ChatControllerSliceTest {
                     .chatRoomId(100L)
                     .chatType("DIRECT")
                     .status("ACTIVE")
+                    .origin("DM")
                     .walkConfirmed(false)
                     .participants(List.of())
                     .build();
@@ -122,7 +123,68 @@ class ChatControllerSliceTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.chatRoomId").value(100L));
+                    .andExpect(jsonPath("$.data.chatRoomId").value(100L))
+                    .andExpect(jsonPath("$.data.origin").value("DM"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("성공: WALK origin으로 채팅방 생성 시 origin이 응답에 포함된다")
+        void createDirect_withWalkOrigin_success() throws Exception {
+            // given
+            ChatRoomDirectCreateRequest request = new ChatRoomDirectCreateRequest();
+            request.setPartnerId(2L);
+            request.setOrigin("WALK");
+
+            ChatRoomDetailResponse response = ChatRoomDetailResponse.builder()
+                    .chatRoomId(101L)
+                    .chatType("DIRECT")
+                    .status("ACTIVE")
+                    .origin("WALK")
+                    .walkConfirmed(false)
+                    .participants(List.of())
+                    .build();
+
+            given(chatRoomService.createDirectRoom(anyLong(), any(ChatRoomDirectCreateRequest.class))).willReturn(response);
+
+            // when & then
+            mockMvc.perform(post("/api/v1/chat-rooms/direct")
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.chatRoomId").value(101L))
+                    .andExpect(jsonPath("$.data.origin").value("WALK"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("성공: LOST_PET origin으로 채팅방 생성 시 origin이 응답에 포함된다")
+        void createDirect_withLostPetOrigin_success() throws Exception {
+            // given
+            ChatRoomDirectCreateRequest request = new ChatRoomDirectCreateRequest();
+            request.setPartnerId(2L);
+            request.setOrigin("LOST_PET");
+
+            ChatRoomDetailResponse response = ChatRoomDetailResponse.builder()
+                    .chatRoomId(102L)
+                    .chatType("DIRECT")
+                    .status("ACTIVE")
+                    .origin("LOST_PET")
+                    .walkConfirmed(false)
+                    .participants(List.of())
+                    .build();
+
+            given(chatRoomService.createDirectRoom(anyLong(), any(ChatRoomDirectCreateRequest.class))).willReturn(response);
+
+            // when & then
+            mockMvc.perform(post("/api/v1/chat-rooms/direct")
+                            .with(csrf())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.chatRoomId").value(102L))
+                    .andExpect(jsonPath("$.data.origin").value("LOST_PET"));
         }
     }
 
@@ -159,6 +221,7 @@ class ChatControllerSliceTest {
                     .chatRoomId(100L)
                     .chatType("DIRECT")
                     .status("ACTIVE")
+                    .origin("DM")
                     .walkConfirmed(false)
                     .participants(List.of())
                     .build();
@@ -166,7 +229,8 @@ class ChatControllerSliceTest {
 
             mockMvc.perform(get("/api/v1/chat-rooms/{chatRoomId}", 100L))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.chatRoomId").value(100L));
+                    .andExpect(jsonPath("$.data.chatRoomId").value(100L))
+                    .andExpect(jsonPath("$.data.origin").value("DM"));
         }
 
         @Test
