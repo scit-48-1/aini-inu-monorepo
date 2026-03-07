@@ -91,7 +91,7 @@ class WalkThreadServiceCoverageTest {
         // then
         assertThat(response.getContent()).hasSize(1);
         assertThat(response.getContent().get(0).getId()).isEqualTo(101L);
-        assertThat(response.getContent().get(0).getCurrentParticipants()).isEqualTo(2);
+        assertThat(response.getContent().get(0).getCurrentParticipants()).isEqualTo(3);
         assertThat(response.getContent().get(0).isApplied()).isTrue();
     }
 
@@ -113,7 +113,7 @@ class WalkThreadServiceCoverageTest {
         // then
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).getThreadId()).isEqualTo(101L);
-        assertThat(responses.get(0).getCurrentParticipants()).isEqualTo(3);
+        assertThat(responses.get(0).getCurrentParticipants()).isEqualTo(4);
     }
 
     @Test

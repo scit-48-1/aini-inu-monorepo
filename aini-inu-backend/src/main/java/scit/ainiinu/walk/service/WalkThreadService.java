@@ -159,7 +159,7 @@ public class WalkThreadService {
 
         List<ThreadMapResponse> results = new ArrayList<>();
         for (WalkThread thread : filteredThreads) {
-            long currentParticipants = countMap.getOrDefault(thread.getId(), 0L);
+            long currentParticipants = countMap.getOrDefault(thread.getId(), 0L) + 1;
             results.add(ThreadMapResponse.builder()
                     .threadId(thread.getId())
                     .title(thread.getTitle())
@@ -270,7 +270,7 @@ public class WalkThreadService {
                 threadId,
                 WalkThreadApplicationStatus.JOINED
         );
-        if (joinedCount >= thread.getMaxParticipants()) {
+        if (joinedCount + 1 >= thread.getMaxParticipants()) {
             throw new BusinessException(ThreadErrorCode.CAPACITY_FULL);
         }
 
@@ -339,7 +339,7 @@ public class WalkThreadService {
         Set<Long> appliedSet = batchAppliedSet(threadIds, memberId, WalkThreadApplicationStatus.JOINED);
 
         return threads.stream()
-                .map(thread -> toSummaryResponse(thread, countMap.getOrDefault(thread.getId(), 0L), appliedSet.contains(thread.getId())))
+                .map(thread -> toSummaryResponse(thread, countMap.getOrDefault(thread.getId(), 0L) + 1, appliedSet.contains(thread.getId())))
                 .toList();
     }
 
@@ -381,7 +381,7 @@ public class WalkThreadService {
         long currentParticipants = walkThreadApplicationRepository.countByThreadIdAndStatus(
                 thread.getId(),
                 WalkThreadApplicationStatus.JOINED
-        );
+        ) + 1;
 
         List<Long> petIds = walkThreadPetRepository.findAllByThreadId(thread.getId())
                 .stream()
