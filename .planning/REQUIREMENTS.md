@@ -118,10 +118,10 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 
 - [x] **LOST-01**: 실종 등록 (FR-LOST-001, `LOST-CREATE`)
 - [x] **LOST-02**: 제보 등록 (FR-LOST-001, `SIGHTING-CREATE`)
-- [ ] **LOST-03**: AI 분석 — 유사 제보 후보 세션 스냅샷 조회 (FR-LOST-002, `LOST-ANALYZE`)
-- [ ] **LOST-04**: 매칭 조회 — 재진입 순서 고정 (FR-LOST-002, `LOST-MATCH`)
-- [ ] **LOST-05**: 매칭 승인 → 채팅 연결 (FR-LOST-003/DEC-006, `LOST-MATCH-APPROVE`)
-- [ ] **LOST-06**: 분석 실패 처리 — 500 + L500_AI_ANALYZE_FAILED, 세션 미생성 (FR-LOST-004/DEC-005)
+- [x] **LOST-03**: AI 분석 — 유사 제보 후보 세션 스냅샷 조회 (FR-LOST-002, `LOST-ANALYZE`)
+- [x] **LOST-04**: 매칭 조회 — 재진입 순서 고정 (FR-LOST-002, `LOST-MATCH`)
+- [x] **LOST-05**: 매칭 승인 → 채팅 연결 (FR-LOST-003/DEC-006, `LOST-MATCH-APPROVE`)
+- [x] **LOST-06**: 분석 실패 처리 — 500 + L500_AI_ANALYZE_FAILED, 세션 미생성 (FR-LOST-004/DEC-005)
 - [x] **LOST-07**: 긴급 제보 UI — around-me 제보 탭, 이미지 분석 플로우 (PRD §8.3)
 
 ### Dashboard (Phase 11) — FR-DASH
@@ -255,10 +255,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | FEED-08 | Phase 9 | Complete |
 | LOST-01 | Phase 10 | Complete |
 | LOST-02 | Phase 10 | Complete |
-| LOST-03 | Phase 10 | Pending |
-| LOST-04 | Phase 10 | Pending |
-| LOST-05 | Phase 10 | Pending |
-| LOST-06 | Phase 10 | Pending |
+| LOST-03 | Phase 10 | Complete |
+| LOST-04 | Phase 10 | Complete |
+| LOST-05 | Phase 10 | Complete |
+| LOST-06 | Phase 10 | Complete |
 | LOST-07 | Phase 10 | Complete |
 | DASH-01 | Phase 11 | Pending |
 | DASH-02 | Phase 11 | Pending |
