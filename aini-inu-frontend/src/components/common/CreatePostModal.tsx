@@ -1,39 +1,40 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { X, Loader2, Check } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { usePostForm } from '@/hooks/forms/usePostForm';
 import { PostFormFields } from '@/components/shared/forms/PostFormFields';
-import { UserType } from '@/types';
 
 interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  userProfile: UserType;
+  userProfile: { nickname?: string; profileImageUrl?: string; avatar?: string } | null;
 }
 
 export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onSuccess, userProfile }) => {
-  const { postForm, setPostForm, isSubmitting, handleSubmit } = usePostForm(() => {
+  const {
+    content,
+    setContent,
+    previewUrls,
+    handleAddImage,
+    handleRemoveImage,
+    isSubmitting,
+    handleSubmit,
+  } = usePostForm(() => {
     onSuccess();
     onClose();
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (isOpen && userProfile) {
-      setPostForm(prev => ({ ...prev, location: userProfile.location || '서울시 성수동' }));
-    }
-  }, [isOpen, userProfile, setPostForm]);
-
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-[5000] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
@@ -44,15 +45,20 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClos
         </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar">
-          <PostFormFields 
-            postForm={postForm} setPostForm={setPostForm} userProfile={userProfile}
-            onImageUpload={(base64) => setPostForm({...postForm, images: [base64]})}
+          <PostFormFields
+            content={content}
+            setContent={setContent}
+            previewUrls={previewUrls}
+            onAddImage={handleAddImage}
+            onRemoveImage={handleRemoveImage}
+            authorName={userProfile?.nickname}
+            authorAvatar={userProfile?.profileImageUrl || userProfile?.avatar || '/AINIINU_ROGO_B.png'}
             fileInputRef={fileInputRef}
           />
         </div>
 
         <div className="p-8 border-t border-zinc-50">
-          <Button 
+          <Button
             variant="primary" fullWidth size="xl" className="py-8 text-xl shadow-2xl"
             onClick={handleSubmit} disabled={isSubmitting}
           >
