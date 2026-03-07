@@ -16,6 +16,10 @@ public class ChatRoomSummaryResponse {
     private String chatType;
     @Schema(description = "상태 코드입니다.", example = "ACTIVE", allowableValues = {"ACTIVE", "CLOSED"})
     private String status;
+    @Schema(description = "출처 코드입니다.", example = "DM", allowableValues = {"DM", "WALK", "LOST_PET"})
+    private String origin;
+    @Schema(description = "채팅방 제목입니다 (산책/실종 채팅방용).", example = "한강 저녁 산책")
+    private String roomTitle;
     @Schema(description = "채팅방 표시 이름입니다 (상대방 닉네임).", example = "홍길동")
     private String displayName;
     @Schema(description = "lastMessage 값입니다.", example = "강아지와 즐거운 산책을 했어요.")

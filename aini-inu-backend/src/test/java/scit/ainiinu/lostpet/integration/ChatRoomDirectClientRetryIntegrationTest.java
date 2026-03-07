@@ -57,7 +57,7 @@ class ChatRoomDirectClientRetryIntegrationTest {
                 .willThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
                 .willReturn(successResponse(777L));
 
-        Long result = chatRoomDirectClient.createDirectRoom(22L, "Bearer test-token");
+        Long result = chatRoomDirectClient.createDirectRoom(22L, "LOST_PET", "test title", "Bearer test-token");
 
         assertThat(result).isEqualTo(777L);
         verify(restTemplate, times(2)).exchange(
@@ -79,7 +79,7 @@ class ChatRoomDirectClientRetryIntegrationTest {
         ))
                 .willThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED));
 
-        assertThatThrownBy(() -> chatRoomDirectClient.createDirectRoom(22L, "Bearer test-token"))
+        assertThatThrownBy(() -> chatRoomDirectClient.createDirectRoom(22L, "LOST_PET", "test title", "Bearer test-token"))
                 .isInstanceOf(ChatDirectAuthException.class);
 
         verify(restTemplate, times(1)).exchange(
@@ -101,7 +101,7 @@ class ChatRoomDirectClientRetryIntegrationTest {
         ))
                 .willThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST));
 
-        assertThatThrownBy(() -> chatRoomDirectClient.createDirectRoom(22L, "Bearer test-token"))
+        assertThatThrownBy(() -> chatRoomDirectClient.createDirectRoom(22L, "LOST_PET", "test title", "Bearer test-token"))
                 .isInstanceOf(ChatDirectResponseSchemaException.class);
 
         verify(restTemplate, times(1)).exchange(
@@ -123,7 +123,7 @@ class ChatRoomDirectClientRetryIntegrationTest {
         ))
                 .willReturn(ResponseEntity.ok(Map.of("data", Map.of())));
 
-        assertThatThrownBy(() -> chatRoomDirectClient.createDirectRoom(22L, "Bearer test-token"))
+        assertThatThrownBy(() -> chatRoomDirectClient.createDirectRoom(22L, "LOST_PET", "test title", "Bearer test-token"))
                 .isInstanceOf(ChatDirectResponseSchemaException.class);
 
         verify(restTemplate, times(1)).exchange(

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import scit.ainiinu.chat.entity.ChatRoom;
+import scit.ainiinu.chat.entity.ChatRoomOrigin;
 import scit.ainiinu.chat.entity.ChatRoomStatus;
 import scit.ainiinu.chat.entity.ChatRoomType;
 
@@ -99,11 +100,13 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
                   and cp.leftAt is null
             )
               and (:status is null or cr.status = :status)
+              and (:origin is null or cr.origin = :origin)
             order by cr.updatedAt desc, cr.id desc
             """)
     Slice<ChatRoom> findAccessibleRoomsByMemberId(
             @Param("memberId") Long memberId,
             @Param("status") ChatRoomStatus status,
+            @Param("origin") ChatRoomOrigin origin,
             Pageable pageable
     );
 }

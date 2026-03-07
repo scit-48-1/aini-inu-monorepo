@@ -81,10 +81,11 @@ public class ChatController {
     public ResponseEntity<ApiResponse<SliceResponse<ChatRoomSummaryResponse>>> getChatRooms(
             @CurrentMember Long memberId,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String origin,
             @Parameter(hidden = true)
             @PageableDefault(size = 20) Pageable pageable
     ) {
-        SliceResponse<ChatRoomSummaryResponse> response = chatRoomService.getRooms(memberId, status, pageable);
+        SliceResponse<ChatRoomSummaryResponse> response = chatRoomService.getRooms(memberId, status, origin, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

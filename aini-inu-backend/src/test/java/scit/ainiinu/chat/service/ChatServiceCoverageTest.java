@@ -25,6 +25,7 @@ import scit.ainiinu.chat.entity.ChatMessageType;
 import scit.ainiinu.chat.entity.ChatParticipant;
 import scit.ainiinu.chat.entity.ChatReview;
 import scit.ainiinu.chat.entity.ChatRoom;
+import scit.ainiinu.chat.entity.ChatRoomOrigin;
 import scit.ainiinu.chat.entity.ChatRoomStatus;
 import scit.ainiinu.chat.entity.ChatRoomType;
 import scit.ainiinu.chat.entity.Message;
@@ -84,13 +85,13 @@ class ChatServiceCoverageTest {
         @Test
         @DisplayName("채팅방 목록 조회에 성공한다")
         void getRooms_success() {
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             ReflectionTestUtils.setField(room, "id", 10L);
             Slice<ChatRoom> slice = new SliceImpl<>(List.of(room), PageRequest.of(0, 20), false);
-            given(chatRoomRepository.findAccessibleRoomsByMemberId(1L, null, PageRequest.of(0, 20))).willReturn(slice);
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(1L, null, null, PageRequest.of(0, 20))).willReturn(slice);
             given(messageRepository.findLastMessagesByRoomIds(List.of(10L))).willReturn(java.util.Collections.emptyMap());
 
-            SliceResponse<ChatRoomSummaryResponse> response = chatRoomService.getRooms(1L, null, PageRequest.of(0, 20));
+            SliceResponse<ChatRoomSummaryResponse> response = chatRoomService.getRooms(1L, null, null, PageRequest.of(0, 20));
 
             assertThat(response.getContent()).hasSize(1);
             assertThat(response.getContent().get(0).getChatRoomId()).isEqualTo(10L);
@@ -100,15 +101,15 @@ class ChatServiceCoverageTest {
         @DisplayName("채팅방 목록 조회 시 배치 쿼리로 마지막 메시지를 가져온다 (N+1 방지)")
         void getRooms_batchFetchesLastMessages() {
             // given: 3개의 채팅방
-            ChatRoom room1 = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ChatRoom room1 = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             ReflectionTestUtils.setField(room1, "id", 1L);
-            ChatRoom room2 = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ChatRoom room2 = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             ReflectionTestUtils.setField(room2, "id", 2L);
-            ChatRoom room3 = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ChatRoom room3 = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             ReflectionTestUtils.setField(room3, "id", 3L);
 
             Slice<ChatRoom> slice = new SliceImpl<>(List.of(room1, room2, room3), PageRequest.of(0, 20), false);
-            given(chatRoomRepository.findAccessibleRoomsByMemberId(1L, null, PageRequest.of(0, 20))).willReturn(slice);
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(1L, null, null, PageRequest.of(0, 20))).willReturn(slice);
 
             // 방 1, 3에만 메시지 존재
             Message msg1 = Message.create(1L, 10L, "안녕", ChatMessageType.USER, "c1");
@@ -119,7 +120,7 @@ class ChatServiceCoverageTest {
                     .willReturn(java.util.Map.of(1L, msg1, 3L, msg3));
 
             // when
-            SliceResponse<ChatRoomSummaryResponse> response = chatRoomService.getRooms(1L, null, PageRequest.of(0, 20));
+            SliceResponse<ChatRoomSummaryResponse> response = chatRoomService.getRooms(1L, null, null, PageRequest.of(0, 20));
 
             // then: 3개 방 모두 반환, 각각 올바른 last message
             assertThat(response.getContent()).hasSize(3);
@@ -135,7 +136,7 @@ class ChatServiceCoverageTest {
         @Test
         @DisplayName("채팅방 상세 조회에 성공한다")
         void getRoomDetail_success() {
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             ReflectionTestUtils.setField(room, "id", 20L);
             ChatParticipant participant = ChatParticipant.create(20L, 1L);
             ReflectionTestUtils.setField(participant, "id", 100L);
@@ -155,7 +156,7 @@ class ChatServiceCoverageTest {
         @Test
         @DisplayName("채팅방 나가기에 성공한다")
         void leaveRoom_success() {
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             ReflectionTestUtils.setField(room, "id", 30L);
             ChatParticipant participant = ChatParticipant.create(30L, 1L);
 
@@ -192,7 +193,7 @@ class ChatServiceCoverageTest {
         @Test
         @DisplayName("메시지 전송에 성공한다")
         void createMessage_success() {
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             ReflectionTestUtils.setField(room, "id", 10L);
             Message saved = Message.create(10L, 1L, "메시지", ChatMessageType.USER, "cid-1");
             ReflectionTestUtils.setField(saved, "id", 500L);
@@ -241,7 +242,7 @@ class ChatServiceCoverageTest {
         @Test
         @DisplayName("산책 확정 처리에 성공한다")
         void confirmWalk_success() {
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             ReflectionTestUtils.setField(room, "id", 1L);
             ChatParticipant me = ChatParticipant.create(1L, 1L);
 
@@ -259,7 +260,7 @@ class ChatServiceCoverageTest {
         @Test
         @DisplayName("산책 확정 상태 조회에 성공한다")
         void getWalkConfirm_success() {
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             ReflectionTestUtils.setField(room, "id", 2L);
             ChatParticipant me = ChatParticipant.create(2L, 1L);
 
@@ -276,7 +277,7 @@ class ChatServiceCoverageTest {
         @Test
         @DisplayName("산책 확정 취소 처리에 성공한다")
         void cancelWalkConfirm_success() {
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             ReflectionTestUtils.setField(room, "id", 3L);
             ChatParticipant me = ChatParticipant.create(3L, 1L);
 

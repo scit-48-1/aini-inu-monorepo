@@ -9,10 +9,10 @@ import { useParams } from 'next/navigation';
 import { getRooms, type ChatRoomSummaryResponse } from '@/api/chat';
 import { ChatStartModal } from '@/components/chat/ChatStartModal';
 
-type ChatTab = 'ACTIVE' | 'PAST';
+type ChatTab = 'DM' | 'WALK' | 'LOST_PET';
 
 export function ChatList() {
-  const [activeTab, setActiveTab] = useState<ChatTab>('ACTIVE');
+  const [activeTab, setActiveTab] = useState<ChatTab>('DM');
   const [searchQuery, setSearchQuery] = useState('');
   const [rooms, setRooms] = useState<ChatRoomSummaryResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,7 +27,7 @@ export function ChatList() {
     try {
       setHasError(false);
       if (!append) setIsLoading(true);
-      const result = await getRooms({ page: pageNum, size: 20 });
+      const result = await getRooms({ page: pageNum, size: 20, status: 'ACTIVE', origin: activeTab });
       if (append) {
         setRooms((prev) => [...prev, ...result.content]);
       } else {
@@ -40,7 +40,7 @@ export function ChatList() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [activeTab]);
 
   useEffect(() => {
     fetchRooms();
@@ -54,21 +54,15 @@ export function ChatList() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [fetchRooms]);
 
-  // Client-side filtering by tab and search
+  // Client-side search filter only (tab filtering is server-side)
   const filteredRooms = rooms.filter((room) => {
-    // Tab filter: ACTIVE = not CLOSED, PAST = CLOSED
-    const matchTab =
-      activeTab === 'ACTIVE'
-        ? room.status !== 'CLOSED'
-        : room.status === 'CLOSED';
-    if (!matchTab) return false;
-
-    // Search filter by last message content
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchSearch =
-        room.lastMessage?.content?.toLowerCase().includes(q) ?? false;
-      return matchSearch;
+        room.lastMessage?.content?.toLowerCase().includes(q) ||
+        room.displayName?.toLowerCase().includes(q) ||
+        room.roomTitle?.toLowerCase().includes(q);
+      return matchSearch ?? false;
     }
     return true;
   });
@@ -81,6 +75,9 @@ export function ChatList() {
 
   // Derive display name from room
   function getRoomDisplayName(room: ChatRoomSummaryResponse): string {
+    if (room.origin === 'WALK' || room.origin === 'LOST_PET') {
+      return room.roomTitle ?? room.displayName ?? '채팅';
+    }
     if (room.displayName) {
       return room.displayName;
     }
@@ -151,16 +148,9 @@ export function ChatList() {
       <div className="px-6 shrink-0">
         <div className="flex gap-6 border-b border-zinc-100">
           {[
-            {
-              id: 'ACTIVE' as const,
-              label: 'Messages',
-              count: rooms.filter((r) => r.status !== 'CLOSED').length,
-            },
-            {
-              id: 'PAST' as const,
-              label: 'History',
-              count: rooms.filter((r) => r.status === 'CLOSED').length,
-            },
+            { id: 'DM' as const, label: 'Messages' },
+            { id: 'WALK' as const, label: '산책' },
+            { id: 'LOST_PET' as const, label: '실종 신고' },
           ].map((tab) => (
             <button
               key={tab.id}

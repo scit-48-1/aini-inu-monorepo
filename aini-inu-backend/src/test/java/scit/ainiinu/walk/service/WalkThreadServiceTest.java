@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import scit.ainiinu.chat.entity.ChatRoom;
+import scit.ainiinu.chat.entity.ChatRoomOrigin;
 import scit.ainiinu.chat.entity.ChatRoomStatus;
 import scit.ainiinu.chat.entity.ChatRoomType;
 import scit.ainiinu.chat.repository.ChatParticipantRepository;
@@ -191,7 +192,7 @@ class WalkThreadServiceTest {
                     .build();
             ReflectionTestUtils.setField(thread, "id", 1L);
 
-            ChatRoom savedRoom = ChatRoom.create(1L, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ChatRoom savedRoom = ChatRoom.create(1L, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.WALK, null);
             ReflectionTestUtils.setField(savedRoom, "id", 101L);
 
             ThreadApplyRequest request = new ThreadApplyRequest();

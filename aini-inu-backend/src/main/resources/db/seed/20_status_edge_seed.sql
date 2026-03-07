@@ -113,13 +113,15 @@ SET thread_id = EXCLUDED.thread_id,
     updated_at = NOW();
 
 -- Chat rooms: one linked group room, one empty direct room
-INSERT INTO chat_room (id, thread_id, chat_type, status, walk_confirmed, created_at, updated_at) VALUES
-    (9501, 9401, 'GROUP', 'ACTIVE', false, NOW(), NOW()),
-    (9502, NULL, 'DIRECT', 'ACTIVE', false, NOW(), NOW())
+INSERT INTO chat_room (id, thread_id, chat_type, status, origin, room_title, walk_confirmed, created_at, updated_at) VALUES
+    (9501, 9401, 'GROUP', 'ACTIVE', 'WALK', '정원 마감 임박 산책', false, NOW(), NOW()),
+    (9502, NULL, 'DIRECT', 'ACTIVE', 'DM', NULL, false, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE
 SET thread_id = EXCLUDED.thread_id,
     chat_type = EXCLUDED.chat_type,
     status = EXCLUDED.status,
+    origin = EXCLUDED.origin,
+    room_title = EXCLUDED.room_title,
     walk_confirmed = EXCLUDED.walk_confirmed,
     updated_at = NOW();
 

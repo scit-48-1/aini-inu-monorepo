@@ -15,6 +15,7 @@ import scit.ainiinu.chat.dto.response.MessageReadResponse;
 import scit.ainiinu.chat.entity.ChatMessageType;
 import scit.ainiinu.chat.entity.ChatParticipant;
 import scit.ainiinu.chat.entity.ChatRoom;
+import scit.ainiinu.chat.entity.ChatRoomOrigin;
 import scit.ainiinu.chat.entity.ChatRoomStatus;
 import scit.ainiinu.chat.entity.ChatRoomType;
 import scit.ainiinu.chat.entity.Message;
@@ -66,7 +67,7 @@ class MessageServiceTest {
             Long memberId = 1L;
             Long chatRoomId = 10L;
 
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             ReflectionTestUtils.setField(room, "id", chatRoomId);
 
             ChatMessageCreateRequest request = new ChatMessageCreateRequest();
@@ -115,7 +116,7 @@ class MessageServiceTest {
             Long memberId = 1L;
             Long chatRoomId = 10L;
 
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.CLOSED);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.CLOSED, ChatRoomOrigin.DM, null);
             ReflectionTestUtils.setField(room, "id", chatRoomId);
 
             ChatMessageCreateRequest request = new ChatMessageCreateRequest();
@@ -136,7 +137,7 @@ class MessageServiceTest {
             Long memberId = 1L;
             Long chatRoomId = 10L;
 
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             ReflectionTestUtils.setField(room, "id", chatRoomId);
 
             ChatMessageCreateRequest request = new ChatMessageCreateRequest();

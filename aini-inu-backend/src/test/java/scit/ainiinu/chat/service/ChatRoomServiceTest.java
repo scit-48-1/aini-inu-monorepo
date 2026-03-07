@@ -17,6 +17,7 @@ import scit.ainiinu.chat.dto.response.ChatRoomSummaryResponse;
 import scit.ainiinu.chat.entity.ChatParticipant;
 import scit.ainiinu.chat.entity.ChatParticipantPet;
 import scit.ainiinu.chat.entity.ChatRoom;
+import scit.ainiinu.chat.entity.ChatRoomOrigin;
 import scit.ainiinu.chat.entity.ChatRoomStatus;
 import scit.ainiinu.chat.entity.ChatRoomType;
 import scit.ainiinu.chat.exception.ChatException;
@@ -75,10 +76,10 @@ class ChatRoomServiceTest {
             Long memberId = 1L;
             Pageable pageable = PageRequest.of(0, 20);
 
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             setRoomId(room, 10L);
 
-            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), any(), eq(pageable)))
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), any(), any(), eq(pageable)))
                     .willReturn(new SliceImpl<>(List.of(room), pageable, false));
             given(messageRepository.findLastMessagesByRoomIds(List.of(10L)))
                     .willReturn(Collections.emptyMap());
@@ -93,7 +94,7 @@ class ChatRoomServiceTest {
                     .willReturn(List.of(partnerMember));
 
             // when
-            SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, pageable);
+            SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, null, pageable);
 
             // then
             assertThat(result.getContent()).hasSize(1);
@@ -107,10 +108,10 @@ class ChatRoomServiceTest {
             Long memberId = 1L;
             Pageable pageable = PageRequest.of(0, 20);
 
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             setRoomId(room, 10L);
 
-            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), any(), eq(pageable)))
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), any(), any(), eq(pageable)))
                     .willReturn(new SliceImpl<>(List.of(room), pageable, false));
             given(messageRepository.findLastMessagesByRoomIds(List.of(10L)))
                     .willReturn(Collections.emptyMap());
@@ -125,7 +126,7 @@ class ChatRoomServiceTest {
                     .willReturn(List.of(createMember(2L, "홍길동"), createMember(3L, "김철수")));
 
             // when
-            SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, pageable);
+            SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, null, pageable);
 
             // then
             assertThat(result.getContent().get(0).getDisplayName()).isEqualTo("홍길동, 김철수");
@@ -138,10 +139,10 @@ class ChatRoomServiceTest {
             Long memberId = 1L;
             Pageable pageable = PageRequest.of(0, 20);
 
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             setRoomId(room, 10L);
 
-            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), any(), eq(pageable)))
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), any(), any(), eq(pageable)))
                     .willReturn(new SliceImpl<>(List.of(room), pageable, false));
             given(messageRepository.findLastMessagesByRoomIds(List.of(10L)))
                     .willReturn(Collections.emptyMap());
@@ -161,7 +162,7 @@ class ChatRoomServiceTest {
                     ));
 
             // when
-            SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, pageable);
+            SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, null, pageable);
 
             // then
             assertThat(result.getContent().get(0).getDisplayName()).isEqualTo("홍길동, 김철수 외 1명");
@@ -174,10 +175,10 @@ class ChatRoomServiceTest {
             Long memberId = 1L;
             Pageable pageable = PageRequest.of(0, 20);
 
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             setRoomId(room, 10L);
 
-            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), any(), eq(pageable)))
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), any(), any(), eq(pageable)))
                     .willReturn(new SliceImpl<>(List.of(room), pageable, false));
             given(messageRepository.findLastMessagesByRoomIds(List.of(10L)))
                     .willReturn(Collections.emptyMap());
@@ -192,7 +193,7 @@ class ChatRoomServiceTest {
                     .willReturn(List.of(createMember(2L, "홍길동")));
 
             // when
-            SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, pageable);
+            SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, null, pageable);
 
             // then
             assertThat(result.getContent().get(0).getDisplayName()).isEqualTo("알 수 없음");
@@ -205,13 +206,13 @@ class ChatRoomServiceTest {
             Long memberId = 1L;
             Pageable pageable = PageRequest.of(0, 20);
 
-            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), any(), eq(pageable)))
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), any(), any(), eq(pageable)))
                     .willReturn(new SliceImpl<>(List.of(), pageable, false));
             given(messageRepository.findLastMessagesByRoomIds(List.of()))
                     .willReturn(Collections.emptyMap());
 
             // when
-            SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, pageable);
+            SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, null, pageable);
 
             // then
             assertThat(result.getContent()).isEmpty();
@@ -229,7 +230,7 @@ class ChatRoomServiceTest {
             Long memberId = 1L;
             Long chatRoomId = 10L;
 
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             setRoomId(room, chatRoomId);
 
             ChatParticipant me = createParticipant(1L, chatRoomId, memberId);
@@ -271,7 +272,7 @@ class ChatRoomServiceTest {
             Long memberId = 1L;
             Long chatRoomId = 10L;
 
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             setRoomId(room, chatRoomId);
 
             ChatParticipant me = createParticipant(1L, chatRoomId, memberId);

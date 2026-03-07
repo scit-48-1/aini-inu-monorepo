@@ -36,6 +36,13 @@ public class ChatRoom extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private ChatRoomStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private ChatRoomOrigin origin;
+
+    @Column(name = "room_title", length = 200)
+    private String roomTitle;
+
     @Column(name = "walk_confirmed", nullable = false)
     private Boolean walkConfirmed;
 
@@ -43,18 +50,24 @@ public class ChatRoom extends BaseTimeEntity {
     private Long version;
 
     @Builder
-    private ChatRoom(Long threadId, ChatRoomType chatType, ChatRoomStatus status, Boolean walkConfirmed) {
+    private ChatRoom(Long threadId, ChatRoomType chatType, ChatRoomStatus status,
+                     ChatRoomOrigin origin, String roomTitle, Boolean walkConfirmed) {
         this.threadId = threadId;
         this.chatType = chatType;
         this.status = status != null ? status : ChatRoomStatus.ACTIVE;
+        this.origin = origin != null ? origin : ChatRoomOrigin.DM;
+        this.roomTitle = roomTitle;
         this.walkConfirmed = walkConfirmed != null ? walkConfirmed : Boolean.FALSE;
     }
 
-    public static ChatRoom create(Long threadId, ChatRoomType chatType, ChatRoomStatus status) {
+    public static ChatRoom create(Long threadId, ChatRoomType chatType, ChatRoomStatus status,
+                                  ChatRoomOrigin origin, String roomTitle) {
         return ChatRoom.builder()
                 .threadId(threadId)
                 .chatType(chatType)
                 .status(status)
+                .origin(origin)
+                .roomTitle(roomTitle)
                 .walkConfirmed(false)
                 .build();
     }

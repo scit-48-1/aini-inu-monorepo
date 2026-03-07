@@ -1,6 +1,7 @@
 package scit.ainiinu.lostpet.integration.chat;
 
 import io.github.resilience4j.retry.annotation.Retry;
+import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,14 +35,18 @@ public class ChatRoomDirectClientImpl implements ChatRoomDirectClient {
 
     @Override
     @Retry(name = "lostpetChatDirect")
-    public Long createDirectRoom(Long partnerId, String authorizationHeader) {
+    public Long createDirectRoom(Long partnerId, String origin, String roomTitle, String authorizationHeader) {
         String endpoint = chatBaseUrl + directCreatePath;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         if (hasText(authorizationHeader)) {
             headers.set(HttpHeaders.AUTHORIZATION, authorizationHeader);
         }
-        HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(Map.of("partnerId", partnerId), headers);
+        Map<String, Object> body = new HashMap<>();
+        body.put("partnerId", partnerId);
+        if (origin != null) body.put("origin", origin);
+        if (roomTitle != null) body.put("roomTitle", roomTitle);
+        HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(body, headers);
 
         ResponseEntity<Map<String, Object>> responseEntity;
         try {

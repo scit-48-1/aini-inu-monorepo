@@ -16,6 +16,7 @@ import scit.ainiinu.chat.dto.response.LeaveRoomResponse;
 import scit.ainiinu.chat.entity.ChatParticipant;
 import scit.ainiinu.chat.entity.ChatParticipantPet;
 import scit.ainiinu.chat.entity.ChatRoom;
+import scit.ainiinu.chat.entity.ChatRoomOrigin;
 import scit.ainiinu.chat.entity.ChatRoomStatus;
 import scit.ainiinu.chat.entity.ChatRoomType;
 import scit.ainiinu.chat.entity.Message;
@@ -53,9 +54,10 @@ public class ChatRoomService {
     private final MemberRepository memberRepository;
     private final PetRepository petRepository;
 
-    public SliceResponse<ChatRoomSummaryResponse> getRooms(Long memberId, String status, Pageable pageable) {
+    public SliceResponse<ChatRoomSummaryResponse> getRooms(Long memberId, String status, String origin, Pageable pageable) {
         ChatRoomStatus parsedStatus = parseStatus(status);
-        Slice<ChatRoom> rooms = chatRoomRepository.findAccessibleRoomsByMemberId(memberId, parsedStatus, pageable);
+        ChatRoomOrigin parsedOrigin = parseOrigin(origin);
+        Slice<ChatRoom> rooms = chatRoomRepository.findAccessibleRoomsByMemberId(memberId, parsedStatus, parsedOrigin, pageable);
 
         // Batch-fetch last messages for all rooms (N+1 prevention)
         List<Long> roomIds = rooms.getContent().stream().map(ChatRoom::getId).toList();
@@ -107,7 +109,10 @@ public class ChatRoomService {
             return toDetailResponse(existing.get());
         }
 
-        ChatRoom room = chatRoomRepository.save(ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE));
+        ChatRoomOrigin requestOrigin = parseOrigin(request.getOrigin());
+        ChatRoom room = chatRoomRepository.save(
+                ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE,
+                        requestOrigin != null ? requestOrigin : ChatRoomOrigin.DM, request.getRoomTitle()));
         ChatParticipant me = chatParticipantRepository.save(ChatParticipant.create(room.getId(), memberId));
         ChatParticipant partner = chatParticipantRepository.save(ChatParticipant.create(room.getId(), partnerId));
 
@@ -191,6 +196,8 @@ public class ChatRoomService {
                 .chatRoomId(room.getId())
                 .chatType(room.getChatType().name())
                 .status(room.getStatus().name())
+                .origin(room.getOrigin().name())
+                .roomTitle(room.getRoomTitle())
                 .displayName(displayName)
                 .lastMessage(lastMessage)
                 .updatedAt(room.getUpdatedAt())
@@ -276,6 +283,17 @@ public class ChatRoomService {
         }
         try {
             return ChatRoomStatus.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException exception) {
+            throw new ChatException(ChatErrorCode.INVALID_REQUEST);
+        }
+    }
+
+    private ChatRoomOrigin parseOrigin(String origin) {
+        if (origin == null || origin.isBlank()) {
+            return null;
+        }
+        try {
+            return ChatRoomOrigin.valueOf(origin.trim().toUpperCase());
         } catch (IllegalArgumentException exception) {
             throw new ChatException(ChatErrorCode.INVALID_REQUEST);
         }

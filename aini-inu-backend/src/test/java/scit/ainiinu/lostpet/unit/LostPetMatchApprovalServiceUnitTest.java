@@ -3,6 +3,7 @@ package scit.ainiinu.lostpet.unit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 import java.math.BigDecimal;
@@ -100,7 +101,7 @@ class LostPetMatchApprovalServiceUnitTest {
                     .willReturn(Optional.of(candidate));
             given(sightingRepository.findById(2L)).willReturn(Optional.of(sighting));
             given(lostPetMatchRepository.findByLostPetReportIdAndSightingId(1L, 2L)).willReturn(Optional.empty());
-            given(chatRoomDirectClient.createDirectRoom(22L, "Bearer test-token")).willReturn(555L);
+            given(chatRoomDirectClient.createDirectRoom(eq(22L), any(), any(), eq("Bearer test-token"))).willReturn(555L);
             given(lostPetMatchRepository.save(any(LostPetMatch.class))).willAnswer(invocation -> invocation.getArgument(0));
 
             LostPetMatchResponse response = lostPetMatchApprovalService.approve(
@@ -151,7 +152,7 @@ class LostPetMatchApprovalServiceUnitTest {
                     .willReturn(Optional.of(candidate));
             given(sightingRepository.findById(2L)).willReturn(Optional.of(sighting));
             given(lostPetMatchRepository.findByLostPetReportIdAndSightingId(1L, 2L)).willReturn(Optional.empty());
-            given(chatRoomDirectClient.createDirectRoom(22L, "Bearer test-token"))
+            given(chatRoomDirectClient.createDirectRoom(eq(22L), any(), any(), eq("Bearer test-token")))
                     .willThrow(new ChatDirectClientException(
                             ChatDirectFailureType.CONNECT,
                             "chat down"
@@ -278,7 +279,7 @@ class LostPetMatchApprovalServiceUnitTest {
                     .willReturn(Optional.of(candidate));
             given(sightingRepository.findById(2L)).willReturn(Optional.of(sighting));
             given(lostPetMatchRepository.findByLostPetReportIdAndSightingId(1L, 2L)).willReturn(Optional.empty());
-            given(chatRoomDirectClient.createDirectRoom(22L, "Bearer test-token"))
+            given(chatRoomDirectClient.createDirectRoom(eq(22L), any(), any(), eq("Bearer test-token")))
                     .willThrow(new ChatDirectClientException(
                             ChatDirectFailureType.AUTH,
                             "unauthorized"
@@ -333,7 +334,7 @@ class LostPetMatchApprovalServiceUnitTest {
                     .willReturn(Optional.of(candidate));
             given(sightingRepository.findById(2L)).willReturn(Optional.of(sighting));
             given(lostPetMatchRepository.findByLostPetReportIdAndSightingId(1L, 2L)).willReturn(Optional.empty());
-            given(chatRoomDirectClient.createDirectRoom(22L, "Bearer test-token")).willReturn(null);
+            given(chatRoomDirectClient.createDirectRoom(eq(22L), any(), any(), eq("Bearer test-token"))).willReturn(null);
             given(lostPetMatchRepository.save(any(LostPetMatch.class))).willAnswer(invocation -> invocation.getArgument(0));
 
             LostPetMatchResponse response = lostPetMatchApprovalService.approve(

@@ -95,7 +95,8 @@ public class LostPetMatchApprovalService {
         candidate.approve();
 
         try {
-            Long chatRoomId = chatRoomDirectClient.createDirectRoom(sighting.getFinderId(), authorizationHeader);
+            String roomTitle = (report.getBreed() != null ? report.getBreed() + " " : "") + report.getPetName() + "를 찾습니다";
+            Long chatRoomId = chatRoomDirectClient.createDirectRoom(sighting.getFinderId(), "LOST_PET", roomTitle, authorizationHeader);
             if (chatRoomId == null) {
                 throw new ChatDirectClientException(
                         ChatDirectFailureType.RESPONSE_SCHEMA,

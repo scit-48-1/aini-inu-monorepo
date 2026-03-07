@@ -335,7 +335,7 @@ class LostPetIntegrationTest {
                             "ok",
                             List.of(new LostPetAiCandidate(sightingId, finderId, new BigDecimal("0.91000")))
                     ));
-            given(chatRoomDirectClient.createDirectRoom(any(), any())).willReturn(777L);
+            given(chatRoomDirectClient.createDirectRoom(any(), any(), any(), any())).willReturn(777L);
 
             String analyzeRequest = """
                     {

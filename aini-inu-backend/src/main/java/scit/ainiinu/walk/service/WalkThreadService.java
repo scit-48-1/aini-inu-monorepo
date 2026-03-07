@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import scit.ainiinu.chat.entity.ChatParticipant;
 import scit.ainiinu.chat.entity.ChatRoom;
+import scit.ainiinu.chat.entity.ChatRoomOrigin;
 import scit.ainiinu.chat.entity.ChatRoomStatus;
 import scit.ainiinu.chat.entity.ChatRoomType;
 import scit.ainiinu.chat.repository.ChatParticipantRepository;
@@ -489,7 +490,8 @@ public class WalkThreadService {
                             ChatRoomStatus.ACTIVE
                     )
                     .orElseGet(() -> chatRoomRepository.save(
-                            ChatRoom.create(threadId, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE)
+                            ChatRoom.create(threadId, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE,
+                                    ChatRoomOrigin.WALK, thread.getTitle())
                     ));
             case INDIVIDUAL -> chatRoomRepository
                     .findByThreadIdAndTypeAndParticipants(
@@ -500,7 +502,8 @@ public class WalkThreadService {
                             applicantId
                     )
                     .orElseGet(() -> chatRoomRepository.save(
-                            ChatRoom.create(threadId, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE)
+                            ChatRoom.create(threadId, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE,
+                                    ChatRoomOrigin.WALK, thread.getTitle())
                     ));
         };
 

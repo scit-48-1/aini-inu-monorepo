@@ -7,6 +7,8 @@ export interface ChatRoomSummaryResponse {
   chatRoomId: number;
   chatType: string;
   status: string;
+  origin: string;
+  roomTitle: string | null;
   displayName: string;
   lastMessage: ChatMessageResponse | null;
   updatedAt: string;
@@ -36,6 +38,8 @@ export interface ChatParticipantPetResponse {
 
 export interface ChatRoomDirectCreateRequest {
   partnerId: number;
+  origin?: string;
+  roomTitle?: string;
 }
 
 export interface ChatMessageCreateRequest {
@@ -113,10 +117,11 @@ export interface WalkConfirmResponse {
 // --- API Functions ---
 
 export async function getRooms(
-  params?: PaginationParams & { status?: string },
+  params?: PaginationParams & { status?: string; origin?: string },
 ): Promise<SliceResponse<ChatRoomSummaryResponse>> {
   const query = new URLSearchParams();
   if (params?.status) query.set('status', params.status);
+  if (params?.origin) query.set('origin', params.origin);
   if (params?.page !== undefined) query.set('page', String(params.page));
   if (params?.size !== undefined) query.set('size', String(params.size));
   if (params?.sort) query.set('sort', params.sort);

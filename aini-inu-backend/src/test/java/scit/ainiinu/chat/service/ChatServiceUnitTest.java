@@ -12,6 +12,7 @@ import scit.ainiinu.chat.dto.request.WalkConfirmRequest;
 import scit.ainiinu.chat.dto.response.ChatRoomDetailResponse;
 import scit.ainiinu.chat.dto.response.WalkConfirmResponse;
 import scit.ainiinu.chat.entity.ChatRoom;
+import scit.ainiinu.chat.entity.ChatRoomOrigin;
 import scit.ainiinu.chat.entity.ChatRoomStatus;
 import scit.ainiinu.chat.entity.ChatRoomType;
 import scit.ainiinu.chat.entity.ChatParticipant;
@@ -71,7 +72,7 @@ class ChatServiceUnitTest {
             ChatRoomDirectCreateRequest request = new ChatRoomDirectCreateRequest();
             request.setPartnerId(2L);
 
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             setRoomId(room, 10L);
 
             given(memberRepository.existsById(2L)).willReturn(true);
@@ -97,7 +98,7 @@ class ChatServiceUnitTest {
         @DisplayName("CONFIRM 요청 시 본인 상태를 CONFIRMED로 갱신한다")
         void confirmAction_updatesState() {
             // given
-            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE);
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             setRoomId(room, 100L);
 
             ChatParticipant me = ChatParticipant.create(100L, 1L);

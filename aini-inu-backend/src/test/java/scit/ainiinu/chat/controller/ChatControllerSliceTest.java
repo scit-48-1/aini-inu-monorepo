@@ -141,7 +141,7 @@ class ChatControllerSliceTest {
                     .updatedAt(LocalDateTime.now())
                     .build();
             Slice<ChatRoomSummaryResponse> slice = new SliceImpl<>(List.of(room), PageRequest.of(0, 20), false);
-            given(chatRoomService.getRooms(anyLong(), any(), any())).willReturn(SliceResponse.of(slice));
+            given(chatRoomService.getRooms(anyLong(), any(), any(), any())).willReturn(SliceResponse.of(slice));
 
             mockMvc.perform(get("/api/v1/chat-rooms")
                             .param("page", "0")

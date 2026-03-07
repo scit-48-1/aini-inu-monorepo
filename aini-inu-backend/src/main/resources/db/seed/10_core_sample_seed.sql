@@ -182,15 +182,17 @@ SET thread_id = EXCLUDED.thread_id,
     updated_at = NOW();
 
 -- Chat
-INSERT INTO chat_room (id, thread_id, chat_type, status, walk_confirmed, created_at, updated_at) VALUES
-    (2401, 2001, 'GROUP', 'ACTIVE', false, NOW(), NOW()),
-    (2402, 2002, 'DIRECT', 'ACTIVE', true, NOW(), NOW()),
-    (2403, NULL, 'DIRECT', 'ACTIVE', false, NOW(), NOW()),
-    (2404, 2003, 'GROUP', 'CLOSED', false, NOW(), NOW())
+INSERT INTO chat_room (id, thread_id, chat_type, status, origin, room_title, walk_confirmed, created_at, updated_at) VALUES
+    (2401, 2001, 'GROUP', 'ACTIVE', 'WALK', '한강 저녁 산책', false, NOW(), NOW()),
+    (2402, 2002, 'DIRECT', 'ACTIVE', 'WALK', '아침 짧은 산책', true, NOW(), NOW()),
+    (2403, NULL, 'DIRECT', 'ACTIVE', 'LOST_PET', '말티즈 몽이를 찾습니다', false, NOW(), NOW()),
+    (2404, 2003, 'GROUP', 'CLOSED', 'WALK', '주말 공원 산책', false, NOW(), NOW())
 ON CONFLICT (id) DO UPDATE
 SET thread_id = EXCLUDED.thread_id,
     chat_type = EXCLUDED.chat_type,
     status = EXCLUDED.status,
+    origin = EXCLUDED.origin,
+    room_title = EXCLUDED.room_title,
     walk_confirmed = EXCLUDED.walk_confirmed,
     updated_at = NOW();
 
