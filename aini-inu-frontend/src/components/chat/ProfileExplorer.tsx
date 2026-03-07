@@ -38,7 +38,7 @@ export const ProfileExplorer: React.FC<ProfileExplorerProps> = ({ partnerId, isO
 
       {/* 프로필 컨텐츠 */}
       <div className="flex-1 overflow-y-auto no-scrollbar">
-        <ProfileView memberId={String(partnerId)} compact={true} />
+        {isOpen && <ProfileView memberId={String(partnerId)} compact={true} />}
       </div>
     </aside>
   );
