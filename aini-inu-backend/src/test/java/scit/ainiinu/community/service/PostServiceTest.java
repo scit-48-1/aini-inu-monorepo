@@ -17,6 +17,7 @@ import scit.ainiinu.common.exception.BusinessException;
 import scit.ainiinu.common.response.SliceResponse;
 import scit.ainiinu.community.dto.CommentCreateRequest;
 import scit.ainiinu.community.dto.CommentResponse;
+import scit.ainiinu.community.dto.PostCreateRequest;
 import scit.ainiinu.community.dto.PostDetailResponse;
 import scit.ainiinu.community.dto.PostLikeResponse;
 import scit.ainiinu.community.dto.PostResponse;
@@ -325,6 +326,19 @@ class PostServiceTest {
             assertThat(response.getLikeCount()).isEqualTo(0);
             then(postLikeRepository).should(times(1)).delete(existingLike);
         }
+
+        @Test
+        @DisplayName("존재하지 않는 게시글에 좋아요 시 CO001 예외가 발생한다")
+        void fail_PostNotFound() {
+            // given
+            Long postId = 999L;
+            given(postRepository.findById(postId)).willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> postService.toggleLike(1L, postId))
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", CommunityErrorCode.POST_NOT_FOUND);
+        }
     }
 
     @Nested
@@ -485,6 +499,20 @@ class PostServiceTest {
             assertThat(response.getContent().get(0).getAuthor().getNickname()).isEqualTo("이웃");
             then(commentRepository).should(times(1)).findByPostIdOrderByCreatedAtAsc(postId, pageable);
         }
+
+        @Test
+        @DisplayName("존재하지 않는 게시글의 댓글 조회 시 CO001 예외가 발생한다")
+        void fail_PostNotFound() {
+            // given
+            Long postId = 999L;
+            Pageable pageable = PageRequest.of(0, 20);
+            given(postRepository.findById(postId)).willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> postService.getComments(1L, postId, pageable))
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", CommunityErrorCode.POST_NOT_FOUND);
+        }
     }
 
     @Nested
@@ -606,6 +634,72 @@ class PostServiceTest {
             assertThat(response.getComments().get(0).getAuthor().getNickname()).isEqualTo("보리누나");
             assertThat(response.getComments().get(0).getAuthor().getProfileImageUrl())
                     .isEqualTo("https://cdn.example.com/comment-author.jpg");
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 게시글 조회 시 CO001 예외가 발생한다")
+        void fail_PostNotFound() {
+            // given
+            Long postId = 999L;
+            given(postRepository.findById(postId)).willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> postService.getPostDetail(1L, postId))
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", CommunityErrorCode.POST_NOT_FOUND);
+        }
+    }
+
+    @Nested
+    @DisplayName("게시글 생성")
+    class CreatePost {
+
+        @Test
+        @DisplayName("유효한 요청으로 게시글을 생성하면 성공한다")
+        void success() {
+            // given
+            Long memberId = 1L;
+            PostCreateRequest request = new PostCreateRequest();
+            request.setContent("새 게시글 내용");
+            request.setImageUrls(List.of("img1.jpg", "img2.jpg"));
+
+            Post savedPost = Post.create(memberId, request.getResolvedContent(), request.getImageUrls());
+            setId(savedPost, 10L);
+
+            given(postRepository.save(any(Post.class))).willReturn(savedPost);
+
+            // when
+            PostResponse response = postService.create(memberId, request);
+
+            // then
+            then(postRepository).should(times(1)).save(any(Post.class));
+            assertThat(response.getContent()).isEqualTo("새 게시글 내용");
+            assertThat(response.getAuthor().getId()).isEqualTo(memberId);
+        }
+
+        @Test
+        @DisplayName("작성자 회원 정보가 있으면 author 닉네임이 채워진다")
+        void success_with_member_profile() {
+            // given
+            Long memberId = 1L;
+            PostCreateRequest request = new PostCreateRequest();
+            request.setContent("새 게시글 내용");
+            request.setImageUrls(Collections.emptyList());
+
+            Post savedPost = Post.create(memberId, request.getResolvedContent(), request.getImageUrls());
+            setId(savedPost, 10L);
+
+            Member author = createMember(memberId, "몽이아빠", "https://cdn.example.com/profile.jpg");
+
+            given(postRepository.save(any(Post.class))).willReturn(savedPost);
+            given(memberRepository.findAllById(anyIterable())).willReturn(List.of(author));
+
+            // when
+            PostResponse response = postService.create(memberId, request);
+
+            // then
+            assertThat(response.getAuthor().getNickname()).isEqualTo("몽이아빠");
+            assertThat(response.getAuthor().getProfileImageUrl()).isEqualTo("https://cdn.example.com/profile.jpg");
         }
     }
 
