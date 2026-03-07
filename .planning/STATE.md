@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 08-04-PLAN.md
+stopped_at: Completed 08-05-PLAN.md
 last_updated: "2026-03-07T01:06:01.763Z"
 last_activity: 2026-03-07 -- Completed plan 08-02 (chat room detail & messaging)
 progress:
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 8 of 12 (Chat System)
-Plan: 2 of 3 in current phase (08-02 complete)
+Plan: 5 of 5 in current phase (08-05 complete)
 Status: Executing
-Last activity: 2026-03-07 -- Completed plan 08-02 (chat room detail & messaging)
+Last activity: 2026-03-07 -- Completed plan 08-05 (leave room & dashboard friends bug fixes)
 
 Progress: [██████████] 97%
 
@@ -84,6 +84,7 @@ Progress: [██████████] 97%
 | Phase 08-chat-system P02 | 3 | 2 tasks | 4 files |
 | Phase 08-chat-system P03 | 5 | 2 tasks | 5 files |
 | Phase 08-chat-system P04 | 2 | 2 tasks | 4 files |
+| Phase 08-chat-system P05 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -177,6 +178,9 @@ Recent decisions affecting current work:
 - [Phase 08-chat-system]: WalkReviewModal tags concatenated into comment field since backend has no tags; old chatService deleted after dashboard migration
 - [Phase 08-04]: mergeMessages uses Map-based merge to preserve optimistic sends not yet confirmed by server
 - [Phase 08-04]: Mark-read effect depends on latestMessageId (number) not messages array to prevent infinite API calls
+- [Phase 08-05]: Disconnect WS before leaveRoom API to prevent polling errors between API call and disconnect
+- [Phase 08-05]: visibilitychange listener in ChatList for cross-cutting room list refresh
+- [Phase 08-05]: getRoom per room (max 5) on dashboard to extract partner memberId from participants
 
 ### Pending Todos
 
@@ -188,6 +192,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-07T01:06:01.760Z
-Stopped at: Completed 08-04-PLAN.md
+Last session: 2026-03-07T01:09:15Z
+Stopped at: Completed 08-05-PLAN.md
 Resume file: None
