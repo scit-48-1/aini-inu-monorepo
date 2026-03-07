@@ -126,11 +126,11 @@ Requirements for frontend realignment. Each maps to roadmap phases.
 
 ### Dashboard (Phase 11) — FR-DASH
 
-- [ ] **DASH-01**: 인사/매너 점수/활동량 표시 (FR-DASH-001, `MEM-ME-GET` + `MEM-WALK-STATS-GET`)
-- [ ] **DASH-02**: 산책 추천 카드 (FR-DASH-002, `THR-HOTSPOT-GET`)
-- [ ] **DASH-03**: 동네 최신 스레드 요약 (FR-DASH-003, `THR-LIST`)
+- [x] **DASH-01**: 인사/매너 점수/활동량 표시 (FR-DASH-001, `MEM-ME-GET` + `MEM-WALK-STATS-GET`)
+- [x] **DASH-02**: 산책 추천 카드 (FR-DASH-002, `THR-HOTSPOT-GET`)
+- [x] **DASH-03**: 동네 최신 스레드 요약 (FR-DASH-003, `THR-LIST`)
 - [ ] **DASH-04**: 미작성 리뷰 모달 — 제출/실패 재시도 (FR-DASH-004, `CHAT-ROOMS-GET` + `CHAT-REVIEW-CREATE`)
-- [ ] **DASH-05**: 섹션별 부분 실패 fallback (PRD §8.3)
+- [x] **DASH-05**: 섹션별 부분 실패 fallback (PRD §8.3)
 
 ### Settings + Integration (Phase 12) — FR-SET
 
@@ -260,11 +260,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | LOST-05 | Phase 10 | Complete |
 | LOST-06 | Phase 10 | Complete |
 | LOST-07 | Phase 10 | Complete |
-| DASH-01 | Phase 11 | Pending |
-| DASH-02 | Phase 11 | Pending |
-| DASH-03 | Phase 11 | Pending |
+| DASH-01 | Phase 11 | Complete |
+| DASH-02 | Phase 11 | Complete |
+| DASH-03 | Phase 11 | Complete |
 | DASH-04 | Phase 11 | Pending |
-| DASH-05 | Phase 11 | Pending |
+| DASH-05 | Phase 11 | Complete |
 | SET-01 | Phase 12 | Pending |
 | SET-02 | Phase 12 | Pending |
 | SET-03 | Phase 12 | Pending |
