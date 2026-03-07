@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Siren, Users } from 'lucide-react';
+import { X, Users } from 'lucide-react';
 import { AroundMeHeader } from '@/components/around-me/AroundMeHeader';
 import { RadarMapSection } from '@/components/around-me/RadarMapSection';
 import { RadarSidebar } from '@/components/around-me/RadarSidebar';
 import { RecruitForm } from '@/components/around-me/RecruitForm';
-import { EmergencyReportForm } from '@/components/around-me/EmergencyReportForm';
-import { AICandidateList } from '@/components/around-me/AICandidateList';
+import { EmergencySubTabs } from '@/components/around-me/EmergencySubTabs';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import DaumPostcode from 'react-daum-postcode';
@@ -96,7 +95,7 @@ export default function AroundMePage() {
       />
 
       <div className="flex-1 flex flex-col lg:flex-row px-4 md:px-8 py-6 gap-8 overflow-hidden">
-        {(activeTab === 'FIND' || activeTab === 'EMERGENCY') && (
+        {activeTab === 'FIND' && (
           <RadarMapSection
             coordinates={effectiveCoordinates}
             mapMarkers={mapMarkers}
@@ -176,24 +175,7 @@ export default function AroundMePage() {
         )}
 
         {activeTab === 'EMERGENCY' && (
-          <div className="flex-1 relative">
-            <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-3xl">
-              <div className="text-center space-y-2">
-                <Siren size={40} className="mx-auto text-zinc-300" />
-                <p className="text-zinc-400 font-bold text-sm">준비 중</p>
-                <p className="text-zinc-300 text-xs">긴급 제보 기능은 곧 제공됩니다</p>
-              </div>
-            </div>
-            {/* Keep existing emergency components underneath for Phase 10 */}
-            <div className="flex-1 overflow-y-auto no-scrollbar opacity-0 pointer-events-none">
-              <EmergencyReportForm
-                isSubmitting={false}
-                isSuccess={false}
-                onSubmit={() => {}}
-                optimizeImage={(b64) => Promise.resolve(b64)}
-              />
-            </div>
-          </div>
+          <EmergencySubTabs />
         )}
       </div>
 

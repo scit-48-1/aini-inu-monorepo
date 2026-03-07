@@ -107,7 +107,6 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
             className={cn(
               'px-6 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-2',
               activeTab === tab.id ? 'bg-amber-500 text-black shadow-md' : 'text-black hover:bg-zinc-50',
-              tab.id === 'EMERGENCY' && 'opacity-50',
             )}
           >
             <tab.icon size={16} /> {tab.label}

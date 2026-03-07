@@ -156,8 +156,6 @@ export const EmergencyReportForm: React.FC<EmergencyReportFormProps> = ({
     }
   };
 
-  const currentLocation = mode === 'LOST' ? lastSeenLocation : foundLocation;
-
   return (
     <div className="space-y-6 pb-20 animate-in slide-in-from-right-10 duration-700">
       <Card className="p-10 bg-white shadow-2xl rounded-[48px] space-y-10 relative overflow-hidden min-h-[500px] justify-center flex flex-col items-center text-center">

@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { EmergencyReportForm } from '@/components/around-me/EmergencyReportForm';
-import type { LostPetResponse } from '@/api/lostPets';
 
 type EmergencySubTab = 'REPORT' | 'MY_LIST';
 
