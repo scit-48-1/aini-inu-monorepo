@@ -39,7 +39,7 @@ export function usePostForm(onSuccess?: () => void) {
     setIsSubmitting(true);
     try {
       const imageUrls = await Promise.all(
-        imageFiles.map((f) => uploadImageFlow(f, 'COMMUNITY_POST')),
+        imageFiles.map((f) => uploadImageFlow(f, 'POST')),
       );
       await createPost({ content, imageUrls });
       toast.success('게시글이 등록되었습니다!');
