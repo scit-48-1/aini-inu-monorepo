@@ -96,6 +96,7 @@ class WalkThreadServicePhase06Test {
                     .willReturn(Optional.of(thread));
             given(walkThreadPetRepository.findAllByThreadId(threadId))
                     .willReturn(List.of(WalkThreadPet.of(threadId, 1L)));
+            given(walkThreadRepository.saveAndFlush(thread)).willReturn(thread);
             given(walkThreadApplicationRepository.countByThreadIdAndStatus(threadId, WalkThreadApplicationStatus.JOINED))
                     .willReturn(0L);
             given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(threadId, memberId, WalkThreadApplicationStatus.JOINED))
@@ -127,6 +128,7 @@ class WalkThreadServicePhase06Test {
                     .willReturn(Optional.of(thread));
             given(walkThreadPetRepository.findAllByThreadId(threadId))
                     .willReturn(List.of(WalkThreadPet.of(threadId, 2L), WalkThreadPet.of(threadId, 3L)));
+            given(walkThreadRepository.saveAndFlush(thread)).willReturn(thread);
             given(walkThreadApplicationRepository.countByThreadIdAndStatus(threadId, WalkThreadApplicationStatus.JOINED))
                     .willReturn(0L);
             given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(threadId, memberId, WalkThreadApplicationStatus.JOINED))
