@@ -128,8 +128,7 @@ public class ImageUploadService {
     }
 
     private String buildUploadUrl(String token) {
-        String baseUrl = resolvePublicBaseUrl();
-        return baseUrl + "/api/v1/images/presigned-upload/" + token;
+        return "/api/v1/images/presigned-upload/" + token;
     }
 
     private Path resolveAndValidatePath(String objectKey) {
@@ -142,20 +141,8 @@ public class ImageUploadService {
     }
 
     private String buildImageUrl(String objectKey) {
-        String baseUrl = resolvePublicBaseUrl();
         String encodedKey = URLEncoder.encode(objectKey, StandardCharsets.UTF_8);
-        return baseUrl + "/api/v1/images/local?key=" + encodedKey;
-    }
-
-    private String resolvePublicBaseUrl() {
-        String baseUrl = properties.getPublicBaseUrl();
-        if (baseUrl == null || baseUrl.isBlank()) {
-            baseUrl = "http://localhost:8080";
-        }
-        if (baseUrl.endsWith("/")) {
-            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
-        }
-        return baseUrl;
+        return "/api/v1/images/local?key=" + encodedKey;
     }
 
     private String normalizeContentType(String contentType) {

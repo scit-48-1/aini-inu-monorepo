@@ -1,7 +1,7 @@
 export const analyzeDogImage = async (base64Image: string) => {
   console.log("Client: Requesting Spring Boot backend analysis...");
 
-  const response = await fetch("http://localhost:8080/api/v1/pets/analyze", {
+  const response = await fetch("/api/v1/pets/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ image: base64Image }),

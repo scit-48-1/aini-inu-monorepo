@@ -81,7 +81,8 @@ export function useChatWebSocket(roomId: number, enabled: boolean) {
       return;
     }
 
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || `${wsProtocol}//${window.location.hostname}:8080`;
 
     const stompClient = new Client({
       brokerURL: `${wsUrl}/ws/chat-rooms/${roomId}`,
