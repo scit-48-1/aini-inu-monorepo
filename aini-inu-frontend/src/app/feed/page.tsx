@@ -81,6 +81,10 @@ export default function FeedPage() {
     setPosts(prev => prev.filter(p => p.id !== postId));
   }, []);
 
+  const handleEditUpdate = useCallback((updatedPost: PostResponse) => {
+    setPosts(prev => prev.map(p => p.id === updatedPost.id ? { ...p, content: updatedPost.content } : p));
+  }, []);
+
   const handleLikeUpdate = useCallback((postId: number, liked: boolean, likeCount: number) => {
     setPosts(prev => prev.map(p => p.id === postId ? { ...p, liked, likeCount } : p));
   }, []);
@@ -149,6 +153,7 @@ export default function FeedPage() {
                   post={post}
                   currentUserId={currentUserId}
                   onDelete={handleDeletePost}
+                  onEditUpdate={handleEditUpdate}
                   onLikeUpdate={handleLikeUpdate}
                 />
               ))}

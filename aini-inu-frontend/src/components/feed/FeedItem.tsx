@@ -13,6 +13,7 @@ import {
   createComment,
   deleteComment,
   deletePost,
+  updatePost,
 } from '@/api/community';
 import { useUserStore } from '@/store/useUserStore';
 import { toast } from 'sonner';
@@ -35,11 +36,11 @@ interface FeedItemProps {
   post: PostResponse;
   currentUserId?: number;
   onDelete?: (postId: number) => void;
-  onEdit?: (post: PostResponse) => void;
+  onEditUpdate?: (updatedPost: PostResponse) => void;
   onLikeUpdate?: (postId: number, liked: boolean, likeCount: number) => void;
 }
 
-export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost, currentUserId, onDelete, onEdit, onLikeUpdate }) => {
+export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost, currentUserId, onDelete, onEditUpdate, onLikeUpdate }) => {
   const [post, setPost] = useState<PostResponse>(initialPost);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLiked, setIsLiked] = useState(initialPost.liked);
@@ -49,6 +50,9 @@ export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const resolvedUserId = currentUserId ?? Number(useUserStore.getState().profile?.id);
   const isMyPost = !!(resolvedUserId && post.author?.id === resolvedUserId);
@@ -74,6 +78,36 @@ export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost
       setIsDeleting(false);
       setShowDeleteConfirm(false);
     }
+  };
+
+  const handleEdit = () => {
+    setEditContent(post.content);
+    setIsEditing(true);
+    setShowMenu(false);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editContent.trim()) {
+      toast.error('내용을 입력해주세요.');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const updatedPost = await updatePost(post.id, { content: editContent });
+      setPost(prev => ({ ...prev, content: updatedPost.content }));
+      toast.success('게시글이 수정되었습니다.');
+      onEditUpdate?.(updatedPost);
+      setIsEditing(false);
+    } catch {
+      toast.error('수정에 실패했습니다.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditContent('');
   };
 
   const handleShare = (e: React.MouseEvent) => {
@@ -228,6 +262,49 @@ export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost
         {/* Mobile Expanded Interaction Area */}
         {isExpanded && (
           <div className="lg:hidden mt-4 pt-4 border-t border-zinc-100 flex flex-col flex-1 overflow-hidden animate-in fade-in slide-in-from-bottom-2" onClick={e => e.stopPropagation()}>
+             {/* Mobile Owner Actions */}
+             {isMyPost && !isEditing && (
+               <div className="flex items-center gap-2 mb-3">
+                 <button
+                   onClick={handleEdit}
+                   className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-600 text-xs font-bold hover:bg-zinc-200 transition-colors"
+                 >
+                   <Pencil size={12} /> 수정
+                 </button>
+                 <button
+                   onClick={() => setShowDeleteConfirm(true)}
+                   className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-50 text-red-500 text-xs font-bold hover:bg-red-100 transition-colors"
+                 >
+                   <Trash2 size={12} /> 삭제
+                 </button>
+               </div>
+             )}
+             {/* Mobile Edit UI */}
+             {isEditing && (
+               <div className="space-y-3 mb-4">
+                 <textarea
+                   className="w-full bg-zinc-50 border border-zinc-100 rounded-2xl p-4 text-sm font-medium focus:outline-none focus:ring-2 ring-amber-500/20 min-h-[80px] resize-none"
+                   value={editContent}
+                   onChange={(e) => setEditContent(e.target.value)}
+                   placeholder="글 내용을 입력해주세요..."
+                 />
+                 <div className="flex gap-2">
+                   <button
+                     onClick={handleSaveEdit}
+                     disabled={isSaving}
+                     className="px-4 py-2 rounded-full bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors disabled:opacity-60"
+                   >
+                     {isSaving ? '저장 중...' : '저장'}
+                   </button>
+                   <button
+                     onClick={handleCancelEdit}
+                     className="px-4 py-2 rounded-full bg-zinc-100 text-zinc-600 text-sm font-bold hover:bg-zinc-200 transition-colors"
+                   >
+                     취소
+                   </button>
+                 </div>
+               </div>
+             )}
              {/* Comments List (Mobile) */}
              <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-2">
                 {comments.length > 0 ? comments.map((cmt) => (
@@ -289,7 +366,7 @@ export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {isMyPost && (
+              {isMyPost && !isEditing && (
                 <div className="relative">
                   <button
                     onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
@@ -301,21 +378,12 @@ export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost
                     <>
                       <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setShowMenu(false); }} />
                       <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-zinc-100 py-1 z-50 min-w-[120px]">
-                        {onEdit ? (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setShowMenu(false); onEdit(post); }}
-                            className="w-full px-4 py-2.5 text-left text-sm font-medium text-zinc-700 hover:bg-zinc-50 flex items-center gap-2"
-                          >
-                            <Pencil size={14} /> 수정
-                          </button>
-                        ) : (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setShowMenu(false); toast('수정 기능 준비 중'); }}
-                            className="w-full px-4 py-2.5 text-left text-sm font-medium text-zinc-400 hover:bg-zinc-50 flex items-center gap-2"
-                          >
-                            <Pencil size={14} /> 수정
-                          </button>
-                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleEdit(); }}
+                          className="w-full px-4 py-2.5 text-left text-sm font-medium text-zinc-700 hover:bg-zinc-50 flex items-center gap-2"
+                        >
+                          <Pencil size={14} /> 수정
+                        </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setShowMenu(false); setShowDeleteConfirm(true); }}
                           className="w-full px-4 py-2.5 text-left text-sm font-medium text-red-500 hover:bg-red-50 flex items-center gap-2"
@@ -361,9 +429,35 @@ export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost
 
           {/* Content */}
           <div className="space-y-4 mb-6 shrink-0">
-            <Typography variant="body" className="font-medium text-zinc-700 leading-relaxed text-sm">
-              {post.content}
-            </Typography>
+            {isEditing ? (
+              <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
+                <textarea
+                  className="w-full bg-zinc-50 border border-zinc-100 rounded-2xl p-4 text-sm font-medium focus:outline-none focus:ring-2 ring-amber-500/20 min-h-[100px] resize-none"
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  placeholder="글 내용을 입력해주세요..."
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={isSaving}
+                    className="px-4 py-2 rounded-full bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors disabled:opacity-60"
+                  >
+                    {isSaving ? '저장 중...' : '저장'}
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="px-4 py-2 rounded-full bg-zinc-100 text-zinc-600 text-sm font-bold hover:bg-zinc-200 transition-colors"
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <Typography variant="body" className="font-medium text-zinc-700 leading-relaxed text-sm">
+                {post.content}
+              </Typography>
+            )}
           </div>
 
           {/* Comments Section (Scrollable) */}
