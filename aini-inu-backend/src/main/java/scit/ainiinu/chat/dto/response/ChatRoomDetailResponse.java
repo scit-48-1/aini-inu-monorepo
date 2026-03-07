@@ -16,6 +16,8 @@ public class ChatRoomDetailResponse {
     private String chatType;
     @Schema(description = "상태 코드입니다.", example = "ACTIVE", allowableValues = {"ACTIVE", "CLOSED"})
     private String status;
+    @Schema(description = "채팅방 생성 출처입니다.", example = "WALK", allowableValues = {"DM", "WALK", "LOST_PET"})
+    private String origin;
     @Schema(description = "walkConfirmed 값입니다.", example = "true")
     private boolean walkConfirmed;
     @Schema(description = "participants 값입니다.", example = "[\"예시 항목\"]")

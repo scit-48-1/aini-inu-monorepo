@@ -351,8 +351,8 @@ export default function ChatRoomPage() {
           onLeave={handleLeave}
         />
 
-        {/* Review button -- only visible when allConfirmed and no existing review */}
-        {walkConfirm?.allConfirmed === true && !myReview?.exists ? (
+        {/* Review button -- only visible for WALK rooms when allConfirmed and no existing review */}
+        {room.origin === 'WALK' && walkConfirm?.allConfirmed === true && !myReview?.exists ? (
           <div className="px-4 py-2 bg-white/60 border-b border-zinc-50">
             <button
               onClick={handleOpenReview}

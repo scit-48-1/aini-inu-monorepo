@@ -258,6 +258,7 @@ public class ChatRoomService {
                 .chatRoomId(room.getId())
                 .chatType(room.getChatType().name())
                 .status(room.getStatus().name())
+                .origin(room.getOrigin().name())
                 .walkConfirmed(Boolean.TRUE.equals(room.getWalkConfirmed()))
                 .participants(participantResponses)
                 .lastMessage(lastMessage)

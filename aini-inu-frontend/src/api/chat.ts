@@ -18,6 +18,7 @@ export interface ChatRoomDetailResponse {
   chatRoomId: number;
   chatType: string;
   status: string;
+  origin: string;
   walkConfirmed: boolean;
   participants: ChatParticipantResponse[];
   lastMessage: ChatMessageResponse | null;

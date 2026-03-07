@@ -127,14 +127,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               >
                 {label}
               </Typography>
-              {allConfirmed ? (
+              {room.origin === 'WALK' && allConfirmed ? (
                 <Badge
                   variant="emerald"
                   className="bg-emerald-50 text-emerald-600 border-none text-[7px] px-1 py-0 shrink-0"
                 >
                   산책 확정!
                 </Badge>
-              ) : room.walkConfirmed ? (
+              ) : room.origin === 'WALK' && room.walkConfirmed ? (
                 <Badge
                   variant="emerald"
                   className="bg-emerald-50 text-emerald-600 border-none text-[7px] px-1 py-0 shrink-0"
@@ -161,28 +161,30 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Walk confirm button */}
-        <button
-          onClick={() => {
-            if (isConfirmed) {
-              onCancelConfirm();
-            } else {
-              onConfirmWalk();
-            }
-          }}
-          className={cn(
-            'p-2.5 rounded-xl transition-all flex items-center gap-1.5',
-            isConfirmed
-              ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-              : 'bg-zinc-50 text-zinc-400 hover:bg-zinc-100 hover:text-emerald-600',
-          )}
-          title={isConfirmed ? '산책 확인 취소' : '산책 확인'}
-        >
-          <CheckCircle size={20} />
-          <span className="text-[10px] font-black">
-            {confirmedCount}/{totalCount}
-          </span>
-        </button>
+        {/* Walk confirm button -- only for WALK origin rooms */}
+        {room.origin === 'WALK' && (
+          <button
+            onClick={() => {
+              if (isConfirmed) {
+                onCancelConfirm();
+              } else {
+                onConfirmWalk();
+              }
+            }}
+            className={cn(
+              'p-2.5 rounded-xl transition-all flex items-center gap-1.5',
+              isConfirmed
+                ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                : 'bg-zinc-50 text-zinc-400 hover:bg-zinc-100 hover:text-emerald-600',
+            )}
+            title={isConfirmed ? '산책 확인 취소' : '산책 확인'}
+          >
+            <CheckCircle size={20} />
+            <span className="text-[10px] font-black">
+              {confirmedCount}/{totalCount}
+            </span>
+          </button>
+        )}
 
         <button
           onClick={onShowInfoToggle}
