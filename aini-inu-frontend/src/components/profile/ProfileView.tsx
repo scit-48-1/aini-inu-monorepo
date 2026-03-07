@@ -4,9 +4,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/hooks/useProfile';
-import { postService } from '@/services/api/postService';
 import { memberService } from '@/services/api/memberService';
-import { FeedPostType, DogType, UserType } from '@/types';
+import { DogType, UserType } from '@/types';
+import type { PostResponse } from '@/api/community';
 import type { WalkDiaryResponse } from '@/api/diaries';
 import type { MemberResponse } from '@/api/members';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
@@ -48,7 +48,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
 
   const [profile, setProfile] = useState<UserType | null>(null);
   const [dogs, setDogs] = useState<DogType[]>([]);
-  const [posts, setPosts] = useState<FeedPostType[]>([]);
+  const [posts, setPosts] = useState<PostResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFollowingInit, setIsFollowingInit] = useState(false);
   const [activeTab, setActiveTab] = useState<ProfileTab>('FEED');
@@ -61,9 +61,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
   const [selectedDog, setSelectedDog] = useState<DogType | null>(null);
   const [selectedHistory, setSelectedHistory] = useState<WalkDiaryResponse | null>(null);
   const [editMode, setEditMode] = useState<EditMode>('NONE');
-  const [selectedPost, setSelectedPost] = useState<FeedPostType | null>(null);
-  const [isEditingPost, setIsEditingPost] = useState(false);
-  const [editCaption, setEditCaption] = useState('');
+  const [selectedPost, setSelectedPost] = useState<PostResponse | null>(null);
   const [zoomedPhoto, setZoomedPhoto] = useState<string | null>(null);
 
   const isMe = useMemo(() => {
@@ -90,19 +88,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
     setIsLoading(true);
     try {
       const isTargetMe = memberId === 'me';
-      const targetId = isTargetMe ? undefined : memberId;
 
-      const [userRes, dogsRes, postsRes] = await Promise.all([
+      const [userRes, dogsRes] = await Promise.all([
         isTargetMe ? memberService.getMe() : memberService.getMemberProfile(memberId),
         isTargetMe ? memberService.getMyDogs() : memberService.getMemberDogs(memberId),
-        postService.getPosts(targetId),
       ]);
 
       if (!userRes) throw new Error('User not found');
 
       setProfile(userRes);
       setDogs(dogsRes || []);
-      setPosts(postsRes || []);
       await fetchDiaries(0);
 
       if (!isTargetMe) {
@@ -214,7 +209,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
         {activeTab === 'FEED' && (
           <ProfileFeed
             posts={posts}
-            onPostClick={(p) => { setSelectedPost(p); setEditCaption(p.caption); setIsEditingPost(false); }}
+            onPostClick={(p) => setSelectedPost(p)}
           />
         )}
         {activeTab === 'DOGS' && (
@@ -300,13 +295,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
         isOpen={!!selectedPost}
         onClose={() => setSelectedPost(null)}
         post={selectedPost}
-        user={profile}
-        isEditing={isMe && isEditingPost}
-        setIsEditing={setIsEditingPost}
-        editCaption={editCaption}
-        setEditCaption={setEditCaption}
-        onUpdate={async () => { await fetchData(); setIsEditingPost(false); }}
-        onDelete={async () => { if (isMe) { await fetchData(); setSelectedPost(null); } }}
+        onUpdated={(updatedPost) => {
+          setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
+          setSelectedPost(updatedPost);
+        }}
+        onDeleted={(postId) => {
+          setPosts(prev => prev.filter(p => p.id !== postId));
+          setSelectedPost(null);
+        }}
       />
 
       <DiaryBookModal
