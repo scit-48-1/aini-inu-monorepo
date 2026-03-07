@@ -1,39 +1,71 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { postService } from '@/services/api/postService';
+import { createPost } from '@/api/community';
+import { uploadImageFlow } from '@/api/upload';
 import { toast } from 'sonner';
 
 export function usePostForm(onSuccess?: () => void) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [postForm, setPostForm] = useState({
-    caption: '',
-    location: '',
-    images: [] as string[]
-  });
+  const [content, setContent] = useState('');
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+
+  const handleAddImage = useCallback((file: File) => {
+    setImageFiles((prev) => [...prev, file]);
+    const url = URL.createObjectURL(file);
+    setPreviewUrls((prev) => [...prev, url]);
+  }, []);
+
+  const handleRemoveImage = useCallback((index: number) => {
+    setPreviewUrls((prev) => {
+      const url = prev[index];
+      if (url) URL.revokeObjectURL(url);
+      return prev.filter((_, i) => i !== index);
+    });
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  }, []);
 
   const handleSubmit = useCallback(async () => {
-    if (postForm.images.length === 0) return toast.warning('사진을 최소 1장 이상 업로드해주세요.');
-    if (!postForm.caption.trim()) return toast.warning('설명을 입력해주세요.');
+    if (imageFiles.length === 0) {
+      toast.warning('사진을 최소 1장 이상 업로드해주세요.');
+      return;
+    }
+    if (!content.trim()) {
+      toast.warning('설명을 입력해주세요.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      await postService.createPost(postForm);
-      toast.success('포스팅이 등록되었습니다!');
-      setPostForm({ caption: '', location: '', images: [] });
+      const imageUrls = await Promise.all(
+        imageFiles.map((f) => uploadImageFlow(f, 'COMMUNITY_POST')),
+      );
+      await createPost({ content, imageUrls });
+      toast.success('게시글이 등록되었습니다!');
+      // Reset state
+      setContent('');
+      setImageFiles([]);
+      setPreviewUrls((prev) => {
+        prev.forEach((url) => URL.revokeObjectURL(url));
+        return [];
+      });
       onSuccess?.();
-      return true;
-    } catch (e) {
+    } catch {
       toast.error('등록 중 오류가 발생했습니다.');
-      return false;
     } finally {
       setIsSubmitting(false);
     }
-  }, [postForm, onSuccess]);
+  }, [imageFiles, content, onSuccess]);
 
   return {
-    postForm, setPostForm,
+    content,
+    setContent,
+    imageFiles,
+    previewUrls,
+    handleAddImage,
+    handleRemoveImage,
     isSubmitting,
-    handleSubmit
+    handleSubmit,
   };
 }
