@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 09-02-PLAN.md
-last_updated: "2026-03-07T06:09:52.820Z"
-last_activity: 2026-03-07 -- Completed plan 09-01 (post creation presigned URL rewire)
+stopped_at: Completed 09-03-PLAN.md
+last_updated: "2026-03-07T06:15:38.017Z"
+last_activity: 2026-03-07 -- Completed plan 09-03 (profile post migration + postService deletion)
 progress:
   total_phases: 12
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 40
-  completed_plans: 39
-  percent: 95
+  completed_plans: 40
+  percent: 97
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 9 of 12 (Community Feed)
-Plan: 1 of 3 in current phase (09-01 complete)
+Plan: 3 of 3 in current phase (09-03 complete)
 Status: Executing
-Last activity: 2026-03-07 -- Completed plan 09-01 (post creation presigned URL rewire)
+Last activity: 2026-03-07 -- Completed plan 09-03 (profile post migration + postService deletion)
 
-Progress: [█████████░] 95%
+Progress: [██████████] 97%
 
 ## Performance Metrics
 
@@ -87,6 +87,7 @@ Progress: [█████████░] 95%
 | Phase 08-chat-system P05 | 3 | 2 tasks | 4 files |
 | Phase 09 P02 | 4 | 2 tasks | 2 files |
 | Phase 09-community-feed P01 | 4 | 2 tasks | 3 files |
+| Phase 09-community-feed PP03 | 3 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -187,6 +188,9 @@ Recent decisions affecting current work:
 - [Phase 09]: Korean relative time helper inline in FeedItem for domain isolation (not shared util)
 - [Phase 09-01]: Duck-typed userProfile prop (nickname/profileImageUrl/avatar) accepts both UserType and MemberResponse without importing either type
 - [Phase 09-01]: Avatar fallback chain: profileImageUrl -> avatar -> /AINIINU_ROGO_B.png for cross-type compatibility
+- [Phase 09-community-feed]: PostDetailModal manages edit/delete internally via useUserStore + api/community.ts instead of parent-driven callbacks
+- [Phase 09-community-feed]: Edit/delete buttons shown only when post.author.id matches Number(profile?.id)
+- [Phase 09-community-feed]: Posts remain empty array in profile views since backend has no member-filtered post endpoint
 
 ### Pending Todos
 
@@ -198,6 +202,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-07T06:09:52.817Z
-Stopped at: Completed 09-02-PLAN.md
+Last session: 2026-03-07T06:15:33.664Z
+Stopped at: Completed 09-03-PLAN.md
 Resume file: None
