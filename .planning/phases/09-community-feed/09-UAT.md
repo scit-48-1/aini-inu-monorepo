@@ -1,9 +1,9 @@
 ---
-status: complete
+status: diagnosed
 phase: 09-community-feed
 source: [09-01-SUMMARY.md, 09-02-SUMMARY.md, 09-03-SUMMARY.md]
 started: 2026-03-07T06:20:00Z
-updated: 2026-03-07T06:22:00Z
+updated: 2026-03-07T06:30:00Z
 ---
 
 ## Current Test
@@ -73,22 +73,41 @@ skipped: 3
   reason: "User reported: 등록 실패해 '업로드 목적 또는 파일 정보가 올바르지 않습니다' 이렇게 나타나"
   severity: major
   test: 1
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Frontend sends 'COMMUNITY_POST' as upload purpose but backend UploadPurpose enum only defines 'POST'"
+  artifacts:
+    - path: "aini-inu-frontend/src/hooks/forms/usePostForm.ts"
+      issue: "Line 42: uploadImageFlow(f, 'COMMUNITY_POST') uses wrong purpose string"
+    - path: "aini-inu-backend/src/main/java/scit/ainiinu/community/dto/UploadPurpose.java"
+      issue: "Enum defines POST, not COMMUNITY_POST"
+  missing:
+    - "Change purpose argument from 'COMMUNITY_POST' to 'POST' in usePostForm.ts"
+  debug_session: ".planning/debug/post-creation-upload-purpose.md"
 - truth: "Like count increments immediately and persists via API"
   status: failed
   reason: "User reported: 서버에서 실패 - org.springframework.transaction.TransactionSystemException: Could not commit JPA transaction"
   severity: major
   test: 3
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Post entity @Version Long version field is nullable and uninitialized. Seed SQL omits version column, leaving NULL. Optimistic lock UPDATE fails with NULL version."
+  artifacts:
+    - path: "aini-inu-backend/src/main/java/scit/ainiinu/community/entity/Post.java"
+      issue: "Line 44: @Version private Long version — nullable, no default"
+    - path: "aini-inu-backend/src/main/resources/db/seed/10_core_sample_seed.sql"
+      issue: "INSERT omits version column for post table"
+    - path: "aini-inu-backend/src/main/resources/db/seed/20_status_edge_seed.sql"
+      issue: "INSERT omits version column for post table"
+  missing:
+    - "Initialize version field: private Long version = 0L"
+    - "Add version column with value 0 to all seed SQL INSERTs"
+  debug_session: ".planning/debug/like-toggle-transaction-error.md"
 - truth: "Comment appears in list with author info after submission"
   status: failed
   reason: "User reported: 서버에서 java.lang.NullPointerException: Cannot invoke \"java.lang.Long.longValue()\" because \"current\" is null"
   severity: major
   test: 4
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Same as Issue 2: Post entity @Version Long version is NULL on seeded posts. Comment creation dirties entity via increaseComment(), Hibernate version check NPEs on null Long unboxing."
+  artifacts:
+    - path: "aini-inu-backend/src/main/java/scit/ainiinu/community/entity/Post.java"
+      issue: "Line 44: @Version private Long version — nullable, no default"
+  missing:
+    - "Fix shared with Issue 2 — initializing version field fixes both"
+  debug_session: ".planning/debug/comment-create-npe.md"
