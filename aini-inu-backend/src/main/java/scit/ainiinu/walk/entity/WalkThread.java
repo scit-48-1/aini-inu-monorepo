@@ -199,6 +199,13 @@ public class WalkThread extends BaseTimeEntity {
         }
     }
 
+    public void complete() {
+        if (this.status == WalkThreadStatus.DELETED) {
+            return;
+        }
+        this.status = WalkThreadStatus.COMPLETED;
+    }
+
     public boolean isRecruiting() {
         return this.status == WalkThreadStatus.RECRUITING;
     }
@@ -208,7 +215,7 @@ public class WalkThread extends BaseTimeEntity {
     }
 
     public boolean isExpired(LocalDateTime now) {
-        if (this.status == WalkThreadStatus.EXPIRED || this.status == WalkThreadStatus.DELETED) {
+        if (this.status == WalkThreadStatus.EXPIRED || this.status == WalkThreadStatus.COMPLETED || this.status == WalkThreadStatus.DELETED) {
             return true;
         }
         return !this.startTime.plusMinutes(60).isAfter(now);

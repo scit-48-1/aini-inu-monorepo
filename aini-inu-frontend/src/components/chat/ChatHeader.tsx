@@ -165,23 +165,27 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         {room.origin === 'WALK' && (
           <button
             onClick={() => {
+              if (allConfirmed) return;
               if (isConfirmed) {
                 onCancelConfirm();
               } else {
                 onConfirmWalk();
               }
             }}
+            disabled={allConfirmed}
             className={cn(
               'p-2.5 rounded-xl transition-all flex items-center gap-1.5',
-              isConfirmed
-                ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                : 'bg-zinc-50 text-zinc-400 hover:bg-zinc-100 hover:text-emerald-600',
+              allConfirmed
+                ? 'bg-emerald-100 text-emerald-600 cursor-not-allowed opacity-80'
+                : isConfirmed
+                  ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                  : 'bg-zinc-50 text-zinc-400 hover:bg-zinc-100 hover:text-emerald-600',
             )}
-            title={isConfirmed ? '산책 확인 취소' : '산책 확인'}
+            title={allConfirmed ? '산책 확정 완료' : isConfirmed ? '산책 확인 취소' : '산책 확인'}
           >
             <CheckCircle size={20} />
             <span className="text-[10px] font-black">
-              {confirmedCount}/{totalCount}
+              {allConfirmed ? '확정' : isConfirmed ? '확인됨' : '산책완료'} {confirmedCount}/{totalCount}
             </span>
           </button>
         )}

@@ -39,7 +39,14 @@ import scit.ainiinu.common.response.CursorResponse;
 import scit.ainiinu.common.response.SliceResponse;
 import scit.ainiinu.member.repository.MemberRepository;
 import scit.ainiinu.pet.repository.PetRepository;
+import scit.ainiinu.walk.entity.WalkThread;
+import scit.ainiinu.walk.entity.WalkChatType;
+import scit.ainiinu.walk.entity.WalkThreadStatus;
+import scit.ainiinu.walk.repository.WalkThreadRepository;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +55,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ChatServiceCoverageTest {
@@ -68,6 +77,8 @@ class ChatServiceCoverageTest {
     private ChatRealtimeEventHandler chatRealtimeEventHandler;
     @Mock
     private ChatReviewRepository chatReviewRepository;
+    @Mock
+    private WalkThreadRepository walkThreadRepository;
 
     @InjectMocks
     private ChatRoomService chatRoomService;
@@ -272,6 +283,51 @@ class ChatServiceCoverageTest {
 
             assertThat(response.getRoomId()).isEqualTo(2L);
             assertThat(response.getMyState()).isEqualTo("UNCONFIRMED");
+        }
+
+        @Test
+        @DisplayName("전원 확정 시 WalkThread 상태가 COMPLETED로 전환된다")
+        void confirmWalk_completesWalkThread() {
+            Long threadId = 100L;
+            ChatRoom room = ChatRoom.create(threadId, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.WALK, null);
+            ReflectionTestUtils.setField(room, "id", 1L);
+            ChatParticipant me = ChatParticipant.create(1L, 1L);
+            WalkThread walkThread = WalkThread.builder()
+                    .authorId(1L).title("산책하자").description("같이 산책해요")
+                    .walkDate(LocalDate.now()).startTime(LocalDateTime.now())
+                    .chatType(WalkChatType.GROUP).maxParticipants(3)
+                    .placeName("공원").latitude(BigDecimal.valueOf(37.5))
+                    .longitude(BigDecimal.valueOf(127.0))
+                    .status(WalkThreadStatus.RECRUITING).build();
+
+            given(chatRoomRepository.findByIdForUpdate(1L)).willReturn(Optional.of(room));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(1L, 1L)).willReturn(Optional.of(me));
+            given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(1L)).willReturn(List.of(me));
+            given(chatRoomRepository.findById(1L)).willReturn(Optional.of(room));
+            given(walkThreadRepository.findById(threadId)).willReturn(Optional.of(walkThread));
+
+            WalkConfirmResponse response = walkConfirmService.confirmWalk(1L, 1L);
+
+            assertThat(response.isAllConfirmed()).isTrue();
+            assertThat(walkThread.getStatus()).isEqualTo(WalkThreadStatus.COMPLETED);
+        }
+
+        @Test
+        @DisplayName("threadId가 null인 경우 WalkThread 조회를 하지 않는다")
+        void confirmWalk_nullThreadId_skipsWalkThread() {
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
+            ReflectionTestUtils.setField(room, "id", 1L);
+            ChatParticipant me = ChatParticipant.create(1L, 1L);
+
+            given(chatRoomRepository.findByIdForUpdate(1L)).willReturn(Optional.of(room));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(1L, 1L)).willReturn(Optional.of(me));
+            given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(1L)).willReturn(List.of(me));
+            given(chatRoomRepository.findById(1L)).willReturn(Optional.of(room));
+
+            WalkConfirmResponse response = walkConfirmService.confirmWalk(1L, 1L);
+
+            assertThat(response.isAllConfirmed()).isTrue();
+            verify(walkThreadRepository, never()).findById(anyLong());
         }
 
         @Test

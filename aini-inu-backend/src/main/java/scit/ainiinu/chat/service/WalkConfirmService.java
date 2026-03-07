@@ -11,6 +11,7 @@ import scit.ainiinu.chat.exception.ChatErrorCode;
 import scit.ainiinu.chat.exception.ChatException;
 import scit.ainiinu.chat.repository.ChatParticipantRepository;
 import scit.ainiinu.chat.repository.ChatRoomRepository;
+import scit.ainiinu.walk.repository.WalkThreadRepository;
 
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class WalkConfirmService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;
+    private final WalkThreadRepository walkThreadRepository;
 
     @Transactional
     public WalkConfirmResponse confirmWalk(Long memberId, Long chatRoomId) {
@@ -79,7 +81,13 @@ public class WalkConfirmService {
 
         if (syncRoomState) {
             chatRoomRepository.findById(chatRoomId)
-                    .ifPresent(room -> room.updateWalkConfirmed(allConfirmed));
+                    .ifPresent(room -> {
+                        room.updateWalkConfirmed(allConfirmed);
+                        if (allConfirmed && room.getThreadId() != null) {
+                            walkThreadRepository.findById(room.getThreadId())
+                                    .ifPresent(thread -> thread.complete());
+                        }
+                    });
         }
 
         List<Long> confirmedMemberIds = activeParticipants.stream()
