@@ -38,27 +38,38 @@ export const AICandidateList: React.FC<AICandidateListProps> = ({
             AI Matching Analysis
           </Typography>
         </div>
-        <Typography
-          variant="h2"
-          className="text-3xl md:text-4xl text-navy-900 font-serif"
-        >
-          실종된 아이와{' '}
-          <span className="text-amber-500 italic">유사한 제보</span>들을
-          찾았습니다.
-        </Typography>
-        <Typography variant="body" className="text-zinc-400 text-lg">
-          Gemini AI가 이미지와 특징을 분석하여 가장 높은 확률의 후보들을
-          선별했습니다.
-        </Typography>
+        {candidates.length > 0 ? (
+          <>
+            <Typography
+              variant="h2"
+              className="text-3xl md:text-4xl text-navy-900 font-serif"
+            >
+              실종된 아이와{' '}
+              <span className="text-amber-500 italic">유사한 제보</span>들을
+              찾았습니다.
+            </Typography>
+            <Typography variant="body" className="text-zinc-400 text-lg">
+              Gemini AI가 이미지와 특징을 분석하여 가장 높은 확률의 후보들을
+              선별했습니다.
+            </Typography>
+          </>
+        ) : (
+          <>
+            <Typography
+              variant="h2"
+              className="text-3xl md:text-4xl text-navy-900 font-serif"
+            >
+              아직 <span className="text-zinc-400 italic">일치하는 제보</span>가
+              없습니다.
+            </Typography>
+            <Typography variant="body" className="text-zinc-400 text-lg">
+              새로운 제보가 등록되면 AI가 자동으로 매칭을 시도합니다.
+            </Typography>
+          </>
+        )}
       </div>
 
-      {candidates.length === 0 ? (
-        <div className="flex items-center justify-center py-20">
-          <Typography variant="body" className="text-zinc-400 text-sm">
-            일치하는 후보를 찾지 못했습니다.
-          </Typography>
-        </div>
-      ) : (
+      {candidates.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {candidates.slice(0, 10).map((candidate) => (
             <Card
