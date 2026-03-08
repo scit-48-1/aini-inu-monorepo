@@ -22,6 +22,8 @@ import scit.ainiinu.common.response.SliceResponse;
 import scit.ainiinu.member.entity.Member;
 import scit.ainiinu.member.entity.enums.MemberType;
 import scit.ainiinu.member.repository.MemberRepository;
+import scit.ainiinu.pet.entity.Pet;
+import scit.ainiinu.pet.repository.PetRepository;
 import scit.ainiinu.walk.dto.request.ThreadApplyRequest;
 import scit.ainiinu.walk.dto.request.ThreadCreateRequest;
 import scit.ainiinu.walk.dto.request.ThreadPatchRequest;
@@ -66,6 +68,7 @@ public class WalkThreadService {
     private final WalkThreadFilterRepository walkThreadFilterRepository;
     private final WalkThreadApplicationRepository walkThreadApplicationRepository;
     private final MemberRepository memberRepository;
+    private final PetRepository petRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final ApplicationEventPublisher eventPublisher;
@@ -166,9 +169,27 @@ public class WalkThreadService {
         List<Long> threadIds = filteredThreads.stream().map(WalkThread::getId).toList();
         Map<Long, Long> countMap = batchCountByStatus(threadIds, WalkThreadApplicationStatus.JOINED);
 
+        // Batch fetch first pet image for each thread (2 queries, no N+1)
+        List<WalkThreadPet> allThreadPets = walkThreadPetRepository.findAllByThreadIdIn(threadIds);
+        Map<Long, Long> threadFirstPetMap = new HashMap<>();
+        for (WalkThreadPet tp : allThreadPets) {
+            threadFirstPetMap.putIfAbsent(tp.getThreadId(), tp.getPetId());
+        }
+        List<Long> petIds = new ArrayList<>(new HashSet<>(threadFirstPetMap.values()));
+        Map<Long, String> petPhotoMap = new HashMap<>();
+        if (!petIds.isEmpty()) {
+            for (Pet pet : petRepository.findAllById(petIds)) {
+                if (pet.getPhotoUrl() != null) {
+                    petPhotoMap.put(pet.getId(), pet.getPhotoUrl());
+                }
+            }
+        }
+
         List<ThreadMapResponse> results = new ArrayList<>();
         for (WalkThread thread : filteredThreads) {
             long currentParticipants = countMap.getOrDefault(thread.getId(), 0L) + 1;
+            Long firstPetId = threadFirstPetMap.get(thread.getId());
+            String petImageUrl = firstPetId != null ? petPhotoMap.get(firstPetId) : null;
             results.add(ThreadMapResponse.builder()
                     .threadId(thread.getId())
                     .title(thread.getTitle())
@@ -178,6 +199,7 @@ public class WalkThreadService {
                     .latitude(thread.getLatitude())
                     .longitude(thread.getLongitude())
                     .placeName(thread.getPlaceName())
+                    .petImageUrl(petImageUrl)
                     .build());
         }
 

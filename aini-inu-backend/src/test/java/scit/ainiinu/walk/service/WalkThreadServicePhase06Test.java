@@ -17,6 +17,7 @@ import scit.ainiinu.chat.repository.ChatRoomRepository;
 import scit.ainiinu.common.exception.BusinessException;
 import scit.ainiinu.common.response.SliceResponse;
 import scit.ainiinu.member.repository.MemberRepository;
+import scit.ainiinu.pet.repository.PetRepository;
 import scit.ainiinu.walk.dto.request.ThreadPatchRequest;
 import scit.ainiinu.walk.dto.response.ThreadResponse;
 import scit.ainiinu.walk.dto.response.ThreadSummaryResponse;
@@ -65,6 +66,9 @@ class WalkThreadServicePhase06Test {
 
     @Mock
     private MemberRepository memberRepository;
+
+    @Mock
+    private PetRepository petRepository;
 
     @Mock
     private ChatRoomRepository chatRoomRepository;
@@ -515,6 +519,7 @@ class WalkThreadServicePhase06Test {
                     .willReturn(List.of(thread1, thread2));
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L))).willReturn(List.of());
 
             // Date range covers only thread1 (today to today+5)
             LocalDate startDate = LocalDate.now();
@@ -543,6 +548,7 @@ class WalkThreadServicePhase06Test {
                     .willReturn(List.of(thread1, thread2));
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L, 2L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L, 2L))).willReturn(List.of());
 
             // when
             List<scit.ainiinu.walk.dto.response.ThreadMapResponse> result =

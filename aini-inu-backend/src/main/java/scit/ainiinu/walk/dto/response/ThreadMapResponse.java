@@ -26,4 +26,6 @@ public class ThreadMapResponse {
     private BigDecimal longitude;
     @Schema(description = "장소명입니다.", example = "몽이")
     private String placeName;
+    @Schema(description = "첫 번째 참여 강아지의 프로필 이미지 URL입니다.", example = "https://example.com/pet.jpg")
+    private String petImageUrl;
 }

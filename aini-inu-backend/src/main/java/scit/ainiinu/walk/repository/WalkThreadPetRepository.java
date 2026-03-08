@@ -12,6 +12,8 @@ public interface WalkThreadPetRepository extends JpaRepository<WalkThreadPet, Lo
 
     List<WalkThreadPet> findAllByThreadId(Long threadId);
 
+    List<WalkThreadPet> findAllByThreadIdIn(List<Long> threadIds);
+
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM WalkThreadPet wtp WHERE wtp.threadId = :threadId")
     void deleteAllByThreadId(@Param("threadId") Long threadId);

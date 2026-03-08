@@ -15,6 +15,7 @@ import scit.ainiinu.chat.repository.ChatParticipantRepository;
 import scit.ainiinu.chat.repository.ChatRoomRepository;
 import scit.ainiinu.common.response.SliceResponse;
 import scit.ainiinu.member.repository.MemberRepository;
+import scit.ainiinu.pet.repository.PetRepository;
 import scit.ainiinu.walk.dto.request.ThreadPatchRequest;
 import scit.ainiinu.walk.dto.response.ThreadHotspotResponse;
 import scit.ainiinu.walk.dto.response.ThreadMapResponse;
@@ -60,6 +61,9 @@ class WalkThreadServiceCoverageTest {
 
     @Mock
     private MemberRepository memberRepository;
+
+    @Mock
+    private PetRepository petRepository;
 
     @Mock
     private ChatRoomRepository chatRoomRepository;
@@ -109,6 +113,7 @@ class WalkThreadServiceCoverageTest {
         given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING)).willReturn(List.of(near, far, expired));
         given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(101L), WalkThreadApplicationStatus.JOINED))
                 .willReturn(List.<Object[]>of(new Object[]{101L, 3L}));
+        given(walkThreadPetRepository.findAllByThreadIdIn(List.of(101L))).willReturn(List.of());
 
         // when
         List<ThreadMapResponse> responses = walkThreadService.getMapThreads(1L, 37.5663, 126.9779, 5.0, null, null);

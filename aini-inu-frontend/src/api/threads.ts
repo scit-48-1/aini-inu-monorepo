@@ -107,6 +107,7 @@ export interface ThreadMapResponse {
   latitude: number;
   longitude: number;
   placeName: string;
+  petImageUrl?: string;
 }
 
 export interface ThreadHotspotResponse {

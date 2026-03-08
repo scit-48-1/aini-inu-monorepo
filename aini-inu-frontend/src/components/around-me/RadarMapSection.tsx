@@ -130,6 +130,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
     id: String(m.threadId),
     lat: m.latitude,
     lng: m.longitude,
+    image: m.petImageUrl,
   }));
 
   // Always include my active thread marker on the map (even if outside search area)

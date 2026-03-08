@@ -19,18 +19,25 @@ import scit.ainiinu.common.exception.BusinessException;
 import scit.ainiinu.member.entity.Member;
 import scit.ainiinu.member.entity.enums.MemberType;
 import scit.ainiinu.member.repository.MemberRepository;
+import scit.ainiinu.pet.entity.Pet;
+import scit.ainiinu.pet.repository.PetRepository;
 import scit.ainiinu.walk.dto.request.ThreadApplyRequest;
 import scit.ainiinu.walk.dto.request.ThreadCreateRequest;
 import scit.ainiinu.walk.dto.response.ThreadApplyResponse;
+import scit.ainiinu.walk.dto.response.ThreadMapResponse;
 import scit.ainiinu.walk.dto.response.ThreadResponse;
+import scit.ainiinu.walk.entity.WalkChatType;
 import scit.ainiinu.walk.entity.WalkThread;
 import scit.ainiinu.walk.entity.WalkThreadApplication;
+import scit.ainiinu.walk.entity.WalkThreadPet;
 import scit.ainiinu.walk.entity.WalkThreadStatus;
 import scit.ainiinu.walk.exception.ThreadErrorCode;
 import scit.ainiinu.walk.repository.WalkThreadApplicationRepository;
+import scit.ainiinu.walk.repository.WalkThreadFilterRepository;
 import scit.ainiinu.walk.repository.WalkThreadPetRepository;
 import scit.ainiinu.walk.repository.WalkThreadRepository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +46,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -54,10 +62,16 @@ class WalkThreadServiceTest {
     private WalkThreadPetRepository walkThreadPetRepository;
 
     @Mock
+    private WalkThreadFilterRepository walkThreadFilterRepository;
+
+    @Mock
     private WalkThreadApplicationRepository walkThreadApplicationRepository;
 
     @Mock
     private MemberRepository memberRepository;
+
+    @Mock
+    private PetRepository petRepository;
 
     @Mock
     private ChatRoomRepository chatRoomRepository;
@@ -229,6 +243,150 @@ class WalkThreadServiceTest {
             assertThat(response.getApplicationStatus()).isEqualTo("JOINED");
             then(chatRoomRepository).should().save(any(ChatRoom.class));
             then(chatParticipantRepository).should(times(2)).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("지도 스레드 조회 (getMapThreads)")
+    class GetMapThreads {
+
+        @Test
+        @DisplayName("성공: 스레드의 첫 번째 강아지 photoUrl이 petImageUrl에 포함된다")
+        void getMapThreads_returnsPetImageUrl() {
+            // given
+            WalkThread thread = createRecruitingThread(1L, "서울숲 산책", 37.54, 127.04);
+
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(thread));
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(anyList(), any()))
+                    .willReturn(List.of());
+
+            WalkThreadPet threadPet = WalkThreadPet.of(1L, 100L);
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
+                    .willReturn(List.of(threadPet));
+
+            Pet pet = Pet.builder().memberId(1L).build();
+            ReflectionTestUtils.setField(pet, "id", 100L);
+            ReflectionTestUtils.setField(pet, "photoUrl", "https://cdn.example.com/dog.jpg");
+            given(petRepository.findAllById(List.of(100L)))
+                    .willReturn(List.of(pet));
+
+            // when
+            List<ThreadMapResponse> results = walkThreadService.getMapThreads(
+                    1L, 37.54, 127.04, 5.0, null, null);
+
+            // then
+            assertThat(results).hasSize(1);
+            assertThat(results.get(0).getPetImageUrl()).isEqualTo("https://cdn.example.com/dog.jpg");
+        }
+
+        @Test
+        @DisplayName("성공: 강아지가 등록되지 않은 스레드는 petImageUrl이 null이다")
+        void getMapThreads_noPet_returnsNullPetImageUrl() {
+            // given
+            WalkThread thread = createRecruitingThread(1L, "한강 산책", 37.52, 126.93);
+
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(thread));
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(anyList(), any()))
+                    .willReturn(List.of());
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
+                    .willReturn(List.of());
+
+            // when
+            List<ThreadMapResponse> results = walkThreadService.getMapThreads(
+                    1L, 37.52, 126.93, 5.0, null, null);
+
+            // then
+            assertThat(results).hasSize(1);
+            assertThat(results.get(0).getPetImageUrl()).isNull();
+        }
+
+        @Test
+        @DisplayName("성공: 여러 강아지가 있으면 첫 번째 강아지의 photoUrl을 사용한다")
+        void getMapThreads_multiplePets_usesFirstPetImage() {
+            // given
+            WalkThread thread = createRecruitingThread(1L, "올림픽공원 산책", 37.52, 127.12);
+
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(thread));
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(anyList(), any()))
+                    .willReturn(List.of());
+
+            WalkThreadPet firstPet = WalkThreadPet.of(1L, 100L);
+            WalkThreadPet secondPet = WalkThreadPet.of(1L, 200L);
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
+                    .willReturn(List.of(firstPet, secondPet));
+
+            Pet pet1 = Pet.builder().memberId(1L).build();
+            ReflectionTestUtils.setField(pet1, "id", 100L);
+            ReflectionTestUtils.setField(pet1, "photoUrl", "https://cdn.example.com/first.jpg");
+
+            Pet pet2 = Pet.builder().memberId(1L).build();
+            ReflectionTestUtils.setField(pet2, "id", 200L);
+            ReflectionTestUtils.setField(pet2, "photoUrl", "https://cdn.example.com/second.jpg");
+
+            given(petRepository.findAllById(anyList()))
+                    .willReturn(List.of(pet1, pet2));
+
+            // when
+            List<ThreadMapResponse> results = walkThreadService.getMapThreads(
+                    1L, 37.52, 127.12, 5.0, null, null);
+
+            // then
+            assertThat(results).hasSize(1);
+            assertThat(results.get(0).getPetImageUrl()).isEqualTo("https://cdn.example.com/first.jpg");
+        }
+
+        @Test
+        @DisplayName("성공: 강아지의 photoUrl이 null이면 petImageUrl도 null이다")
+        void getMapThreads_petWithNoPhoto_returnsNullPetImageUrl() {
+            // given
+            WalkThread thread = createRecruitingThread(1L, "양재천 산책", 37.47, 127.04);
+
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(thread));
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(anyList(), any()))
+                    .willReturn(List.of());
+
+            WalkThreadPet threadPet = WalkThreadPet.of(1L, 100L);
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
+                    .willReturn(List.of(threadPet));
+
+            Pet pet = Pet.builder().memberId(1L).build();
+            ReflectionTestUtils.setField(pet, "id", 100L);
+            given(petRepository.findAllById(List.of(100L)))
+                    .willReturn(List.of(pet));
+
+            // when
+            List<ThreadMapResponse> results = walkThreadService.getMapThreads(
+                    1L, 37.47, 127.04, 5.0, null, null);
+
+            // then
+            assertThat(results).hasSize(1);
+            assertThat(results.get(0).getPetImageUrl()).isNull();
+        }
+
+        private WalkThread createRecruitingThread(Long id, String title, double lat, double lng) {
+            WalkThread thread = WalkThread.builder()
+                    .authorId(1L)
+                    .title(title)
+                    .description("테스트 설명")
+                    .walkDate(LocalDate.now().plusDays(1))
+                    .startTime(LocalDateTime.now().plusDays(1))
+                    .endTime(LocalDateTime.now().plusDays(1).plusHours(1))
+                    .chatType(WalkChatType.GROUP)
+                    .maxParticipants(5)
+                    .allowNonPetOwner(true)
+                    .isVisibleAlways(true)
+                    .placeName(title)
+                    .latitude(BigDecimal.valueOf(lat))
+                    .longitude(BigDecimal.valueOf(lng))
+                    .address("테스트 주소")
+                    .status(WalkThreadStatus.RECRUITING)
+                    .build();
+            ReflectionTestUtils.setField(thread, "id", id);
+            return thread;
         }
     }
 

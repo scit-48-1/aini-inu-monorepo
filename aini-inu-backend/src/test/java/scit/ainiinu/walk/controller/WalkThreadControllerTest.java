@@ -251,6 +251,7 @@ class WalkThreadControllerTest {
                     .currentParticipants(2)
                     .maxParticipants(5)
                     .placeName("서울숲")
+                    .petImageUrl("https://cdn.example.com/dog.jpg")
                     .build();
             given(walkThreadService.getMapThreads(anyLong(), eq(37.54), eq(127.04), eq(5.0), any(), any()))
                     .willReturn(List.of(mapResponse));
@@ -263,7 +264,8 @@ class WalkThreadControllerTest {
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data[0].threadId").value(1L));
+                    .andExpect(jsonPath("$.data[0].threadId").value(1L))
+                    .andExpect(jsonPath("$.data[0].petImageUrl").value("https://cdn.example.com/dog.jpg"));
         }
 
         @Test
