@@ -17,6 +17,7 @@ interface DynamicMapProps {
   onMoveEnd?: (lat: number, lng: number) => void; // 드래그 후 좌표 콜백
   selectedMarkerId?: string | null; // 선택된 마커 강조 표시
   flyTo?: [number, number] | null; // 특정 위치로 부드럽게 이동
+  flyToOffsetX?: number; // flyTo 시 마커를 왼쪽으로 치우치게 하는 픽셀 오프셋
 }
 
 function MapController({ center, zoom, onVisualCenterChange, onMoveEnd }: { center: [number, number]; zoom: number; onVisualCenterChange?: (c: [number, number]) => void; onMoveEnd?: (lat: number, lng: number) => void }) {
@@ -66,17 +67,28 @@ function MapController({ center, zoom, onVisualCenterChange, onMoveEnd }: { cent
   return null;
 }
 
-function FlyToController({ flyTo }: { flyTo?: [number, number] | null }) {
+function FlyToController({ flyTo, offsetX }: { flyTo?: [number, number] | null; offsetX?: number }) {
   const map = useMap();
   useEffect(() => {
     if (flyTo) {
-      map.flyTo(flyTo, map.getZoom(), { duration: 0.8 });
+      if (offsetX) {
+        // 마커가 왼쪽에 보이도록 지도 중심을 오른쪽으로 오프셋
+        const zoom = map.getZoom();
+        const targetPoint = map.project(flyTo, zoom);
+        const newCenter = map.unproject(
+          L.point(targetPoint.x + offsetX, targetPoint.y),
+          zoom,
+        );
+        map.flyTo(newCenter, zoom, { duration: 0.8 });
+      } else {
+        map.flyTo(flyTo, map.getZoom(), { duration: 0.8 });
+      }
     }
-  }, [flyTo, map]);
+  }, [flyTo, offsetX, map]);
   return null;
 }
 
-export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideCircle, interactive = true, radiusKm, onMoveEnd, selectedMarkerId, flyTo }: DynamicMapProps) {
+export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideCircle, interactive = true, radiusKm, onMoveEnd, selectedMarkerId, flyTo, flyToOffsetX }: DynamicMapProps) {
   const visualCenterRef = useRef<[number, number]>(center);
   const [visualCenter, setVisualCenter] = useState<[number, number]>(center);
 
@@ -159,7 +171,7 @@ export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideC
         preferCanvas={true}
       >
         <MapController center={center} zoom={zoom} onVisualCenterChange={handleVisualCenterChange} onMoveEnd={onMoveEnd} />
-        <FlyToController flyTo={flyTo} />
+        <FlyToController flyTo={flyTo} offsetX={flyToOffsetX} />
         
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"

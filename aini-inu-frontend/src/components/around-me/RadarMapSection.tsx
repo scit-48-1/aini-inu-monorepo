@@ -273,6 +273,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
           onMoveEnd={onMoveEnd}
           selectedMarkerId={selectedThread ? String(selectedThread.id) : null}
           flyTo={selectedThread ? [selectedThread.latitude, selectedThread.longitude] : null}
+          flyToOffsetX={selectedThread ? 200 : undefined}
         />
       </div>
 
@@ -310,7 +311,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
 
       {/* Thread detail popup */}
       {selectedThread && (
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-lg px-4 animate-in slide-in-from-bottom-4 duration-500">
+        <div className="absolute bottom-10 right-6 z-[1000] w-full max-w-md animate-in slide-in-from-bottom-4 duration-500">
           <Card className="p-8 bg-white shadow-2xl border-2 border-amber-500/10 space-y-6 rounded-[48px] overflow-hidden">
             {/* Header */}
             <div className="flex justify-between items-start">
