@@ -193,17 +193,17 @@ export const ManagerStep: React.FC<ManagerStepProps> = ({ managerData, setManage
                 <Typography variant="label" className="flex items-center gap-2"><Sparkles size={14} className="text-amber-500" /> 나의 MBTI</Typography>
                 <span className="text-[10px] font-black text-zinc-300 uppercase">Optional</span>
               </div>
-              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">
+              <div className="flex flex-wrap gap-2">
                 {['ENFP', 'ENFJ', 'ENTP', 'ENTJ', 'ESFP', 'ESFJ', 'ESTP', 'ESTJ', 'INFP', 'INFJ', 'INTP', 'INTJ', 'ISFP', 'ISFJ', 'ISTP', 'ISTJ'].map((mbti) => (
                   <button
                     key={mbti}
                     type="button"
                     onClick={() => setManagerData({ ...managerData, mbti: managerData.mbti === mbti ? '' : mbti })}
                     className={cn(
-                      "flex-shrink-0 px-5 py-3 rounded-2xl text-xs font-black transition-all border",
+                      "px-4 py-2 rounded-full text-sm font-bold border-2 transition-all",
                       managerData.mbti === mbti
-                        ? "bg-amber-500 text-white border-amber-500 shadow-lg"
-                        : "bg-white text-zinc-400 border-zinc-100"
+                        ? "bg-amber-500 border-amber-500 text-white"
+                        : "bg-zinc-50 border-zinc-100 text-zinc-500 hover:border-amber-300"
                     )}
                   >
                     {mbti}

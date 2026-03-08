@@ -281,17 +281,17 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                   </button>
                 )}
               </div>
-              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+              <div className="flex flex-wrap gap-2">
                 {MBTI_LIST.map((mbti) => (
                   <button
                     key={mbti}
                     type="button"
                     onClick={() => setForm({ ...form, mbti: form.mbti === mbti ? '' : mbti })}
                     className={cn(
-                      "flex-shrink-0 px-4 py-3 rounded-2xl text-xs font-black transition-all border",
+                      "px-4 py-2 rounded-full text-sm font-bold border-2 transition-all",
                       form.mbti === mbti
-                        ? "bg-amber-500 text-white border-amber-500 shadow-lg"
-                        : "bg-zinc-50 text-zinc-400 border-transparent hover:border-amber-200"
+                        ? "bg-amber-500 border-amber-500 text-white"
+                        : "bg-zinc-50 border-zinc-100 text-zinc-500 hover:border-amber-300"
                     )}
                   >
                     {mbti}
