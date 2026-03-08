@@ -158,7 +158,7 @@ export default function AroundMePage() {
                   </div>
                   <div>
                     <p className="text-sm font-black text-amber-800">이미 활성 모집글이 있습니다</p>
-                    <p className="text-xs text-amber-600 mt-0.5">기존 모집글을 삭제하거나 만료 후 새 글을 작성할 수 있습니다</p>
+                    <p className="text-xs text-amber-600 mt-0.5">삭제·만료되거나 모두가 산책 완료하면 새 글을 작성할 수 있습니다</p>
                   </div>
                 </div>
                 <div className="bg-white rounded-[20px] p-4 border border-amber-100">
