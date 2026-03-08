@@ -1,9 +1,9 @@
 ---
-status: complete
+status: diagnosed
 phase: 11-dashboard
 source: 11-01-SUMMARY.md, 11-02-SUMMARY.md
 started: 2026-03-08T00:00:00Z
-updated: 2026-03-08T02:05:00Z
+updated: 2026-03-08T02:10:00Z
 ---
 
 ## Current Test
@@ -66,37 +66,65 @@ skipped: 0
   reason: "User reported: 유저 닉네임, 매너점수, 대표강아지 프로필사진, 위치 아무것도 적용이 안되어 있어."
   severity: major
   test: 1
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "DashboardHero greeting shows dog name instead of nickname; mapMemberToUser() hardcodes location:'' and dogs:[]; mainDog fallback always triggers because userProfile.dogs is always empty"
+  artifacts:
+    - path: "aini-inu-frontend/src/store/useUserStore.ts"
+      issue: "mapMemberToUser() hardcodes location:'' and dogs:[] -- no data source in MemberResponse"
+    - path: "aini-inu-frontend/src/components/dashboard/DashboardHero.tsx"
+      issue: "Line 59 greets with mainDog.name instead of userProfile.nickname"
+    - path: "aini-inu-frontend/src/app/dashboard/page.tsx"
+      issue: "Lines 52-56 mainDog fallback always triggers since userProfile.dogs is []"
+  missing:
+    - "Change greeting to use userProfile.nickname instead of mainDog.name"
+    - "Fetch user's pets via getMemberPets(userId) in page orchestrator"
+    - "Pass representative pet to DashboardHero for dog profile photo"
+    - "Derive location from another source (last walk, user settings) or add to backend MemberResponse"
+  debug_session: ".planning/debug/dashboard-hero-missing-data.md"
 
 - truth: "Local Feed Preview shows nearby threads based on user location, and clicking a card navigates to /around-me with that thread selected"
   status: failed
   reason: "User reported: 카드가 보이지만 나의 위치 주변 스레드가 아님. 카드 선택시 around-me로 넘어가기만 하고 해당 스레드가 선택된 상태가 아님."
   severity: major
   test: 3
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "fetchThreads() calls getThreads({page:0, size:3}) without passing latitude/longitude/radius; LocalFeedPreview card links use bare /around-me without threadId query param"
+  artifacts:
+    - path: "aini-inu-frontend/src/app/dashboard/page.tsx"
+      issue: "Line 95 fetchThreads does not pass latitude/longitude/radius to getThreads()"
+    - path: "aini-inu-frontend/src/components/dashboard/LocalFeedPreview.tsx"
+      issue: "Line 71 card Link uses bare /around-me href without ?threadId={thread.id}"
+    - path: "aini-inu-frontend/src/app/around-me/page.tsx"
+      issue: "No logic to read threadId query param and auto-select thread on mount"
+  missing:
+    - "Pass user coordinates (from Geolocation or location store) to getThreads() with latitude, longitude, radius"
+    - "Add threadId query param to card links: /around-me?threadId={thread.id}"
+    - "Read threadId from searchParams in around-me/page.tsx and call selectThread()"
+  debug_session: ".planning/debug/local-feed-no-location-filter.md"
 
 - truth: "RecentFriends shows unique walk partner cards with correct dog image, dog name, and no duplicate keys"
   status: failed
   reason: "User reported: 강아지 이미지 미표시, 강아지 이름 대신 memberId 표시, 동일 카드 중복, RecentFriends.tsx:54에서 key '9004' 중복 에러."
   severity: major
   test: 8
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "fetchRecentFriends builds friend objects with non-unique key (memberId reused across rooms), fallback name shows memberId instead of nickname, hardcoded placeholder image, and no deduplication of same partner"
+  artifacts:
+    - path: "aini-inu-frontend/src/app/dashboard/page.tsx"
+      issue: "Lines 163-191: id uses memberId (non-unique), name fallback shows memberId, image hardcoded to logo, no dedup"
+  missing:
+    - "Use chatRoomId as key or deduplicate by memberId first"
+    - "Change name fallback to petNames || partner.nickname || Member ${memberId}"
+    - "Use partner.profileImageUrl || fallback instead of hardcoded logo"
+    - "Add Map<memberId, friend> deduplication before building friends array"
+  debug_session: ".planning/debug/recent-friends-bugs.md"
 
 - truth: "Pending Review Card uses smaller, cuter notification style on right margin instead of full-width top placement"
   status: failed
   reason: "User suggested: 디자인적으로 최상단 전체폭보다 대시보드 오른쪽 여백에 작고 귀여운 형태로 나타나는 것이 좋겠다."
   severity: cosmetic
   test: 4
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "PendingReviewCard uses full-width dark navy card at top of dashboard; user prefers smaller floating notification on right margin"
+  artifacts:
+    - path: "aini-inu-frontend/src/components/dashboard/PendingReviewCard.tsx"
+      issue: "Full-width top placement design"
+  missing:
+    - "Redesign as smaller, cuter floating notification card positioned in right margin area"
   debug_session: ""
