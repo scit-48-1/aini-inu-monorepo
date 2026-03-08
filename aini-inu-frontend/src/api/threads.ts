@@ -50,6 +50,20 @@ export interface ThreadApplyRequest {
   petIds: number[];
 }
 
+export interface PetSummary {
+  id: number;
+  name: string;
+  photoUrl: string | null;
+  breedName: string | null;
+  age: number;
+  gender: string;
+  size: string;
+  mbti: string | null;
+  isNeutered: boolean;
+  walkingStyles: string[];
+  personalities: string[];
+}
+
 export interface ThreadResponse {
   id: number;
   authorId: number;
@@ -69,6 +83,7 @@ export interface ThreadResponse {
   address: string;
   status: string;
   petIds: number[];
+  pets: PetSummary[];
   applicants: ApplicantSummary[];
   applied: boolean;
 }

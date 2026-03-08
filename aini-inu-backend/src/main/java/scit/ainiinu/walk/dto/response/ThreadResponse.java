@@ -54,6 +54,8 @@ public class ThreadResponse {
     private List<ApplicantSummary> applicants;
     @Schema(description = "현재 사용자의 신청 여부입니다.", example = "false")
     private Boolean applied;
+    @Schema(description = "참여 반려견 상세 정보입니다.")
+    private List<PetSummary> pets;
 
     public static ThreadResponse from(WalkThread walkThread) {
         return ThreadResponse.builder()
@@ -77,6 +79,7 @@ public class ThreadResponse {
                 .petIds(List.of())
                 .applicants(List.of())
                 .applied(false)
+                .pets(List.of())
                 .build();
     }
 
@@ -89,5 +92,32 @@ public class ThreadResponse {
         private String status;
         @Schema(description = "채팅방 ID입니다.", example = "101")
         private Long chatRoomId;
+    }
+
+    @Getter
+    @Builder
+    public static class PetSummary {
+        @Schema(description = "반려견 ID입니다.", example = "1")
+        private Long id;
+        @Schema(description = "반려견 이름입니다.", example = "몽이")
+        private String name;
+        @Schema(description = "반려견 사진 URL입니다.")
+        private String photoUrl;
+        @Schema(description = "견종 이름입니다.", example = "시바견")
+        private String breedName;
+        @Schema(description = "나이입니다.", example = "3")
+        private Integer age;
+        @Schema(description = "성별입니다.", example = "MALE")
+        private String gender;
+        @Schema(description = "크기입니다.", example = "MEDIUM")
+        private String size;
+        @Schema(description = "MBTI입니다.", example = "ENFP")
+        private String mbti;
+        @Schema(description = "중성화 여부입니다.", example = "true")
+        private Boolean isNeutered;
+        @Schema(description = "산책 스타일 목록입니다.")
+        private List<String> walkingStyles;
+        @Schema(description = "성격 목록입니다.")
+        private List<String> personalities;
     }
 }

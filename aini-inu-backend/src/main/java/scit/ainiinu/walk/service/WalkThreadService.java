@@ -37,9 +37,11 @@ import scit.ainiinu.walk.entity.WalkThread;
 import scit.ainiinu.walk.entity.WalkThreadApplication;
 import scit.ainiinu.walk.entity.WalkThreadApplicationStatus;
 import scit.ainiinu.walk.entity.WalkThreadFilter;
+import scit.ainiinu.walk.entity.WalkThreadApplicationPet;
 import scit.ainiinu.walk.entity.WalkThreadPet;
 import scit.ainiinu.walk.entity.WalkThreadStatus;
 import scit.ainiinu.walk.exception.ThreadErrorCode;
+import scit.ainiinu.walk.repository.WalkThreadApplicationPetRepository;
 import scit.ainiinu.walk.repository.WalkThreadApplicationRepository;
 import scit.ainiinu.walk.repository.WalkThreadFilterRepository;
 import scit.ainiinu.walk.repository.WalkThreadPetRepository;
@@ -67,6 +69,7 @@ public class WalkThreadService {
     private final WalkThreadPetRepository walkThreadPetRepository;
     private final WalkThreadFilterRepository walkThreadFilterRepository;
     private final WalkThreadApplicationRepository walkThreadApplicationRepository;
+    private final WalkThreadApplicationPetRepository walkThreadApplicationPetRepository;
     private final MemberRepository memberRepository;
     private final PetRepository petRepository;
     private final ChatRoomRepository chatRoomRepository;
@@ -311,9 +314,12 @@ public class WalkThreadService {
         Long chatRoomId = resolveChatRoomId(thread, memberId);
         if (existing.isPresent()) {
             existing.get().rejoin(chatRoomId);
+            walkThreadApplicationPetRepository.deleteAllByApplicationId(existing.get().getId());
+            saveApplicationPets(existing.get().getId(), request.getPetIds());
         } else {
             WalkThreadApplication application = WalkThreadApplication.joined(threadId, memberId, chatRoomId);
-            walkThreadApplicationRepository.save(application);
+            WalkThreadApplication savedApplication = walkThreadApplicationRepository.save(application);
+            saveApplicationPets(savedApplication.getId(), request.getPetIds());
         }
 
         return ThreadApplyResponse.builder()
@@ -331,6 +337,8 @@ public class WalkThreadService {
                 .orElseThrow(() -> new BusinessException(ThreadErrorCode.THREAD_APPLY_NOT_FOUND));
 
         application.cancel();
+        walkThreadApplicationRepository.flush();
+        walkThreadApplicationPetRepository.deleteAllByApplicationId(application.getId());
     }
 
     public List<ThreadHotspotResponse> getHotspots(int hours) {
@@ -435,17 +443,58 @@ public class WalkThreadService {
                 WalkThreadApplicationStatus.JOINED
         ) + 1;
 
-        List<Long> petIds = walkThreadPetRepository.findAllByThreadId(thread.getId())
+        // Collect author pet IDs
+        List<Long> authorPetIds = walkThreadPetRepository.findAllByThreadId(thread.getId())
                 .stream()
                 .map(WalkThreadPet::getPetId)
                 .toList();
 
+        // Collect joined applications (reused for applicants + application pets)
+        List<WalkThreadApplication> joinedApplications = walkThreadApplicationRepository
+                .findAllByThreadIdAndStatus(thread.getId(), WalkThreadApplicationStatus.JOINED);
+
+        // Collect all pet IDs: author pets + joined applicants' pets
+        Set<Long> allPetIds = new java.util.LinkedHashSet<>(authorPetIds);
+        if (!joinedApplications.isEmpty()) {
+            List<Long> applicationIds = joinedApplications.stream()
+                    .map(WalkThreadApplication::getId)
+                    .toList();
+            List<WalkThreadApplicationPet> applicationPets = walkThreadApplicationPetRepository
+                    .findAllByApplicationIdIn(applicationIds);
+            for (WalkThreadApplicationPet ap : applicationPets) {
+                allPetIds.add(ap.getPetId());
+            }
+        }
+
+        // Build PetSummary list
+        List<ThreadResponse.PetSummary> pets = List.of();
+        if (!allPetIds.isEmpty()) {
+            List<Pet> petEntities = petRepository.findAllById(new ArrayList<>(allPetIds));
+            pets = petEntities.stream()
+                    .map(pet -> ThreadResponse.PetSummary.builder()
+                            .id(pet.getId())
+                            .name(pet.getName())
+                            .photoUrl(pet.getPhotoUrl())
+                            .breedName(pet.getBreed() != null ? pet.getBreed().getName() : null)
+                            .age(pet.getAge())
+                            .gender(pet.getGender() != null ? pet.getGender().name() : null)
+                            .size(pet.getSize() != null ? pet.getSize().name() : null)
+                            .mbti(pet.getMbti())
+                            .isNeutered(pet.getIsNeutered())
+                            .walkingStyles(pet.getPetWalkingStyles().stream()
+                                    .map(ws -> ws.getWalkingStyle().getName())
+                                    .toList())
+                            .personalities(pet.getPetPersonalities().stream()
+                                    .map(pp -> pp.getPersonality().getName())
+                                    .toList())
+                            .build())
+                    .toList();
+        }
+
+        // Applicants (only for thread author)
         List<ThreadResponse.ApplicantSummary> applicants = null;
         if (thread.isAuthor(memberId)) {
-            applicants = walkThreadApplicationRepository.findAllByThreadIdAndStatus(
-                            thread.getId(),
-                            WalkThreadApplicationStatus.JOINED
-                    ).stream()
+            applicants = joinedApplications.stream()
                     .map(application -> ThreadResponse.ApplicantSummary.builder()
                             .memberId(application.getMemberId())
                             .status(application.getStatus().name())
@@ -476,7 +525,8 @@ public class WalkThreadService {
                 .longitude(thread.getLongitude())
                 .address(thread.getAddress())
                 .status(thread.getStatus().name())
-                .petIds(petIds)
+                .petIds(authorPetIds)
+                .pets(pets)
                 .applicants(applicants)
                 .applied(isApplied)
                 .build();
@@ -500,6 +550,15 @@ public class WalkThreadService {
         }
         for (Long petId : petIds) {
             walkThreadPetRepository.save(WalkThreadPet.of(threadId, petId));
+        }
+    }
+
+    private void saveApplicationPets(Long applicationId, List<Long> petIds) {
+        if (petIds == null || petIds.isEmpty()) {
+            return;
+        }
+        for (Long petId : petIds) {
+            walkThreadApplicationPetRepository.save(WalkThreadApplicationPet.of(applicationId, petId));
         }
     }
 

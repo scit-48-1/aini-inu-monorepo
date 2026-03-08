@@ -17,8 +17,10 @@ import type {
   ThreadResponse,
   ThreadSummaryResponse,
 } from '@/api/threads';
+import type { PetSummary } from '@/api/threads';
 import type { PetResponse } from '@/api/pets';
 import { applyToThread, cancelApplication } from '@/api/threads';
+import { PetDetailPanel } from '@/components/around-me/PetDetailPanel';
 
 const DynamicMap = dynamic(() => import('@/components/common/DynamicMap'), {
   ssr: false,
@@ -116,6 +118,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
   const [showPetSelect, setShowPetSelect] = useState(false);
   const [hotspotPopup, setHotspotPopup] = useState<HotspotPopup | null>(null);
   const [optimisticApplied, setOptimisticApplied] = useState<boolean | null>(null);
+  const [selectedPetDetail, setSelectedPetDetail] = useState<PetSummary | null>(null);
 
   useEffect(() => {
     setIsConfirmingDelete(false);
@@ -123,6 +126,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
     setShowPetSelect(false);
     setHotspotPopup(null);
     setOptimisticApplied(null);
+    setSelectedPetDetail(null);
   }, [selectedThread]);
 
   // Convert ThreadMapResponse[] to MapMarker[] for DynamicMap
@@ -268,6 +272,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
           radiusKm={radius}
           onMoveEnd={onMoveEnd}
           selectedMarkerId={selectedThread ? String(selectedThread.id) : null}
+          flyTo={selectedThread ? [selectedThread.latitude, selectedThread.longitude] : null}
         />
       </div>
 
@@ -365,6 +370,44 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
             {selectedThread.description && (
               <div className="bg-zinc-50/50 p-6 rounded-[32px] border border-zinc-100/50 italic text-zinc-600 text-sm">
                 &quot;{selectedThread.description}&quot;
+              </div>
+            )}
+
+            {/* Participating Pets */}
+            {selectedThread.pets && selectedThread.pets.length > 0 && (
+              <div className="space-y-3">
+                <Typography variant="label" className="text-amber-500 font-black uppercase tracking-[0.2em] text-[10px]">
+                  참여 반려견
+                </Typography>
+                <div className="flex gap-3 overflow-x-auto no-scrollbar py-1">
+                  {selectedThread.pets.map((pet) => (
+                    <button
+                      key={pet.id}
+                      onClick={() => setSelectedPetDetail((prev) => prev?.id === pet.id ? null : pet)}
+                      className={cn(
+                        'flex flex-col items-center gap-1.5 shrink-0 transition-all',
+                        selectedPetDetail?.id === pet.id && 'scale-105',
+                      )}
+                    >
+                      <div className={cn(
+                        'w-14 h-14 rounded-2xl overflow-hidden border-2 transition-colors',
+                        selectedPetDetail?.id === pet.id ? 'border-amber-500 shadow-lg shadow-amber-500/20' : 'border-zinc-100',
+                      )}>
+                        <img
+                          src={pet.photoUrl || '/AINIINU_ROGO_B.png'}
+                          alt={pet.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className={cn(
+                        'text-[10px] font-black max-w-[56px] truncate',
+                        selectedPetDetail?.id === pet.id ? 'text-amber-600' : 'text-zinc-500',
+                      )}>
+                        {pet.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -510,6 +553,15 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
             </div>
           </Card>
         </div>
+      )}
+
+      {/* Pet detail slide-in panel */}
+      {selectedThread && (
+        <PetDetailPanel
+          isOpen={selectedPetDetail !== null}
+          onClose={() => setSelectedPetDetail(null)}
+          pet={selectedPetDetail}
+        />
       )}
     </div>
   );

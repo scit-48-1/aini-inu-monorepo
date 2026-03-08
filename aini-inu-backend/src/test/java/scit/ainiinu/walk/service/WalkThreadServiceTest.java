@@ -32,14 +32,19 @@ import scit.ainiinu.walk.entity.WalkThreadApplication;
 import scit.ainiinu.walk.entity.WalkThreadPet;
 import scit.ainiinu.walk.entity.WalkThreadStatus;
 import scit.ainiinu.walk.exception.ThreadErrorCode;
+import scit.ainiinu.walk.repository.WalkThreadApplicationPetRepository;
 import scit.ainiinu.walk.repository.WalkThreadApplicationRepository;
 import scit.ainiinu.walk.repository.WalkThreadFilterRepository;
 import scit.ainiinu.walk.repository.WalkThreadPetRepository;
 import scit.ainiinu.walk.repository.WalkThreadRepository;
 
+import scit.ainiinu.walk.entity.WalkThreadApplicationPet;
+import scit.ainiinu.walk.entity.WalkThreadApplicationStatus;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,8 +53,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,6 +73,9 @@ class WalkThreadServiceTest {
 
     @Mock
     private WalkThreadApplicationRepository walkThreadApplicationRepository;
+
+    @Mock
+    private WalkThreadApplicationPetRepository walkThreadApplicationPetRepository;
 
     @Mock
     private MemberRepository memberRepository;
@@ -234,6 +244,10 @@ class WalkThreadServiceTest {
             given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 10L)).willReturn(Optional.empty());
             given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 2L)).willReturn(Optional.empty());
 
+            WalkThreadApplication savedApplication = WalkThreadApplication.joined(1L, 2L, 101L);
+            ReflectionTestUtils.setField(savedApplication, "id", 1L);
+            given(walkThreadApplicationRepository.save(any(WalkThreadApplication.class))).willReturn(savedApplication);
+
             // when
             ThreadApplyResponse response = walkThreadService.applyThread(2L, 1L, request);
 
@@ -243,6 +257,310 @@ class WalkThreadServiceTest {
             assertThat(response.getApplicationStatus()).isEqualTo("JOINED");
             then(chatRoomRepository).should().save(any(ChatRoom.class));
             then(chatParticipantRepository).should(times(2)).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("신청 시 반려견 저장")
+    class ApplyThreadPets {
+
+        @Test
+        @DisplayName("신규 신청 시 WalkThreadApplicationPet이 저장된다")
+        void apply_savesApplicationPets() {
+            // given
+            WalkThread thread = buildFutureThread(1L, 10L);
+
+            ChatRoom savedRoom = ChatRoom.create(1L, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.WALK, null);
+            ReflectionTestUtils.setField(savedRoom, "id", 101L);
+
+            ThreadApplyRequest request = new ThreadApplyRequest();
+            request.setPetIds(List.of(201L, 202L));
+
+            WalkThreadApplication savedApplication = WalkThreadApplication.joined(1L, 2L, 101L);
+            ReflectionTestUtils.setField(savedApplication, "id", 55L);
+
+            given(walkThreadRepository.findByIdAndStatusNot(1L, WalkThreadStatus.DELETED)).willReturn(Optional.of(thread));
+            given(walkThreadApplicationRepository.findByThreadIdAndMemberId(1L, 2L)).willReturn(Optional.empty());
+            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED)).willReturn(0L);
+            given(chatRoomRepository.findFirstByThreadIdAndChatTypeAndStatusOrderByIdAsc(1L, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE))
+                    .willReturn(Optional.empty());
+            given(chatRoomRepository.save(any(ChatRoom.class))).willReturn(savedRoom);
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 10L)).willReturn(Optional.empty());
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 2L)).willReturn(Optional.empty());
+            given(walkThreadApplicationRepository.save(any(WalkThreadApplication.class))).willReturn(savedApplication);
+
+            // when
+            walkThreadService.applyThread(2L, 1L, request);
+
+            // then — 2 pets saved for application ID 55
+            ArgumentCaptor<WalkThreadApplicationPet> captor = ArgumentCaptor.forClass(WalkThreadApplicationPet.class);
+            then(walkThreadApplicationPetRepository).should(times(2)).save(captor.capture());
+
+            List<WalkThreadApplicationPet> saved = captor.getAllValues();
+            assertThat(saved).extracting(WalkThreadApplicationPet::getApplicationId).containsOnly(55L);
+            assertThat(saved).extracting(WalkThreadApplicationPet::getPetId).containsExactly(201L, 202L);
+        }
+
+        @Test
+        @DisplayName("petIds가 빈 리스트이면 ApplicationPet을 저장하지 않는다")
+        void apply_emptyPetIds_skipsApplicationPets() {
+            // given
+            WalkThread thread = buildFutureThread(1L, 10L);
+
+            ChatRoom savedRoom = ChatRoom.create(1L, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.WALK, null);
+            ReflectionTestUtils.setField(savedRoom, "id", 101L);
+
+            ThreadApplyRequest request = new ThreadApplyRequest();
+            request.setPetIds(List.of());
+
+            WalkThreadApplication savedApplication = WalkThreadApplication.joined(1L, 2L, 101L);
+            ReflectionTestUtils.setField(savedApplication, "id", 55L);
+
+            given(walkThreadRepository.findByIdAndStatusNot(1L, WalkThreadStatus.DELETED)).willReturn(Optional.of(thread));
+            given(walkThreadApplicationRepository.findByThreadIdAndMemberId(1L, 2L)).willReturn(Optional.empty());
+            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED)).willReturn(0L);
+            given(chatRoomRepository.findFirstByThreadIdAndChatTypeAndStatusOrderByIdAsc(1L, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE))
+                    .willReturn(Optional.empty());
+            given(chatRoomRepository.save(any(ChatRoom.class))).willReturn(savedRoom);
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 10L)).willReturn(Optional.empty());
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 2L)).willReturn(Optional.empty());
+            given(walkThreadApplicationRepository.save(any(WalkThreadApplication.class))).willReturn(savedApplication);
+
+            // when
+            walkThreadService.applyThread(2L, 1L, request);
+
+            // then
+            then(walkThreadApplicationPetRepository).should(never()).save(any(WalkThreadApplicationPet.class));
+        }
+
+        @Test
+        @DisplayName("재참여(rejoin) 시 기존 반려견을 삭제하고 새 반려견을 저장한다")
+        void apply_rejoin_deletesOldAndSavesNewPets() {
+            // given
+            WalkThread thread = buildFutureThread(1L, 10L);
+
+            ChatRoom savedRoom = ChatRoom.create(1L, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.WALK, null);
+            ReflectionTestUtils.setField(savedRoom, "id", 101L);
+
+            ThreadApplyRequest request = new ThreadApplyRequest();
+            request.setPetIds(List.of(301L));
+
+            WalkThreadApplication existingCanceled = WalkThreadApplication.canceled(1L, 2L);
+            ReflectionTestUtils.setField(existingCanceled, "id", 77L);
+
+            given(walkThreadRepository.findByIdAndStatusNot(1L, WalkThreadStatus.DELETED)).willReturn(Optional.of(thread));
+            given(walkThreadApplicationRepository.findByThreadIdAndMemberId(1L, 2L)).willReturn(Optional.of(existingCanceled));
+            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED)).willReturn(0L);
+            given(chatRoomRepository.findFirstByThreadIdAndChatTypeAndStatusOrderByIdAsc(1L, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE))
+                    .willReturn(Optional.empty());
+            given(chatRoomRepository.save(any(ChatRoom.class))).willReturn(savedRoom);
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 10L)).willReturn(Optional.empty());
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 2L)).willReturn(Optional.empty());
+
+            // when
+            walkThreadService.applyThread(2L, 1L, request);
+
+            // then — old pets deleted, new pet saved
+            then(walkThreadApplicationPetRepository).should().deleteAllByApplicationId(77L);
+
+            ArgumentCaptor<WalkThreadApplicationPet> captor = ArgumentCaptor.forClass(WalkThreadApplicationPet.class);
+            then(walkThreadApplicationPetRepository).should().save(captor.capture());
+            assertThat(captor.getValue().getApplicationId()).isEqualTo(77L);
+            assertThat(captor.getValue().getPetId()).isEqualTo(301L);
+        }
+    }
+
+    @Nested
+    @DisplayName("신청 취소 시 반려견 삭제")
+    class CancelApplyThreadPets {
+
+        @Test
+        @DisplayName("취소 시 해당 신청의 반려견이 모두 삭제된다")
+        void cancel_deletesApplicationPets() {
+            // given
+            WalkThreadApplication application = WalkThreadApplication.joined(1L, 2L, 9001L);
+            ReflectionTestUtils.setField(application, "id", 42L);
+
+            given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(1L, 2L, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(Optional.of(application));
+
+            // when
+            walkThreadService.cancelApplyThread(2L, 1L);
+
+            // then
+            assertThat(application.getStatus()).isEqualTo(WalkThreadApplicationStatus.CANCELED);
+            then(walkThreadApplicationRepository).should().flush();
+            then(walkThreadApplicationPetRepository).should().deleteAllByApplicationId(42L);
+        }
+    }
+
+    @Nested
+    @DisplayName("스레드 상세 조회 - PetSummary")
+    class GetThreadPetSummary {
+
+        @Test
+        @DisplayName("작성자 + 참여자 반려견이 모두 pets에 포함된다")
+        void getThread_includesAuthorAndApplicantPets() {
+            // given
+            WalkThread thread = buildFutureThread(1L, 10L);
+
+            // Author pet
+            WalkThreadPet authorPet = WalkThreadPet.of(1L, 100L);
+
+            // Joined application with pet
+            WalkThreadApplication joinedApp = WalkThreadApplication.joined(1L, 20L, 5001L);
+            ReflectionTestUtils.setField(joinedApp, "id", 50L);
+
+            WalkThreadApplicationPet appPet = WalkThreadApplicationPet.of(50L, 200L);
+
+            // Pet entities
+            Pet pet100 = Pet.builder()
+                    .memberId(10L).name("몽이").age(3)
+                    .gender(scit.ainiinu.pet.entity.enums.PetGender.MALE)
+                    .size(scit.ainiinu.pet.entity.enums.PetSize.MEDIUM)
+                    .isNeutered(true).isMain(true).build();
+            ReflectionTestUtils.setField(pet100, "id", 100L);
+            ReflectionTestUtils.setField(pet100, "photoUrl", "https://cdn.example.com/mongi.jpg");
+            ReflectionTestUtils.setField(pet100, "mbti", "ENFP");
+
+            Pet pet200 = Pet.builder()
+                    .memberId(20L).name("코코").age(2)
+                    .gender(scit.ainiinu.pet.entity.enums.PetGender.FEMALE)
+                    .size(scit.ainiinu.pet.entity.enums.PetSize.SMALL)
+                    .isNeutered(false).isMain(true).build();
+            ReflectionTestUtils.setField(pet200, "id", 200L);
+
+            given(walkThreadRepository.findByIdAndStatusNot(1L, WalkThreadStatus.DELETED)).willReturn(Optional.of(thread));
+            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED)).willReturn(1L);
+            given(walkThreadPetRepository.findAllByThreadId(1L)).willReturn(List.of(authorPet));
+            given(walkThreadApplicationRepository.findAllByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of(joinedApp));
+            given(walkThreadApplicationPetRepository.findAllByApplicationIdIn(List.of(50L)))
+                    .willReturn(List.of(appPet));
+            given(petRepository.findAllById(any())).willReturn(List.of(pet100, pet200));
+            given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(1L, 10L, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(Optional.empty());
+
+            // when
+            ThreadResponse response = walkThreadService.getThread(10L, 1L);
+
+            // then
+            assertThat(response.getPets()).hasSize(2);
+            assertThat(response.getPets()).extracting(ThreadResponse.PetSummary::getId).containsExactlyInAnyOrder(100L, 200L);
+
+            ThreadResponse.PetSummary mongi = response.getPets().stream()
+                    .filter(p -> p.getId().equals(100L)).findFirst().orElseThrow();
+            assertThat(mongi.getName()).isEqualTo("몽이");
+            assertThat(mongi.getPhotoUrl()).isEqualTo("https://cdn.example.com/mongi.jpg");
+            assertThat(mongi.getAge()).isEqualTo(3);
+            assertThat(mongi.getGender()).isEqualTo("MALE");
+            assertThat(mongi.getSize()).isEqualTo("MEDIUM");
+            assertThat(mongi.getMbti()).isEqualTo("ENFP");
+            assertThat(mongi.getIsNeutered()).isTrue();
+
+            ThreadResponse.PetSummary coco = response.getPets().stream()
+                    .filter(p -> p.getId().equals(200L)).findFirst().orElseThrow();
+            assertThat(coco.getName()).isEqualTo("코코");
+            assertThat(coco.getGender()).isEqualTo("FEMALE");
+            assertThat(coco.getSize()).isEqualTo("SMALL");
+            assertThat(coco.getIsNeutered()).isFalse();
+        }
+
+        @Test
+        @DisplayName("참여 신청이 없으면 작성자 반려견만 포함된다")
+        void getThread_noApplicants_onlyAuthorPets() {
+            // given
+            WalkThread thread = buildFutureThread(1L, 10L);
+            WalkThreadPet authorPet = WalkThreadPet.of(1L, 100L);
+
+            Pet pet100 = Pet.builder()
+                    .memberId(10L).name("몽이").age(3)
+                    .gender(scit.ainiinu.pet.entity.enums.PetGender.MALE)
+                    .size(scit.ainiinu.pet.entity.enums.PetSize.MEDIUM)
+                    .isNeutered(true).isMain(true).build();
+            ReflectionTestUtils.setField(pet100, "id", 100L);
+
+            given(walkThreadRepository.findByIdAndStatusNot(1L, WalkThreadStatus.DELETED)).willReturn(Optional.of(thread));
+            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED)).willReturn(0L);
+            given(walkThreadPetRepository.findAllByThreadId(1L)).willReturn(List.of(authorPet));
+            given(walkThreadApplicationRepository.findAllByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(petRepository.findAllById(any())).willReturn(List.of(pet100));
+            given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(1L, 10L, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(Optional.empty());
+
+            // when
+            ThreadResponse response = walkThreadService.getThread(10L, 1L);
+
+            // then
+            assertThat(response.getPets()).hasSize(1);
+            assertThat(response.getPets().get(0).getId()).isEqualTo(100L);
+            assertThat(response.getPets().get(0).getName()).isEqualTo("몽이");
+
+            // petIds는 작성자 것만
+            assertThat(response.getPetIds()).containsExactly(100L);
+        }
+
+        @Test
+        @DisplayName("작성자와 참여자가 같은 반려견을 등록해도 중복 없이 포함된다")
+        void getThread_duplicatePetIds_deduped() {
+            // given
+            WalkThread thread = buildFutureThread(1L, 10L);
+            WalkThreadPet authorPet = WalkThreadPet.of(1L, 100L);
+
+            WalkThreadApplication joinedApp = WalkThreadApplication.joined(1L, 20L, 5001L);
+            ReflectionTestUtils.setField(joinedApp, "id", 50L);
+
+            // Same pet ID 100 as author
+            WalkThreadApplicationPet appPet = WalkThreadApplicationPet.of(50L, 100L);
+
+            Pet pet100 = Pet.builder()
+                    .memberId(10L).name("몽이").age(3)
+                    .gender(scit.ainiinu.pet.entity.enums.PetGender.MALE)
+                    .size(scit.ainiinu.pet.entity.enums.PetSize.MEDIUM)
+                    .isNeutered(true).isMain(true).build();
+            ReflectionTestUtils.setField(pet100, "id", 100L);
+
+            given(walkThreadRepository.findByIdAndStatusNot(1L, WalkThreadStatus.DELETED)).willReturn(Optional.of(thread));
+            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED)).willReturn(1L);
+            given(walkThreadPetRepository.findAllByThreadId(1L)).willReturn(List.of(authorPet));
+            given(walkThreadApplicationRepository.findAllByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of(joinedApp));
+            given(walkThreadApplicationPetRepository.findAllByApplicationIdIn(List.of(50L)))
+                    .willReturn(List.of(appPet));
+            // LinkedHashSet deduplication → only [100L] queried
+            given(petRepository.findAllById(any())).willReturn(List.of(pet100));
+            given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(1L, 10L, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(Optional.empty());
+
+            // when
+            ThreadResponse response = walkThreadService.getThread(10L, 1L);
+
+            // then — deduped to 1 pet
+            assertThat(response.getPets()).hasSize(1);
+            assertThat(response.getPets().get(0).getId()).isEqualTo(100L);
+        }
+
+        @Test
+        @DisplayName("반려견이 없는 스레드는 빈 pets 리스트를 반환한다")
+        void getThread_noPets_emptyList() {
+            // given
+            WalkThread thread = buildFutureThread(1L, 10L);
+
+            given(walkThreadRepository.findByIdAndStatusNot(1L, WalkThreadStatus.DELETED)).willReturn(Optional.of(thread));
+            given(walkThreadApplicationRepository.countByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED)).willReturn(0L);
+            given(walkThreadPetRepository.findAllByThreadId(1L)).willReturn(List.of());
+            given(walkThreadApplicationRepository.findAllByThreadIdAndStatus(1L, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(1L, 10L, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(Optional.empty());
+
+            // when
+            ThreadResponse response = walkThreadService.getThread(10L, 1L);
+
+            // then
+            assertThat(response.getPets()).isEmpty();
+            then(petRepository).should(never()).findAllById(any());
         }
     }
 
@@ -388,6 +706,28 @@ class WalkThreadServiceTest {
             ReflectionTestUtils.setField(thread, "id", id);
             return thread;
         }
+    }
+
+    private WalkThread buildFutureThread(Long id, Long authorId) {
+        WalkThread thread = WalkThread.builder()
+                .authorId(authorId)
+                .title("산책 모집")
+                .description("설명")
+                .walkDate(LocalDate.now().plusDays(1))
+                .startTime(LocalDateTime.now().plusDays(1))
+                .endTime(LocalDateTime.now().plusDays(1).plusHours(1))
+                .chatType(WalkChatType.GROUP)
+                .maxParticipants(5)
+                .allowNonPetOwner(true)
+                .isVisibleAlways(true)
+                .placeName("서울숲")
+                .latitude(BigDecimal.valueOf(37.54))
+                .longitude(BigDecimal.valueOf(127.04))
+                .address("성동구")
+                .status(WalkThreadStatus.RECRUITING)
+                .build();
+        ReflectionTestUtils.setField(thread, "id", id);
+        return thread;
     }
 
     private ThreadCreateRequest createRequest() {

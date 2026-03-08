@@ -28,6 +28,7 @@ import scit.ainiinu.walk.entity.WalkThreadApplicationStatus;
 import scit.ainiinu.walk.entity.WalkThreadPet;
 import scit.ainiinu.walk.entity.WalkThreadStatus;
 import scit.ainiinu.walk.exception.ThreadErrorCode;
+import scit.ainiinu.walk.repository.WalkThreadApplicationPetRepository;
 import scit.ainiinu.walk.repository.WalkThreadApplicationRepository;
 import scit.ainiinu.walk.repository.WalkThreadFilterRepository;
 import scit.ainiinu.walk.repository.WalkThreadPetRepository;
@@ -63,6 +64,9 @@ class WalkThreadServicePhase06Test {
 
     @Mock
     private WalkThreadApplicationRepository walkThreadApplicationRepository;
+
+    @Mock
+    private WalkThreadApplicationPetRepository walkThreadApplicationPetRepository;
 
     @Mock
     private MemberRepository memberRepository;
