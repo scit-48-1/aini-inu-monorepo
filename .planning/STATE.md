@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-03-07T18:23:56.575Z"
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-03-08T02:18:03.735Z"
 last_activity: 2026-03-08 -- Completed plan 11-02 (dashboard orchestrator rewire)
 progress:
   total_phases: 12
-  completed_phases: 11
-  total_plans: 48
-  completed_plans: 48
+  completed_phases: 10
+  total_plans: 50
+  completed_plans: 49
   percent: 100
 ---
 
@@ -96,6 +96,7 @@ Progress: [██████████] 100%
 | Phase 10-lost-pet P02 | 3 | 2 tasks | 5 files |
 | Phase 11-dashboard P01 | 3 | 2 tasks | 5 files |
 | Phase 11-dashboard P02 | 4 | 2 tasks | 3 files |
+| Phase 11-dashboard P03 | 1 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -216,6 +217,7 @@ Recent decisions affecting current work:
 - [Phase 11-dashboard]: SectionState<T> discriminated union for type-safe per-section loading/error/empty/success handling
 - [Phase 11-dashboard]: Pending review detection capped at 20 rooms to avoid N+1 explosion
 - [Phase 11-dashboard]: PendingReviewModal delegates to WalkReviewModal for form rendering -- single review form component
+- [Phase 11-dashboard]: Greeting uses userProfile.nickname with fallback; mainDog from getMyPets() isMain; RecentFriends dedup by memberId Set
 
 ### Pending Todos
 
@@ -227,6 +229,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-07T18:21:16.806Z
-Stopped at: Completed 11-02-PLAN.md
+Last session: 2026-03-08T02:18:03.723Z
+Stopped at: Completed 11-03-PLAN.md
 Resume file: None
