@@ -20,10 +20,13 @@ interface DynamicMapProps {
   flyToOffsetX?: number; // flyTo 시 마커를 왼쪽으로 치우치게 하는 픽셀 오프셋
 }
 
-function MapController({ center, zoom, onVisualCenterChange, onMoveEnd }: { center: [number, number]; zoom: number; onVisualCenterChange?: (c: [number, number]) => void; onMoveEnd?: (lat: number, lng: number) => void }) {
+function MapController({ center, zoom, onVisualCenterChange, onMoveEnd, flyToActive }: { center: [number, number]; zoom: number; onVisualCenterChange?: (c: [number, number]) => void; onMoveEnd?: (lat: number, lng: number) => void; flyToActive?: boolean }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, zoom, { animate: true });
+    // flyTo가 활성화되어 있으면 setView를 건너뛴다 (flyTo가 항상 우선)
+    if (!flyToActive) {
+      map.setView(center, zoom, { animate: true });
+    }
 
     const timer = setTimeout(() => {
       map.invalidateSize();
@@ -43,7 +46,7 @@ function MapController({ center, zoom, onVisualCenterChange, onMoveEnd }: { cent
       clearTimeout(resizeTimer);
       resizeObserver.unobserve(container);
     };
-  }, [center, zoom, map]);
+  }, [center, zoom, map, flyToActive]);
 
   // Track visual center on move (drag/zoom) for Circle
   useEffect(() => {
@@ -78,6 +81,8 @@ function FlyToController({ flyTo, offsetX }: { flyTo?: [number, number] | null; 
     // 좌표 값이 실제로 변경된 경우에만 flyTo 실행
     if (prevRef.current && prevRef.current[0] === flyTo[0] && prevRef.current[1] === flyTo[1]) return;
     prevRef.current = flyTo;
+    // 진행 중인 애니메이션을 중단하고 스레드 위치로 이동
+    map.stop();
     if (offsetX) {
       const zoom = map.getZoom();
       const targetPoint = map.project(flyTo, zoom);
@@ -175,7 +180,7 @@ export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideC
         keyboard={interactive}
         preferCanvas={true}
       >
-        <MapController center={center} zoom={zoom} onVisualCenterChange={handleVisualCenterChange} onMoveEnd={onMoveEnd} />
+        <MapController center={center} zoom={zoom} onVisualCenterChange={handleVisualCenterChange} onMoveEnd={onMoveEnd} flyToActive={!!flyTo} />
         <FlyToController flyTo={flyTo} offsetX={flyToOffsetX} />
         
         <TileLayer
