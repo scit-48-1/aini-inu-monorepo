@@ -5,6 +5,8 @@ import { useProfile } from '@/hooks/useProfile';
 import { getWalkStats } from '@/api/members';
 import { getHotspots, getThreads } from '@/api/threads';
 import { getRooms, getRoom, getMyReview } from '@/api/chat';
+import { getMyPets } from '@/api/pets';
+import type { PetResponse } from '@/api/pets';
 import { useUserStore } from '@/store/useUserStore';
 import { RefreshCw } from 'lucide-react';
 import { AIBanner } from '@/components/dashboard/AIBanner';
@@ -49,11 +51,12 @@ function SectionSkeleton() {
 
 export default function DashboardPage() {
   const { profile: userProfile } = useProfile();
-  const mainDog = userProfile?.dogs?.[0] || {
-    name: '댕댕이',
-    image: '/images/dog-portraits/Mixed Breed.png',
-    breed: '믹스견',
-  };
+  const [myPets, setMyPets] = useState<PetResponse[]>([]);
+
+  const mainPet = myPets.find(p => p.isMain) || myPets[0];
+  const mainDog = mainPet
+    ? { name: mainPet.name, image: mainPet.photoUrl || '/images/dog-portraits/Mixed Breed.png', breed: mainPet.breed?.name || '믹스견' }
+    : { name: '댕댕이', image: '/images/dog-portraits/Mixed Breed.png', breed: '믹스견' };
 
   // Per-section states
   const [walkStats, setWalkStats] = useState<SectionState<WalkStatsResponse>>({ status: 'loading' });
@@ -158,6 +161,18 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // --- Fetch my pets ---
+
+  const fetchMyPets = useCallback(async () => {
+    try {
+      const pets = await getMyPets();
+      setMyPets(pets);
+    } catch {
+      // Non-critical: fallback to empty (default mainDog used)
+      setMyPets([]);
+    }
+  }, []);
+
   // --- Recent friends (keep existing pattern) ---
 
   const fetchRecentFriends = useCallback(async () => {
@@ -168,22 +183,23 @@ export default function DashboardPage() {
         roomSummaries.map((r) => getRoom(r.chatRoomId)),
       );
       const currentId = Number(useUserStore.getState().profile?.id) || 0;
-      const friends = detailResults
-        .map((res) => {
-          if (res.status !== 'fulfilled') return null;
-          const detail = res.value;
-          const partner = detail.participants.find((p) => p.memberId !== currentId && !p.left);
-          if (!partner) return null;
-          const petNames = partner.pets?.map((p) => p.name).join(', ');
-          return {
-            id: String(partner.memberId),
-            roomId: String(detail.chatRoomId),
-            name: petNames || `Member ${partner.memberId}`,
-            img: '/AINIINU_ROGO_B.png',
-            score: 7.0,
-          };
-        })
-        .filter(Boolean) as { id: string; roomId: string; name: string; img: string; score: number }[];
+      const seenMembers = new Set<number>();
+      const friends: { id: string; roomId: string; name: string; img: string; score: number }[] = [];
+      for (const res of detailResults) {
+        if (res.status !== 'fulfilled') continue;
+        const detail = res.value;
+        const partner = detail.participants.find((p) => p.memberId !== currentId && !p.left);
+        if (!partner || seenMembers.has(partner.memberId)) continue;
+        seenMembers.add(partner.memberId);
+        const petNames = partner.pets?.map((p) => p.name).join(', ');
+        friends.push({
+          id: String(partner.memberId),
+          roomId: String(detail.chatRoomId),
+          name: petNames || partner.nickname || '산책 친구',
+          img: partner.profileImageUrl || '/AINIINU_ROGO_B.png',
+          score: 7.0,
+        });
+      }
       setRecentFriends(friends);
     } catch {
       setRecentFriends([]);
@@ -200,13 +216,14 @@ export default function DashboardPage() {
         fetchWalkStats(),
         fetchHotspots(),
         fetchThreads(),
+        fetchMyPets(),
         fetchRecentFriends(),
         detectPendingReviews(),
       ]);
     };
 
     fetchAll();
-  }, [userProfile, fetchWalkStats, fetchHotspots, fetchThreads, fetchRecentFriends, detectPendingReviews]);
+  }, [userProfile, fetchWalkStats, fetchHotspots, fetchThreads, fetchMyPets, fetchRecentFriends, detectPendingReviews]);
 
   if (!userProfile) {
     return (

@@ -56,7 +56,7 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({ userProfile, mainD
           <div className="flex-1 space-y-6 text-center md:text-left min-w-0">
             <div className="space-y-2">
               <Typography variant="h1" className="text-3xl md:text-5xl leading-tight text-navy-900 tracking-tighter">
-                Hello, <span className="text-amber-500 italic">{mainDog.name}</span> <br /> 매니저님!
+                Hello, <span className="text-amber-500 italic">{userProfile.nickname || '댕댕이'}</span> <br /> 매니저님!
               </Typography>
               <div className="flex items-center justify-center md:justify-start gap-2 text-zinc-400 font-black text-sm">
                 <MapPin size={16} className="text-amber-500" /> {userProfile.location || '서울시 성수동'}
