@@ -7,6 +7,7 @@ import type { MemberResponse, PetResponse } from '@/api/members';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileTabs } from '@/components/profile/ProfileTabs';
 import type { ProfileTab } from '@/components/profile/ProfileTabs';
+import { PetHighlights } from '@/components/profile/PetHighlights';
 import { ProfileReviews } from '@/components/profile/ProfileReviews';
 import { ProfileTimeline } from '@/components/profile/ProfileTimeline';
 import { NeighborsModal } from '@/components/profile/NeighborsModal';
@@ -14,9 +15,6 @@ import { useFollowToggle } from '@/hooks/useFollowToggle';
 import { useMemberReviews } from '@/hooks/useMemberReviews';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { cn } from '@/lib/utils';
 
 interface OtherProfileViewProps {
   memberId: number;
@@ -33,7 +31,7 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
   const [initialIsFollowing, setInitialIsFollowing] = useState(false);
   const [followStateLoaded, setFollowStateLoaded] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<ProfileTab>('DOGS');
+  const [activeTab, setActiveTab] = useState<ProfileTab>('TIMELINE');
   const [neighborsModalOpen, setNeighborsModalOpen] = useState(false);
   const [neighborsModalType, setNeighborsModalType] = useState<'FOLLOWERS' | 'FOLLOWING'>('FOLLOWERS');
 
@@ -145,12 +143,14 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
         onFollowingClick={handleFollowingClick}
       />
 
+      <PetHighlights
+        pets={pets}
+        onPetClick={() => {}}
+      />
+
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="flex-1 overflow-y-auto">
-        {activeTab === 'DOGS' && (
-          <OtherProfilePets pets={pets} />
-        )}
         {activeTab === 'FEED' && (
           <EmptyTabState
             message="아직 포스팅이 없습니다."
@@ -188,52 +188,6 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
 };
 
 // --- Sub-components ---
-
-interface OtherProfilePetsProps {
-  pets: PetResponse[];
-}
-
-const OtherProfilePets: React.FC<OtherProfilePetsProps> = ({ pets }) => {
-  if (pets.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center p-16 gap-4 opacity-30">
-        <Typography variant="body" className="font-bold text-zinc-500">
-          등록된 반려동물이 없습니다.
-        </Typography>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 md:p-8 animate-in slide-in-from-bottom-4 duration-500">
-      {pets.map((pet) => (
-        <Card key={pet.id} className={cn("group overflow-hidden rounded-[40px] border-zinc-100 shadow-xl")}>
-          <div className="h-48 relative overflow-hidden">
-            <img
-              src={pet.photoUrl || '/default-pet.png'}
-              alt={pet.name}
-              className="w-full h-full object-cover transition-transform group-hover:scale-110"
-            />
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent text-white">
-              <Typography variant="h3" className="text-white text-xl">{pet.name}</Typography>
-              <Typography variant="label" className="text-white/80 font-bold opacity-80">
-                {pet.breed?.name ?? ''}
-                {pet.gender ? ` • ${pet.gender}` : ''}
-              </Typography>
-            </div>
-          </div>
-          <div className="p-6 space-y-4">
-            {pet.isMain && (
-              <Badge variant="default" className="bg-amber-50 border-none text-[10px] font-bold text-amber-600 px-3">
-                대표
-              </Badge>
-            )}
-          </div>
-        </Card>
-      ))}
-    </div>
-  );
-};
 
 interface EmptyTabStateProps {
   message: string;

@@ -16,8 +16,8 @@ import { useMemberReviews } from '@/hooks/useMemberReviews';
 
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileTabs, ProfileTab } from '@/components/profile/ProfileTabs';
+import { PetHighlights } from '@/components/profile/PetHighlights';
 import { ProfileFeed } from '@/components/profile/ProfileFeed';
-import { ProfileDogs } from '@/components/profile/ProfileDogs';
 import { ProfileHistory } from '@/components/profile/ProfileHistory';
 import { ProfileReviews } from '@/components/profile/ProfileReviews';
 import { ProfileTimeline } from '@/components/profile/ProfileTimeline';
@@ -161,7 +161,7 @@ export const MyProfileView: React.FC = () => {
   // UI state
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [activeTab, setActiveTab] = useState<ProfileTab>('FEED');
+  const [activeTab, setActiveTab] = useState<ProfileTab>('TIMELINE');
 
   // Modal state
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -269,11 +269,6 @@ export const MyProfileView: React.FC = () => {
     );
   }
 
-  // --- Walk stats heatmap slot ---
-  const walkStatsSlot = grassData.length > 0 ? (
-    <WalkHeatmap grassData={grassData} totalWalks={walkStats?.totalWalks || 0} />
-  ) : null;
-
   return (
     <>
       <ProfileHeader
@@ -288,8 +283,17 @@ export const MyProfileView: React.FC = () => {
         onSettingsClick={() => router.push('/settings')}
         onFollowersClick={() => { setNeighborsModalType('FOLLOWERS'); setIsNeighborsModalOpen(true); }}
         onFollowingClick={() => { setNeighborsModalType('FOLLOWING'); setIsNeighborsModalOpen(true); }}
-        walkStatsSlot={walkStatsSlot}
       />
+
+      <PetHighlights
+        pets={pets}
+        onPetClick={setSelectedPet}
+        onAddClick={() => setIsRegisterDogOpen(true)}
+      />
+
+      {grassData.length > 0 && (
+        <WalkHeatmap grassData={grassData} totalWalks={walkStats?.totalWalks || 0} />
+      )}
 
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -298,13 +302,6 @@ export const MyProfileView: React.FC = () => {
           <ProfileFeed
             posts={posts}
             onPostClick={(p) => setSelectedPost(p)}
-          />
-        )}
-        {activeTab === 'DOGS' && (
-          <ProfileDogs
-            pets={pets}
-            onPetClick={setSelectedPet}
-            onAddClick={() => setIsRegisterDogOpen(true)}
           />
         )}
         {activeTab === 'HISTORY' && (

@@ -13,7 +13,7 @@ import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileTabs, ProfileTab } from '@/components/profile/ProfileTabs';
 import { Typography } from '@/components/ui/Typography';
 import { ProfileFeed } from '@/components/profile/ProfileFeed';
-import { ProfileDogs } from '@/components/profile/ProfileDogs';
+import { PetHighlights } from '@/components/profile/PetHighlights';
 import { ProfileHistory } from '@/components/profile/ProfileHistory';
 import { ProfileEditModal } from '@/components/profile/ProfileEditModal';
 import { DogRegisterModal } from '@/components/profile/DogRegisterModal';
@@ -51,7 +51,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
   const [posts, setPosts] = useState<PostResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFollowingInit, setIsFollowingInit] = useState(false);
-  const [activeTab, setActiveTab] = useState<ProfileTab>('FEED');
+  const [activeTab, setActiveTab] = useState<ProfileTab>('TIMELINE');
 
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isRegisterDogOpen, setIsRegisterDogOpen] = useState(false);
@@ -184,6 +184,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
         isFollowLoading={isFollowLoading}
       />
 
+      <PetHighlights
+        pets={dogs as any}
+        onPetClick={setSelectedDog as any}
+        onAddClick={isMe ? () => setIsRegisterDogOpen(true) : undefined}
+      />
+
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="pb-32 px-1 lg:px-0">
@@ -191,14 +197,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
           <ProfileFeed
             posts={posts}
             onPostClick={(p) => setSelectedPost(p)}
-          />
-        )}
-        {activeTab === 'DOGS' && (
-          // TODO: Rewire in Plan 02 — ProfileView uses legacy DogType[] from memberService
-          <ProfileDogs
-            pets={dogs as any}
-            onPetClick={setSelectedDog as any}
-            onAddClick={() => isMe && setIsRegisterDogOpen(true)}
           />
         )}
         {activeTab === 'HISTORY' && (
