@@ -72,6 +72,9 @@ class WalkThreadServicePhase06Test {
     @Mock
     private ChatParticipantRepository chatParticipantRepository;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private WalkThreadService walkThreadService;
 

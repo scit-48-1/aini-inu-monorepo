@@ -64,6 +64,9 @@ class PostServiceTest {
     @Mock
     private MemberRepository memberRepository;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private PostService postService;
 
@@ -461,6 +464,15 @@ class PostServiceTest {
             inOrder.verify(commentRepository).deleteAllByPostId(postId);
             inOrder.verify(postLikeRepository).deleteAllByPostId(postId);
             inOrder.verify(postRepository).delete(post);
+
+            // 삭제 이벤트 발행 검증
+            org.mockito.ArgumentCaptor<scit.ainiinu.common.event.ContentDeletedEvent> eventCaptor =
+                    org.mockito.ArgumentCaptor.forClass(scit.ainiinu.common.event.ContentDeletedEvent.class);
+            then(eventPublisher).should().publishEvent(eventCaptor.capture());
+            scit.ainiinu.common.event.ContentDeletedEvent publishedEvent = eventCaptor.getValue();
+            assertThat(publishedEvent.getMemberId()).isEqualTo(authorId);
+            assertThat(publishedEvent.getReferenceId()).isEqualTo(postId);
+            assertThat(publishedEvent.getEventType()).isEqualTo(scit.ainiinu.common.event.TimelineEventType.POST_CREATED);
         }
     }
 
@@ -675,6 +687,15 @@ class PostServiceTest {
             then(postRepository).should(times(1)).save(any(Post.class));
             assertThat(response.getContent()).isEqualTo("새 게시글 내용");
             assertThat(response.getAuthor().getId()).isEqualTo(memberId);
+
+            // 이벤트 발행 검증
+            org.mockito.ArgumentCaptor<scit.ainiinu.common.event.ContentCreatedEvent> eventCaptor =
+                    org.mockito.ArgumentCaptor.forClass(scit.ainiinu.common.event.ContentCreatedEvent.class);
+            then(eventPublisher).should().publishEvent(eventCaptor.capture());
+            scit.ainiinu.common.event.ContentCreatedEvent publishedEvent = eventCaptor.getValue();
+            assertThat(publishedEvent.getMemberId()).isEqualTo(memberId);
+            assertThat(publishedEvent.getReferenceId()).isEqualTo(10L);
+            assertThat(publishedEvent.getEventType()).isEqualTo(scit.ainiinu.common.event.TimelineEventType.POST_CREATED);
         }
 
         @Test

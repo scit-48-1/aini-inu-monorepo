@@ -38,6 +38,9 @@ class LostPetServiceUnitTest {
     @Mock
     private LostPetReportQueryRepository lostPetReportQueryRepository;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private LostPetServiceImpl lostPetService;
 
@@ -67,6 +70,14 @@ class LostPetServiceUnitTest {
 
             assertThat(response.lostPetId()).isEqualTo(1L);
             assertThat(response.status()).isEqualTo("ACTIVE");
+
+            // 이벤트 발행 검증
+            org.mockito.ArgumentCaptor<scit.ainiinu.common.event.ContentCreatedEvent> eventCaptor =
+                    org.mockito.ArgumentCaptor.forClass(scit.ainiinu.common.event.ContentCreatedEvent.class);
+            org.mockito.BDDMockito.then(eventPublisher).should().publishEvent(eventCaptor.capture());
+            assertThat(eventCaptor.getValue().getEventType()).isEqualTo(scit.ainiinu.common.event.TimelineEventType.LOST_PET_REPORT_CREATED);
+            assertThat(eventCaptor.getValue().getMemberId()).isEqualTo(10L);
+            assertThat(eventCaptor.getValue().getTitle()).isEqualTo("Momo");
         }
 
         @Test

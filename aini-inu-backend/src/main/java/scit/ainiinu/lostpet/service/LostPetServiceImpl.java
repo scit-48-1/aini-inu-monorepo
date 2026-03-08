@@ -1,10 +1,13 @@
 package scit.ainiinu.lostpet.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import scit.ainiinu.common.event.ContentCreatedEvent;
+import scit.ainiinu.common.event.TimelineEventType;
 import scit.ainiinu.lostpet.domain.LostPetReport;
 import scit.ainiinu.lostpet.domain.LostPetReportStatus;
 import scit.ainiinu.lostpet.dto.LostPetCreateRequest;
@@ -22,6 +25,7 @@ public class LostPetServiceImpl implements LostPetService {
 
     private final LostPetReportRepository lostPetReportRepository;
     private final LostPetReportQueryRepository lostPetReportQueryRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -41,6 +45,10 @@ public class LostPetServiceImpl implements LostPetService {
                 request.getLastSeenLocation()
         );
         LostPetReport saved = lostPetReportRepository.save(report);
+
+        eventPublisher.publishEvent(ContentCreatedEvent.of(
+                memberId, saved.getId(), TimelineEventType.LOST_PET_REPORT_CREATED,
+                saved.getPetName(), null, saved.getPhotoUrl()));
 
         return LostPetResponse.builder()
                 .lostPetId(saved.getId())

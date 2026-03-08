@@ -1,10 +1,14 @@
 package scit.ainiinu.community.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import scit.ainiinu.common.event.ContentCreatedEvent;
+import scit.ainiinu.common.event.ContentDeletedEvent;
+import scit.ainiinu.common.event.TimelineEventType;
 import scit.ainiinu.common.exception.BusinessException;
 import scit.ainiinu.common.response.SliceResponse;
 import scit.ainiinu.community.dto.CommentCreateRequest;
@@ -43,6 +47,7 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final PostLikeRepository postLikeRepository;
     private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 게시글 목록 조회 (무한 스크롤)
@@ -132,6 +137,17 @@ public class PostService {
                 request.getImageUrls()
         );
         Post saved = postRepository.save(post);
+
+        String summary = saved.getContent();
+        if (summary != null && summary.length() > 100) {
+            summary = summary.substring(0, 100);
+        }
+        String thumbnail = (saved.getImageUrls() != null && !saved.getImageUrls().isEmpty())
+                ? saved.getImageUrls().get(0) : null;
+        eventPublisher.publishEvent(ContentCreatedEvent.of(
+                memberId, saved.getId(), TimelineEventType.POST_CREATED,
+                null, summary, thumbnail));
+
         Map<Long, Member> memberMap = loadMemberMap(List.of(saved.getAuthorId()));
         return PostResponse.from(saved, resolveAuthor(saved.getAuthorId(), memberMap), false);
     }
@@ -182,6 +198,9 @@ public class PostService {
 
         // 4. 게시글 삭제
         postRepository.delete(post);
+
+        eventPublisher.publishEvent(ContentDeletedEvent.of(
+                memberId, postId, TimelineEventType.POST_CREATED));
     }
 
     /**

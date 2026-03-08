@@ -65,6 +65,9 @@ class WalkThreadServiceTest {
     @Mock
     private ChatParticipantRepository chatParticipantRepository;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private WalkThreadService walkThreadService;
 
@@ -122,6 +125,15 @@ class WalkThreadServiceTest {
             ArgumentCaptor<WalkThread> captor = ArgumentCaptor.forClass(WalkThread.class);
             then(walkThreadRepository).should().save(captor.capture());
             assertThat(captor.getValue().getAuthorId()).isEqualTo(1L);
+
+            // 이벤트 발행 검증
+            org.mockito.ArgumentCaptor<scit.ainiinu.common.event.ContentCreatedEvent> eventCaptor =
+                    org.mockito.ArgumentCaptor.forClass(scit.ainiinu.common.event.ContentCreatedEvent.class);
+            then(eventPublisher).should().publishEvent(eventCaptor.capture());
+            scit.ainiinu.common.event.ContentCreatedEvent publishedEvent = eventCaptor.getValue();
+            assertThat(publishedEvent.getMemberId()).isEqualTo(1L);
+            assertThat(publishedEvent.getReferenceId()).isEqualTo(101L);
+            assertThat(publishedEvent.getEventType()).isEqualTo(scit.ainiinu.common.event.TimelineEventType.WALK_THREAD_CREATED);
         }
     }
 

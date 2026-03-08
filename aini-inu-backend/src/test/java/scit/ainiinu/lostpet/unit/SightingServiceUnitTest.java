@@ -29,6 +29,9 @@ class SightingServiceUnitTest {
     @Mock
     private LostPetAiClient lostPetAiClient;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private SightingService sightingService;
 
@@ -52,6 +55,14 @@ class SightingServiceUnitTest {
 
         assertThat(response.sightingId()).isEqualTo(1L);
         verify(lostPetAiClient).indexSighting(any(Sighting.class));
+
+        // 이벤트 발행 검증
+        org.mockito.ArgumentCaptor<scit.ainiinu.common.event.ContentCreatedEvent> eventCaptor =
+                org.mockito.ArgumentCaptor.forClass(scit.ainiinu.common.event.ContentCreatedEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().getEventType()).isEqualTo(scit.ainiinu.common.event.TimelineEventType.SIGHTING_CREATED);
+        assertThat(eventCaptor.getValue().getMemberId()).isEqualTo(22L);
+        assertThat(eventCaptor.getValue().getTitle()).isEqualTo("Yeoksam");
     }
 
     @Test

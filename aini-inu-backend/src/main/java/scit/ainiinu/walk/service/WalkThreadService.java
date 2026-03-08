@@ -1,11 +1,15 @@
 package scit.ainiinu.walk.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import scit.ainiinu.common.event.ContentCreatedEvent;
+import scit.ainiinu.common.event.ContentDeletedEvent;
+import scit.ainiinu.common.event.TimelineEventType;
 import scit.ainiinu.chat.entity.ChatParticipant;
 import scit.ainiinu.chat.entity.ChatRoom;
 import scit.ainiinu.chat.entity.ChatRoomOrigin;
@@ -64,6 +68,7 @@ public class WalkThreadService {
     private final MemberRepository memberRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public ThreadResponse createThread(Long memberId, ThreadCreateRequest request) {
@@ -98,6 +103,10 @@ public class WalkThreadService {
         WalkThread savedThread = walkThreadRepository.save(thread);
         saveThreadPets(savedThread.getId(), request.getPetIds());
         saveThreadFilters(savedThread.getId(), request.getFilters());
+
+        eventPublisher.publishEvent(ContentCreatedEvent.of(
+                memberId, savedThread.getId(), TimelineEventType.WALK_THREAD_CREATED,
+                savedThread.getTitle(), savedThread.getPlaceName(), null));
 
         return toThreadResponse(savedThread, memberId);
     }
@@ -240,6 +249,9 @@ public class WalkThreadService {
         }
 
         thread.markDeleted();
+
+        eventPublisher.publishEvent(ContentDeletedEvent.of(
+                memberId, threadId, TimelineEventType.WALK_THREAD_CREATED));
     }
 
     @Transactional

@@ -39,6 +39,9 @@ class WalkingSessionServiceTest {
     @Mock
     private MemberRepository memberRepository;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private WalkingSessionService walkingSessionService;
 
@@ -72,6 +75,13 @@ class WalkingSessionServiceTest {
             assertThat(response.startedAt()).isNotNull();
             assertThat(response.lastHeartbeatAt()).isNotNull();
             then(walkingSessionRepository).should().save(any(WalkingSession.class));
+
+            // 이벤트 발행 검증
+            org.mockito.ArgumentCaptor<scit.ainiinu.common.event.ContentCreatedEvent> eventCaptor =
+                    org.mockito.ArgumentCaptor.forClass(scit.ainiinu.common.event.ContentCreatedEvent.class);
+            then(eventPublisher).should().publishEvent(eventCaptor.capture());
+            assertThat(eventCaptor.getValue().getEventType()).isEqualTo(scit.ainiinu.common.event.TimelineEventType.WALKING_SESSION_STARTED);
+            assertThat(eventCaptor.getValue().getMemberId()).isEqualTo(1L);
         }
 
         @Test
@@ -208,6 +218,12 @@ class WalkingSessionServiceTest {
             // then
             assertThat(session.getStatus()).isEqualTo(WalkingSessionStatus.ENDED);
             assertThat(session.getEndedAt()).isNotNull();
+
+            // 완료 이벤트 발행 검증
+            org.mockito.ArgumentCaptor<scit.ainiinu.common.event.ContentCreatedEvent> eventCaptor =
+                    org.mockito.ArgumentCaptor.forClass(scit.ainiinu.common.event.ContentCreatedEvent.class);
+            then(eventPublisher).should().publishEvent(eventCaptor.capture());
+            assertThat(eventCaptor.getValue().getEventType()).isEqualTo(scit.ainiinu.common.event.TimelineEventType.WALKING_SESSION_COMPLETED);
         }
 
         @Test

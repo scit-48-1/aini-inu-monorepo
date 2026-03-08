@@ -8,6 +8,7 @@ import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileTabs } from '@/components/profile/ProfileTabs';
 import type { ProfileTab } from '@/components/profile/ProfileTabs';
 import { ProfileReviews } from '@/components/profile/ProfileReviews';
+import { ProfileTimeline } from '@/components/profile/ProfileTimeline';
 import { NeighborsModal } from '@/components/profile/NeighborsModal';
 import { useFollowToggle } from '@/hooks/useFollowToggle';
 import { useMemberReviews } from '@/hooks/useMemberReviews';
@@ -161,6 +162,9 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
             message="산책 일기가 없습니다."
             subMessage="이 기능은 곧 준비될 예정입니다."
           />
+        )}
+        {activeTab === 'TIMELINE' && (
+          <ProfileTimeline memberId={memberId} />
         )}
         {activeTab === 'REVIEWS' && (
           <ProfileReviews

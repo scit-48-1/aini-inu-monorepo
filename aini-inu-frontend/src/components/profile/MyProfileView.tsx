@@ -20,6 +20,7 @@ import { ProfileFeed } from '@/components/profile/ProfileFeed';
 import { ProfileDogs } from '@/components/profile/ProfileDogs';
 import { ProfileHistory } from '@/components/profile/ProfileHistory';
 import { ProfileReviews } from '@/components/profile/ProfileReviews';
+import { ProfileTimeline } from '@/components/profile/ProfileTimeline';
 import { ProfileEditModal } from '@/components/profile/ProfileEditModal';
 import { DogRegisterModal } from '@/components/profile/DogRegisterModal';
 import { DogDetailModal } from '@/components/profile/DogDetailModal';
@@ -324,6 +325,9 @@ export const MyProfileView: React.FC = () => {
             hasNext={reviewsHasNext}
             onLoadMore={loadMoreReviews}
           />
+        )}
+        {activeTab === 'TIMELINE' && member && (
+          <ProfileTimeline memberId={member.id} />
         )}
       </div>
 

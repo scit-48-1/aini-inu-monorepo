@@ -1,8 +1,11 @@
 package scit.ainiinu.walk.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import scit.ainiinu.common.event.ContentCreatedEvent;
+import scit.ainiinu.common.event.TimelineEventType;
 import scit.ainiinu.common.exception.BusinessException;
 import scit.ainiinu.member.entity.Member;
 import scit.ainiinu.member.repository.MemberRepository;
@@ -24,6 +27,7 @@ public class WalkingSessionService {
 
     private final WalkingSessionRepository walkingSessionRepository;
     private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public WalkingSessionResponse startSession(Long memberId) {
@@ -34,6 +38,11 @@ public class WalkingSessionService {
 
         WalkingSession session = WalkingSession.create(memberId);
         walkingSessionRepository.save(session);
+
+        eventPublisher.publishEvent(ContentCreatedEvent.of(
+                memberId, session.getId(), TimelineEventType.WALKING_SESSION_STARTED,
+                "산책 시작", null, null));
+
         return WalkingSessionResponse.from(session);
     }
 
@@ -49,6 +58,10 @@ public class WalkingSessionService {
         WalkingSession session = walkingSessionRepository.findByMemberIdAndStatus(memberId, WalkingSessionStatus.ACTIVE)
                 .orElseThrow(() -> new BusinessException(WalkingSessionErrorCode.WALKING_SESSION_NOT_FOUND));
         session.end();
+
+        eventPublisher.publishEvent(ContentCreatedEvent.of(
+                memberId, session.getId(), TimelineEventType.WALKING_SESSION_COMPLETED,
+                "산책 완료", null, null));
     }
 
     public List<WalkingUserResponse> getActiveWalkers() {

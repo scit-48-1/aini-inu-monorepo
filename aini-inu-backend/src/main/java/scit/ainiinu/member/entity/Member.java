@@ -74,6 +74,9 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean isVerified;
 
+    @Column(name = "is_timeline_public", nullable = false)
+    private boolean isTimelinePublic = true;
+
     @Embedded
     private MannerTemperature mannerTemperature;
 
@@ -96,6 +99,7 @@ public class Member extends BaseTimeEntity {
         this.personality = personality;
         this.selfIntroduction = selfIntroduction;
         this.isVerified = false;
+        this.isTimelinePublic = true;
         this.mannerTemperature = new MannerTemperature(new java.math.BigDecimal("5.0"));
         this.mannerScoreSum = 0;
         this.mannerScoreCount = 0;
@@ -152,5 +156,9 @@ public class Member extends BaseTimeEntity {
 
     public void downgradeToNonPetOwner() {
         this.memberType = MemberType.NON_PET_OWNER;
+    }
+
+    public void updateTimelinePublic(boolean isTimelinePublic) {
+        this.isTimelinePublic = isTimelinePublic;
     }
 }

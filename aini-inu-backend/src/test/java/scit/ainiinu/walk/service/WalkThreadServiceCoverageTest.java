@@ -67,6 +67,9 @@ class WalkThreadServiceCoverageTest {
     @Mock
     private ChatParticipantRepository chatParticipantRepository;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private WalkThreadService walkThreadService;
 
@@ -213,6 +216,13 @@ class WalkThreadServiceCoverageTest {
 
         // then
         assertThat(thread.getStatus()).isEqualTo(WalkThreadStatus.DELETED);
+
+        // 삭제 이벤트 발행 검증
+        org.mockito.ArgumentCaptor<scit.ainiinu.common.event.ContentDeletedEvent> eventCaptor =
+                org.mockito.ArgumentCaptor.forClass(scit.ainiinu.common.event.ContentDeletedEvent.class);
+        org.mockito.BDDMockito.then(eventPublisher).should().publishEvent(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().getEventType()).isEqualTo(scit.ainiinu.common.event.TimelineEventType.WALK_THREAD_CREATED);
+        assertThat(eventCaptor.getValue().getReferenceId()).isEqualTo(1L);
     }
 
     @Test

@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Grid, Dog, History, Star, LucideIcon } from 'lucide-react';
+import { Grid, Dog, History, Star, Clock, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type ProfileTab = 'FEED' | 'DOGS' | 'HISTORY' | 'REVIEWS';
+export type ProfileTab = 'FEED' | 'DOGS' | 'HISTORY' | 'REVIEWS' | 'TIMELINE';
 
 interface TabItem {
   id: ProfileTab;
@@ -21,7 +21,8 @@ const tabs: TabItem[] = [
   { id: 'FEED', label: '포스팅', icon: Grid },
   { id: 'DOGS', label: '강아지들', icon: Dog },
   { id: 'HISTORY', label: '산책일기', icon: History },
-  { id: 'REVIEWS', label: '리뷰', icon: Star }
+  { id: 'REVIEWS', label: '리뷰', icon: Star },
+  { id: 'TIMELINE', label: '타임라인', icon: Clock }
 ];
 
 export const ProfileTabs: React.FC<ProfileTabsProps> = ({ activeTab, onTabChange }) => {
