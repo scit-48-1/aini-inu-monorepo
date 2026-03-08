@@ -84,6 +84,7 @@ class WalkDiaryControllerTest {
         void createDiary_success() throws Exception {
             // given
             WalkDiaryCreateRequest request = new WalkDiaryCreateRequest();
+            request.setThreadId(101L);
             request.setTitle("한강 산책 일기");
             request.setContent("오늘 날씨가 좋았다");
             request.setWalkDate(LocalDate.now());
@@ -118,6 +119,7 @@ class WalkDiaryControllerTest {
         @DisplayName("실패: 본문이 300자를 초과하면 400을 반환한다")
         void createDiary_contentTooLong_fail() throws Exception {
             WalkDiaryCreateRequest request = new WalkDiaryCreateRequest();
+            request.setThreadId(101L);
             request.setTitle("한강 산책 일기");
             request.setContent("a".repeat(301));
             request.setWalkDate(LocalDate.now());

@@ -55,7 +55,7 @@ class WalkDiaryThreadLinkIntegrationTest {
     private JwtTokenProvider jwtTokenProvider;
 
     @Test
-    @DisplayName("threadId 포함/미포함 생성과 삭제된 스레드 상세 상태를 검증한다")
+    @DisplayName("COMPLETED 스레드로 일기 생성 후, 스레드 삭제 시 linkedThreadStatus가 DELETED로 전환된다")
     void threadLinkLifecycle_success() throws Exception {
         // given
         Member member = memberRepository.save(Member.builder()
@@ -65,7 +65,7 @@ class WalkDiaryThreadLinkIntegrationTest {
                 .build());
         String token = jwtTokenProvider.generateAccessToken(member.getId());
 
-        WalkThread thread = walkThreadRepository.save(createThread(member.getId()));
+        WalkThread thread = createCompletedThread(member.getId());
 
         WalkDiaryCreateRequest linkedRequest = new WalkDiaryCreateRequest();
         linkedRequest.setThreadId(thread.getId());
@@ -87,20 +87,6 @@ class WalkDiaryThreadLinkIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
-        WalkDiaryCreateRequest unlinkedRequest = new WalkDiaryCreateRequest();
-        unlinkedRequest.setTitle("미연결 일기");
-        unlinkedRequest.setContent("본문");
-        unlinkedRequest.setWalkDate(LocalDate.now());
-        unlinkedRequest.setPhotoUrls(List.of());
-
-        mockMvc.perform(post("/api/v1/walk-diaries")
-                        .with(csrf())
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(unlinkedRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.linkedThreadStatus").value("NONE"));
-
         Long linkedDiaryId = objectMapper.readTree(linkedBody).path("data").path("id").asLong();
 
         thread.markDeleted();
@@ -112,9 +98,19 @@ class WalkDiaryThreadLinkIntegrationTest {
                 .andExpect(jsonPath("$.data.linkedThreadStatus").value("DELETED"));
     }
 
-    private WalkThread createThread(Long authorId) {
-        return WalkThread.builder()
-                .authorId(authorId)
+    @Test
+    @DisplayName("미완료 스레드로 일기 생성 시 400을 반환한다")
+    void createDiary_recruitingThread_fail() throws Exception {
+        // given
+        Member member = memberRepository.save(Member.builder()
+                .email("thread-link-fail@test.com")
+                .nickname("linkfail")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+        String token = jwtTokenProvider.generateAccessToken(member.getId());
+
+        WalkThread recruitingThread = walkThreadRepository.save(WalkThread.builder()
+                .authorId(member.getId())
                 .title("스레드")
                 .description("설명")
                 .walkDate(LocalDate.now().plusDays(1))
@@ -129,6 +125,45 @@ class WalkDiaryThreadLinkIntegrationTest {
                 .longitude(BigDecimal.valueOf(127.04))
                 .address("성동구")
                 .status(WalkThreadStatus.RECRUITING)
-                .build();
+                .build());
+
+        WalkDiaryCreateRequest request = new WalkDiaryCreateRequest();
+        request.setThreadId(recruitingThread.getId());
+        request.setTitle("미완료 연결 일기");
+        request.setContent("본문");
+        request.setWalkDate(LocalDate.now());
+        request.setPhotoUrls(List.of());
+        request.setIsPublic(true);
+
+        // when & then
+        mockMvc.perform(post("/api/v1/walk-diaries")
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("WD400_THREAD_NOT_COMPLETED"));
+    }
+
+    private WalkThread createCompletedThread(Long authorId) {
+        WalkThread thread = walkThreadRepository.save(WalkThread.builder()
+                .authorId(authorId)
+                .title("완료 스레드")
+                .description("설명")
+                .walkDate(LocalDate.now())
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(1))
+                .chatType(WalkChatType.GROUP)
+                .maxParticipants(5)
+                .allowNonPetOwner(true)
+                .isVisibleAlways(true)
+                .placeName("서울숲")
+                .latitude(BigDecimal.valueOf(37.54))
+                .longitude(BigDecimal.valueOf(127.04))
+                .address("성동구")
+                .status(WalkThreadStatus.RECRUITING)
+                .build());
+        thread.complete();
+        return walkThreadRepository.save(thread);
     }
 }

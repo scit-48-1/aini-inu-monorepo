@@ -17,8 +17,14 @@ import scit.ainiinu.member.repository.MemberFollowRepository;
 import scit.ainiinu.member.repository.MemberRepository;
 import scit.ainiinu.testsupport.IntegrationTestProfile;
 import scit.ainiinu.walk.dto.request.WalkDiaryCreateRequest;
+import scit.ainiinu.walk.entity.WalkChatType;
+import scit.ainiinu.walk.entity.WalkThread;
+import scit.ainiinu.walk.entity.WalkThreadStatus;
+import scit.ainiinu.walk.repository.WalkThreadRepository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -50,6 +56,9 @@ class WalkDiaryIntegrationTest {
     private MemberFollowRepository memberFollowRepository;
 
     @Autowired
+    private WalkThreadRepository walkThreadRepository;
+
+    @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
     @Test
@@ -63,7 +72,10 @@ class WalkDiaryIntegrationTest {
                 .build());
         String token = jwtTokenProvider.generateAccessToken(member.getId());
 
+        WalkThread thread = createCompletedThread(member.getId());
+
         WalkDiaryCreateRequest createRequest = new WalkDiaryCreateRequest();
+        createRequest.setThreadId(thread.getId());
         createRequest.setTitle("한강 일기");
         createRequest.setContent("좋은 하루");
         createRequest.setWalkDate(LocalDate.now());
@@ -128,7 +140,11 @@ class WalkDiaryIntegrationTest {
         String viewerToken = jwtTokenProvider.generateAccessToken(viewer.getId());
         String authorToken = jwtTokenProvider.generateAccessToken(author.getId());
 
+        WalkThread thread1 = createCompletedThread(author.getId());
+        WalkThread thread2 = createCompletedThread(author.getId());
+
         WalkDiaryCreateRequest publicDiary = new WalkDiaryCreateRequest();
+        publicDiary.setThreadId(thread1.getId());
         publicDiary.setTitle("공개 일기");
         publicDiary.setContent("공개 내용");
         publicDiary.setWalkDate(LocalDate.now());
@@ -136,6 +152,7 @@ class WalkDiaryIntegrationTest {
         publicDiary.setIsPublic(true);
 
         WalkDiaryCreateRequest privateDiary = new WalkDiaryCreateRequest();
+        privateDiary.setThreadId(thread2.getId());
         privateDiary.setTitle("비공개 일기");
         privateDiary.setContent("비공개 내용");
         privateDiary.setWalkDate(LocalDate.now());
@@ -165,5 +182,27 @@ class WalkDiaryIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content.length()").value(1))
                 .andExpect(jsonPath("$.data.content[0].title").value("공개 일기"));
+    }
+
+    private WalkThread createCompletedThread(Long authorId) {
+        WalkThread thread = walkThreadRepository.save(WalkThread.builder()
+                .authorId(authorId)
+                .title("완료 스레드")
+                .description("설명")
+                .walkDate(LocalDate.now())
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(1))
+                .chatType(WalkChatType.GROUP)
+                .maxParticipants(5)
+                .allowNonPetOwner(true)
+                .isVisibleAlways(true)
+                .placeName("서울숲")
+                .latitude(BigDecimal.valueOf(37.54))
+                .longitude(BigDecimal.valueOf(127.04))
+                .address("성동구")
+                .status(WalkThreadStatus.RECRUITING)
+                .build());
+        thread.complete();
+        return walkThreadRepository.save(thread);
     }
 }

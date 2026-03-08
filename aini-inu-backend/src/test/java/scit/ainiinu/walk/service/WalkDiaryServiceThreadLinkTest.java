@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 import scit.ainiinu.common.exception.BusinessException;
 import scit.ainiinu.walk.dto.request.WalkDiaryCreateRequest;
@@ -16,6 +17,7 @@ import scit.ainiinu.walk.entity.WalkThread;
 import scit.ainiinu.walk.entity.WalkThreadStatus;
 import scit.ainiinu.walk.exception.WalkDiaryErrorCode;
 import scit.ainiinu.walk.repository.WalkDiaryRepository;
+import scit.ainiinu.walk.repository.WalkThreadApplicationRepository;
 import scit.ainiinu.walk.repository.WalkThreadRepository;
 
 import java.math.BigDecimal;
@@ -38,6 +40,12 @@ class WalkDiaryServiceThreadLinkTest {
 
     @Mock
     private WalkThreadRepository walkThreadRepository;
+
+    @Mock
+    private WalkThreadApplicationRepository walkThreadApplicationRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private WalkDiaryService walkDiaryService;
@@ -107,7 +115,7 @@ class WalkDiaryServiceThreadLinkTest {
         request.setWalkDate(LocalDate.now());
         request.setIsPublic(true);
 
-        given(walkThreadRepository.findByIdAndStatusNot(eq(999L), eq(WalkThreadStatus.DELETED))).willReturn(Optional.empty());
+        given(walkThreadRepository.findById(999L)).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> walkDiaryService.createDiary(1L, request))

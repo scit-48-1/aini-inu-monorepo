@@ -81,6 +81,7 @@ class WalkDiaryControllerContractTest {
         void createDiary_success() throws Exception {
             // given
             WalkDiaryCreateRequest request = new WalkDiaryCreateRequest();
+            request.setThreadId(101L);
             request.setTitle("산책 기록");
             request.setContent("날씨 좋음");
             request.setWalkDate(LocalDate.now());
