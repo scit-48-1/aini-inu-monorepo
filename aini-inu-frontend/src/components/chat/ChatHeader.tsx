@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, Zap, UserCircle, MoreVertical, CheckCircle, LogOut } from 'lucide-react';
+import { ChevronLeft, Zap, UserCircle, MoreVertical, CheckCircle, LogOut, ExternalLink } from 'lucide-react';
 import { Typography } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,7 @@ interface ChatHeaderProps {
   onConfirmWalk: () => void;
   onCancelConfirm: () => void;
   onLeave: () => void;
+  onTitleClick?: () => void;
 }
 
 function getPartnerDisplay(
@@ -72,8 +73,10 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onConfirmWalk,
   onCancelConfirm,
   onLeave,
+  onTitleClick,
 }) => {
   const { label, petNames, profileImages, isGroup } = getPartnerDisplay(room, currentMemberId);
+  const isWalkRoom = room.origin === 'WALK' && !!room.roomTitle;
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -106,7 +109,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 
         <div
           className="flex items-center gap-3 cursor-pointer group"
-          onClick={onShowInfoToggle}
+          onClick={isWalkRoom ? onTitleClick : onShowInfoToggle}
         >
           <div className="relative">
             <div className="w-10 h-10 md:w-12 md:h-12 shadow-lg group-hover:scale-105 transition-transform duration-500">
@@ -135,8 +138,11 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 variant="h3"
                 className="text-base md:text-lg font-black text-navy-900 leading-tight truncate"
               >
-                {label}
+                {isWalkRoom ? room.roomTitle : label}
               </Typography>
+              {isWalkRoom && (
+                <ExternalLink size={14} className="text-zinc-400 group-hover:text-amber-500 transition-colors shrink-0" />
+              )}
               {room.origin === 'WALK' && allConfirmed ? (
                 <Badge
                   variant="emerald"
@@ -154,17 +160,25 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               ) : null}
             </div>
             <div className="flex items-center gap-1.5 text-zinc-400 font-bold text-[9px] uppercase tracking-widest truncate">
-              {petNames[0] ? (
+              {isWalkRoom ? (
+                <span className="truncate group-hover:text-amber-500 transition-colors">
+                  산책 스레드 보기
+                </span>
+              ) : (
                 <>
-                  <span className="flex items-center gap-1 shrink-0">
-                    <Zap size={8} className="text-amber-500" /> {petNames[0]}
+                  {petNames[0] ? (
+                    <>
+                      <span className="flex items-center gap-1 shrink-0">
+                        <Zap size={8} className="text-amber-500" /> {petNames[0]}
+                      </span>
+                      <span className="w-0.5 h-0.5 rounded-full bg-zinc-200 shrink-0" />
+                    </>
+                  ) : null}
+                  <span className="truncate group-hover:text-amber-500 transition-colors">
+                    상세 정보
                   </span>
-                  <span className="w-0.5 h-0.5 rounded-full bg-zinc-200 shrink-0" />
                 </>
-              ) : null}
-              <span className="truncate group-hover:text-amber-500 transition-colors">
-                상세 정보
-              </span>
+              )}
             </div>
           </div>
         </div>

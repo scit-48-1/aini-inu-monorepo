@@ -18,6 +18,10 @@ public class ChatRoomDetailResponse {
     private String status;
     @Schema(description = "채팅방 생성 출처입니다.", example = "WALK", allowableValues = {"DM", "WALK", "LOST_PET"})
     private String origin;
+    @Schema(description = "산책 스레드 ID입니다.", example = "42")
+    private Long threadId;
+    @Schema(description = "채팅방 제목입니다.", example = "한강 산책 같이 해요!")
+    private String roomTitle;
     @Schema(description = "walkConfirmed 값입니다.", example = "true")
     private boolean walkConfirmed;
     @Schema(description = "participants 값입니다.", example = "[\"예시 항목\"]")

@@ -398,6 +398,75 @@ class ChatRoomServiceTest {
         }
 
         @Test
+        @DisplayName("WALK origin 채팅방 상세 조회 시 threadId와 roomTitle이 포함된다")
+        void detailResponse_containsThreadIdAndRoomTitle() {
+            // given
+            Long memberId = 1L;
+            Long chatRoomId = 10L;
+            Long threadId = 42L;
+            String roomTitle = "한강 산책 같이 해요!";
+
+            ChatRoom room = ChatRoom.create(threadId, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.WALK, roomTitle);
+            setRoomId(room, chatRoomId);
+
+            ChatParticipant me = createParticipant(1L, chatRoomId, memberId);
+            ChatParticipant partner = createParticipant(2L, chatRoomId, 2L);
+
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, memberId))
+                    .willReturn(true);
+            given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(room));
+            given(chatParticipantRepository.findAllByChatRoomId(chatRoomId))
+                    .willReturn(List.of(me, partner));
+            given(memberRepository.findAllById(any()))
+                    .willReturn(List.of(createMember(1L, "나"), createMember(2L, "홍길동")));
+            given(chatParticipantPetRepository.findAllByChatParticipantIdIn(any()))
+                    .willReturn(Collections.emptyList());
+            given(messageRepository.findTopByChatRoomIdOrderByIdDesc(chatRoomId))
+                    .willReturn(Optional.empty());
+
+            // when
+            ChatRoomDetailResponse response = chatRoomService.getRoomDetail(memberId, chatRoomId);
+
+            // then
+            assertThat(response.getThreadId()).isEqualTo(threadId);
+            assertThat(response.getRoomTitle()).isEqualTo(roomTitle);
+            assertThat(response.getOrigin()).isEqualTo("WALK");
+        }
+
+        @Test
+        @DisplayName("DM origin 채팅방 상세 조회 시 threadId와 roomTitle이 null이다")
+        void detailResponse_dmRoom_threadIdAndRoomTitleAreNull() {
+            // given
+            Long memberId = 1L;
+            Long chatRoomId = 10L;
+
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
+            setRoomId(room, chatRoomId);
+
+            ChatParticipant me = createParticipant(1L, chatRoomId, memberId);
+            ChatParticipant partner = createParticipant(2L, chatRoomId, 2L);
+
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, memberId))
+                    .willReturn(true);
+            given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(room));
+            given(chatParticipantRepository.findAllByChatRoomId(chatRoomId))
+                    .willReturn(List.of(me, partner));
+            given(memberRepository.findAllById(any()))
+                    .willReturn(List.of(createMember(1L, "나"), createMember(2L, "홍길동")));
+            given(chatParticipantPetRepository.findAllByChatParticipantIdIn(any()))
+                    .willReturn(Collections.emptyList());
+            given(messageRepository.findTopByChatRoomIdOrderByIdDesc(chatRoomId))
+                    .willReturn(Optional.empty());
+
+            // when
+            ChatRoomDetailResponse response = chatRoomService.getRoomDetail(memberId, chatRoomId);
+
+            // then
+            assertThat(response.getThreadId()).isNull();
+            assertThat(response.getRoomTitle()).isNull();
+        }
+
+        @Test
         @DisplayName("참여자가 아닌 회원이 조회하면 ROOM_ACCESS_DENIED 예외가 발생한다")
         void nonParticipant_throwsException() {
             // given

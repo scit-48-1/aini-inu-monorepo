@@ -6,6 +6,7 @@ import { ChatHeader } from '@/components/chat/ChatHeader';
 import { MessageList } from '@/components/chat/MessageList';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ProfileExplorer } from '@/components/chat/ProfileExplorer';
+import { ParticipantListPanel } from '@/components/chat/ParticipantListPanel';
 import {
   getRoom,
   getMessages,
@@ -303,6 +304,15 @@ export default function ChatRoomPage() {
     setMyReview(refreshed);
   }, [roomId]);
 
+  // Navigate to walk thread
+  const handleTitleClick = useCallback(() => {
+    if (room?.threadId) {
+      router.push(`/around-me?threadId=${room.threadId}`);
+    }
+  }, [room?.threadId, router]);
+
+  const isWalkRoom = room?.origin === 'WALK';
+
   // Derive partnerId for ProfileExplorer
   const partnerId =
     room?.participants.find((p) => p.memberId !== currentMemberId)?.memberId ??
@@ -349,6 +359,7 @@ export default function ChatRoomPage() {
           onConfirmWalk={handleConfirmWalk}
           onCancelConfirm={handleCancelConfirm}
           onLeave={handleLeave}
+          onTitleClick={handleTitleClick}
         />
 
         {/* Review button -- only visible for WALK rooms when allConfirmed and no existing review */}
@@ -383,12 +394,21 @@ export default function ChatRoomPage() {
         />
       </div>
 
-      {/* Profile Explorer */}
-      <ProfileExplorer
-        partnerId={partnerId}
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-      />
+      {/* Side panel: ParticipantListPanel for WALK rooms, ProfileExplorer for others */}
+      {isWalkRoom ? (
+        <ParticipantListPanel
+          participants={room.participants}
+          currentMemberId={currentMemberId}
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+        />
+      ) : (
+        <ProfileExplorer
+          partnerId={partnerId}
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+        />
+      )}
 
       {/* Walk Review Modal */}
       <WalkReviewModal

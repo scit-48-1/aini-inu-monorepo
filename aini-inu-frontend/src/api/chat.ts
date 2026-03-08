@@ -20,6 +20,8 @@ export interface ChatRoomDetailResponse {
   chatType: string;
   status: string;
   origin: string;
+  threadId: number | null;
+  roomTitle: string | null;
   walkConfirmed: boolean;
   participants: ChatParticipantResponse[];
   lastMessage: ChatMessageResponse | null;
