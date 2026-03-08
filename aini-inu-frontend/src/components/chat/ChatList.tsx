@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MessageSquare, Search, Plus, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Typography } from '@/components/ui/Typography';
@@ -9,6 +9,7 @@ import { useParams } from 'next/navigation';
 import { getRooms, type ChatRoomSummaryResponse } from '@/api/chat';
 import { ChatStartModal } from '@/components/chat/ChatStartModal';
 import { GroupAvatar } from '@/components/common/GroupAvatar';
+import { useNotificationWebSocket } from '@/hooks/useNotificationWebSocket';
 
 type ChatTab = 'DM' | 'WALK' | 'LOST_PET';
 
@@ -23,6 +24,7 @@ export function ChatList() {
   const [isChatStartModalOpen, setIsChatStartModalOpen] = useState(false);
   const params = useParams();
   const currentId = params?.id ? Number(params.id) : null;
+  const fetchDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const fetchRooms = useCallback(async (pageNum = 0, append = false) => {
     try {
@@ -43,6 +45,13 @@ export function ChatList() {
     }
   }, [activeTab]);
 
+  useNotificationWebSocket(true, (event) => {
+    if (event.type === 'CHAT_NEW_MESSAGE') {
+      if (fetchDebounceRef.current) clearTimeout(fetchDebounceRef.current);
+      fetchDebounceRef.current = setTimeout(() => fetchRooms(), 300);
+    }
+  });
+
   useEffect(() => {
     fetchRooms();
 
@@ -52,7 +61,10 @@ export function ChatList() {
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (fetchDebounceRef.current) clearTimeout(fetchDebounceRef.current);
+    };
   }, [fetchRooms]);
 
   // Client-side search filter only (tab filtering is server-side)

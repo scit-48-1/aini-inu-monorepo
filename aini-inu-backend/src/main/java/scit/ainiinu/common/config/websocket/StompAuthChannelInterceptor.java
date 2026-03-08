@@ -1,4 +1,4 @@
-package scit.ainiinu.chat.config;
+package scit.ainiinu.common.config.websocket;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
@@ -18,7 +18,7 @@ import java.security.Principal;
 
 @Component
 @RequiredArgsConstructor
-public class ChatStompAuthChannelInterceptor implements ChannelInterceptor {
+public class StompAuthChannelInterceptor implements ChannelInterceptor {
 
     private static final String BEARER_PREFIX = "Bearer ";
 

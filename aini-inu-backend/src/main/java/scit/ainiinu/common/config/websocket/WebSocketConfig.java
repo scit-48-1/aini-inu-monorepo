@@ -1,4 +1,4 @@
-package scit.ainiinu.chat.config;
+package scit.ainiinu.common.config.websocket;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +13,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final ChatStompAuthChannelInterceptor chatStompAuthChannelInterceptor;
+    private final StompAuthChannelInterceptor stompAuthChannelInterceptor;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -26,10 +26,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws/chat-rooms/{roomId}")
                 .setAllowedOriginPatterns("*");
+        registry.addEndpoint("/ws/notifications")
+                .setAllowedOriginPatterns("*");
     }
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(chatStompAuthChannelInterceptor);
+        registration.interceptors(stompAuthChannelInterceptor);
     }
 }

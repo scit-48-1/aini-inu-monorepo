@@ -1,6 +1,7 @@
 package scit.ainiinu.chat.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import scit.ainiinu.chat.dto.request.ChatMessageCreateRequest;
@@ -18,12 +19,14 @@ import scit.ainiinu.chat.realtime.ChatRealtimeEventHandler;
 import scit.ainiinu.chat.repository.ChatParticipantRepository;
 import scit.ainiinu.chat.repository.ChatRoomRepository;
 import scit.ainiinu.chat.repository.MessageRepository;
+import scit.ainiinu.common.event.NotificationEvent;
 import scit.ainiinu.common.response.CursorResponse;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +40,7 @@ public class MessageService {
     private final ChatParticipantRepository chatParticipantRepository;
     private final MessageRepository messageRepository;
     private final ChatRealtimeEventHandler chatRealtimeEventHandler;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public CursorResponse<ChatMessageResponse> getMessages(
             Long memberId,
@@ -100,6 +104,8 @@ public class MessageService {
         ChatMessageResponse response = toResponse(saved);
         chatRealtimeEventHandler.publishMessageCreated(chatRoomId, response);
         chatRealtimeEventHandler.publishMessageDelivered(chatRoomId, saved.getId(), memberId, OffsetDateTime.now());
+
+        publishNotificationToParticipants(memberId, chatRoomId, saved, request.getContent());
 
         return response;
     }
@@ -189,5 +195,34 @@ public class MessageService {
         } catch (IllegalArgumentException e) {
             throw new ChatException(ChatErrorCode.INVALID_REQUEST);
         }
+    }
+
+    private void publishNotificationToParticipants(Long senderId, Long chatRoomId, Message saved, String content) {
+        List<ChatParticipant> participants = chatParticipantRepository
+                .findAllByChatRoomIdAndLeftAtIsNull(chatRoomId);
+        for (ChatParticipant p : participants) {
+            if (!p.getMemberId().equals(senderId)) {
+                applicationEventPublisher.publishEvent(NotificationEvent.of(
+                        p.getMemberId(),
+                        "CHAT_NEW_MESSAGE",
+                        Map.of(
+                                "roomId", chatRoomId,
+                                "senderMemberId", senderId,
+                                "messagePreview", truncateContent(content, 50),
+                                "sentAt", saved.getSentAt().toString()
+                        )
+                ));
+            }
+        }
+    }
+
+    private String truncateContent(String content, int maxLength) {
+        if (content == null) {
+            return "";
+        }
+        if (content.length() <= maxLength) {
+            return content;
+        }
+        return content.substring(0, maxLength) + "...";
     }
 }

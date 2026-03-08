@@ -4,9 +4,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 import scit.ainiinu.chat.dto.request.ChatMessageCreateRequest;
 import scit.ainiinu.chat.dto.request.MessageReadRequest;
@@ -25,6 +27,7 @@ import scit.ainiinu.chat.realtime.ChatRealtimeEventHandler;
 import scit.ainiinu.chat.repository.ChatParticipantRepository;
 import scit.ainiinu.chat.repository.ChatRoomRepository;
 import scit.ainiinu.chat.repository.MessageRepository;
+import scit.ainiinu.common.event.NotificationEvent;
 import scit.ainiinu.common.response.CursorResponse;
 
 import java.util.List;
@@ -37,6 +40,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class MessageServiceTest {
@@ -52,6 +57,9 @@ class MessageServiceTest {
 
     @Mock
     private ChatRealtimeEventHandler chatRealtimeEventHandler;
+
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     private MessageService messageService;
@@ -151,6 +159,121 @@ class MessageServiceTest {
             assertThatThrownBy(() -> messageService.createMessage(memberId, chatRoomId, request))
                     .isInstanceOf(ChatException.class)
                     .hasFieldOrPropertyWithValue("errorCode", ChatErrorCode.ROOM_ACCESS_DENIED);
+        }
+
+        @Test
+        @DisplayName("메시지 생성 시 발신자를 제외한 참가자에게 NotificationEvent가 발행된다")
+        void publishesNotificationToOtherParticipants() {
+            // given
+            Long senderId = 1L;
+            Long recipientId = 2L;
+            Long chatRoomId = 10L;
+
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
+            ReflectionTestUtils.setField(room, "id", chatRoomId);
+
+            ChatMessageCreateRequest request = new ChatMessageCreateRequest();
+            request.setContent("안녕하세요");
+            request.setMessageType("USER");
+            request.setClientMessageId("msg-001");
+
+            Message saved = Message.create(chatRoomId, senderId, "안녕하세요", ChatMessageType.USER, "msg-001");
+            ReflectionTestUtils.setField(saved, "id", 100L);
+
+            ChatParticipant senderParticipant = ChatParticipant.create(chatRoomId, senderId);
+            ChatParticipant recipientParticipant = ChatParticipant.create(chatRoomId, recipientId);
+
+            given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(room));
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, senderId)).willReturn(true);
+            given(messageRepository.save(any(Message.class))).willReturn(saved);
+            given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(chatRoomId))
+                    .willReturn(List.of(senderParticipant, recipientParticipant));
+
+            // when
+            messageService.createMessage(senderId, chatRoomId, request);
+
+            // then
+            ArgumentCaptor<NotificationEvent> captor = ArgumentCaptor.forClass(NotificationEvent.class);
+            then(applicationEventPublisher).should(times(1)).publishEvent(captor.capture());
+
+            NotificationEvent event = captor.getValue();
+            assertThat(event.getRecipientMemberId()).isEqualTo(recipientId);
+            assertThat(event.getType()).isEqualTo("CHAT_NEW_MESSAGE");
+            assertThat(event.getPayload()).containsEntry("roomId", chatRoomId);
+            assertThat(event.getPayload()).containsEntry("senderMemberId", senderId);
+        }
+
+        @Test
+        @DisplayName("그룹 채팅에서 발신자 외 2명에게 각각 NotificationEvent가 발행된다")
+        void publishesNotificationToMultipleParticipants() {
+            // given
+            Long senderId = 1L;
+            Long chatRoomId = 10L;
+
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
+            ReflectionTestUtils.setField(room, "id", chatRoomId);
+
+            ChatMessageCreateRequest request = new ChatMessageCreateRequest();
+            request.setContent("안녕하세요");
+            request.setMessageType("USER");
+            request.setClientMessageId("msg-001");
+
+            Message saved = Message.create(chatRoomId, senderId, "안녕하세요", ChatMessageType.USER, "msg-001");
+            ReflectionTestUtils.setField(saved, "id", 100L);
+
+            ChatParticipant p1 = ChatParticipant.create(chatRoomId, senderId);
+            ChatParticipant p2 = ChatParticipant.create(chatRoomId, 2L);
+            ChatParticipant p3 = ChatParticipant.create(chatRoomId, 3L);
+
+            given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(room));
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, senderId)).willReturn(true);
+            given(messageRepository.save(any(Message.class))).willReturn(saved);
+            given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(chatRoomId))
+                    .willReturn(List.of(p1, p2, p3));
+
+            // when
+            messageService.createMessage(senderId, chatRoomId, request);
+
+            // then
+            ArgumentCaptor<NotificationEvent> captor = ArgumentCaptor.forClass(NotificationEvent.class);
+            then(applicationEventPublisher).should(times(2)).publishEvent(captor.capture());
+
+            List<NotificationEvent> events = captor.getAllValues();
+            assertThat(events).extracting(NotificationEvent::getRecipientMemberId)
+                    .containsExactlyInAnyOrder(2L, 3L);
+        }
+
+        @Test
+        @DisplayName("참가자가 발신자 혼자면 NotificationEvent가 발행되지 않는다")
+        void noNotificationWhenSenderIsOnlyParticipant() {
+            // given
+            Long senderId = 1L;
+            Long chatRoomId = 10L;
+
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.GROUP, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
+            ReflectionTestUtils.setField(room, "id", chatRoomId);
+
+            ChatMessageCreateRequest request = new ChatMessageCreateRequest();
+            request.setContent("안녕하세요");
+            request.setMessageType("USER");
+            request.setClientMessageId("msg-001");
+
+            Message saved = Message.create(chatRoomId, senderId, "안녕하세요", ChatMessageType.USER, "msg-001");
+            ReflectionTestUtils.setField(saved, "id", 100L);
+
+            ChatParticipant senderOnly = ChatParticipant.create(chatRoomId, senderId);
+
+            given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(room));
+            given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, senderId)).willReturn(true);
+            given(messageRepository.save(any(Message.class))).willReturn(saved);
+            given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(chatRoomId))
+                    .willReturn(List.of(senderOnly));
+
+            // when
+            messageService.createMessage(senderId, chatRoomId, request);
+
+            // then
+            then(applicationEventPublisher).should(never()).publishEvent(any(NotificationEvent.class));
         }
     }
 
