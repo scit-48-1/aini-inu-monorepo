@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import DaumPostcode from 'react-daum-postcode';
 import { useRadarLogic } from '@/hooks/useRadarLogic';
+import { useSearchParams } from 'next/navigation';
 import { useConfigStore } from '@/store/useConfigStore';
 import { useUserStore } from '@/store/useUserStore';
 
@@ -64,6 +65,18 @@ export default function AroundMePage() {
   const handleMapMoveEnd = useCallback((lat: number, lng: number) => {
     mapCenterRef.current = [lat, lng];
   }, []);
+
+  // Auto-select thread from URL query param (deep link from dashboard)
+  const searchParams = useSearchParams();
+  const threadIdHandled = useRef(false);
+
+  useEffect(() => {
+    const threadIdParam = searchParams.get('threadId');
+    if (!threadIdParam || threadIdHandled.current) return;
+    threadIdHandled.current = true;
+    // selectThread internally calls getThread and sets selectedThread
+    selectThread(Number(threadIdParam));
+  }, [searchParams, selectThread]);
 
   // Refresh using map's current visual center
   const handleRefreshFromMap = useCallback(() => {

@@ -68,7 +68,7 @@ export const LocalFeedPreview: React.FC<LocalFeedPreviewProps> = ({ threads, err
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {threads.map((thread) => (
-            <Link key={thread.id} href="/around-me">
+            <Link key={thread.id} href={`/around-me?threadId=${thread.id}`}>
               <Card interactive className="p-8 group h-full flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <Badge variant={statusLabel(thread.status).variant} className="text-[10px]">

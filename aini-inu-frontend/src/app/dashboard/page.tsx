@@ -95,7 +95,19 @@ export default function DashboardPage() {
   const fetchThreads = useCallback(async () => {
     setThreads({ status: 'loading' });
     try {
-      const res = await getThreads({ page: 0, size: 3 });
+      // Try to get user location, fallback to Seoul City Hall
+      let lat = 37.5666;
+      let lng = 126.9784;
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
+        );
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch {
+        // Use default Seoul coordinates
+      }
+      const res = await getThreads({ page: 0, size: 3, latitude: lat, longitude: lng, radius: 5 });
       if (res.content.length === 0) {
         setThreads({ status: 'empty' });
       } else {
