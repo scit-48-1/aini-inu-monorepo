@@ -24,7 +24,7 @@ export const PetDetailPanel: React.FC<PetDetailPanelProps> = ({
   return (
     <div
       className={cn(
-        'absolute top-0 right-0 h-full w-[340px] z-[1100] transition-transform duration-500 ease-out',
+        'absolute top-0 right-0 h-full w-[340px] z-[1100] transition-transform duration-500 ease-out flex items-start p-3',
         isOpen ? 'translate-x-0' : 'translate-x-full',
       )}
     >
@@ -35,7 +35,7 @@ export const PetDetailPanel: React.FC<PetDetailPanelProps> = ({
       />
 
       {/* Panel */}
-      <div className="relative h-full bg-white rounded-l-[48px] shadow-2xl border-l border-zinc-100 flex flex-col overflow-hidden z-10">
+      <div className="relative max-h-full bg-white rounded-[48px] shadow-2xl border border-zinc-100 flex flex-col overflow-hidden z-10">
         {/* Hero Image */}
         <div className="h-56 relative shrink-0">
           <img

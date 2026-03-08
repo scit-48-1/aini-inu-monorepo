@@ -29,8 +29,10 @@ function MapController({ center, zoom, onVisualCenterChange, onMoveEnd }: { cent
       map.invalidateSize();
     }, 800);
 
+    let resizeTimer: ReturnType<typeof setTimeout>;
     const resizeObserver = new ResizeObserver(() => {
-      map.invalidateSize();
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => map.invalidateSize(), 300);
     });
 
     const container = map.getContainer();
@@ -38,6 +40,7 @@ function MapController({ center, zoom, onVisualCenterChange, onMoveEnd }: { cent
 
     return () => {
       clearTimeout(timer);
+      clearTimeout(resizeTimer);
       resizeObserver.unobserve(container);
     };
   }, [center, zoom, map]);
@@ -69,20 +72,22 @@ function MapController({ center, zoom, onVisualCenterChange, onMoveEnd }: { cent
 
 function FlyToController({ flyTo, offsetX }: { flyTo?: [number, number] | null; offsetX?: number }) {
   const map = useMap();
+  const prevRef = useRef<[number, number] | null>(null);
   useEffect(() => {
-    if (flyTo) {
-      if (offsetX) {
-        // 마커가 왼쪽에 보이도록 지도 중심을 오른쪽으로 오프셋
-        const zoom = map.getZoom();
-        const targetPoint = map.project(flyTo, zoom);
-        const newCenter = map.unproject(
-          L.point(targetPoint.x + offsetX, targetPoint.y),
-          zoom,
-        );
-        map.flyTo(newCenter, zoom, { duration: 0.8 });
-      } else {
-        map.flyTo(flyTo, map.getZoom(), { duration: 0.8 });
-      }
+    if (!flyTo) { prevRef.current = null; return; }
+    // 좌표 값이 실제로 변경된 경우에만 flyTo 실행
+    if (prevRef.current && prevRef.current[0] === flyTo[0] && prevRef.current[1] === flyTo[1]) return;
+    prevRef.current = flyTo;
+    if (offsetX) {
+      const zoom = map.getZoom();
+      const targetPoint = map.project(flyTo, zoom);
+      const newCenter = map.unproject(
+        L.point(targetPoint.x + offsetX, targetPoint.y),
+        zoom,
+      );
+      map.flyTo(newCenter, zoom, { duration: 0.8 });
+    } else {
+      map.flyTo(flyTo, map.getZoom(), { duration: 0.8 });
     }
   }, [flyTo, offsetX, map]);
   return null;
