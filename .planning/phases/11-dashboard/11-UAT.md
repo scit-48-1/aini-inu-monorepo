@@ -1,9 +1,9 @@
 ---
-status: resolved
+status: complete
 phase: 11-dashboard
-source: 11-01-SUMMARY.md, 11-02-SUMMARY.md
-started: 2026-03-08T00:00:00Z
-updated: 2026-03-08T12:00:00Z
+source: 11-03-SUMMARY.md, 11-04-SUMMARY.md
+started: 2026-03-08T03:00:00Z
+updated: 2026-03-08T03:10:00Z
 ---
 
 ## Current Test
@@ -12,119 +12,44 @@ updated: 2026-03-08T12:00:00Z
 
 ## Tests
 
-### 1. Dashboard Hero - Greeting and Walk Stats
-expected: Navigate to /dashboard (logged in). The hero section shows a greeting with the user's nickname, manner score display, and a heatmap grid visualizing recent walk activity. If no walk data exists, the heatmap shows an empty/zero state.
+### 1. Dashboard Hero 인사말 및 반려견 사진
+expected: 대시보드 히어로 섹션이 유저 닉네임으로 인사합니다 (강아지 이름이 아닌). 대표 반려견의 프로필 사진이 표시됩니다. 반려견이 없으면 기본 이미지가 표시됩니다.
+result: pass
+
+### 2. 내 주변 스레드 피드 및 딥링크
+expected: Local Feed에 내 GPS 위치 기반 주변 스레드가 표시됩니다. 카드를 클릭하면 /around-me?threadId=X로 이동하고, around-me 페이지에서 해당 스레드가 자동 선택됩니다.
+result: pass
+
+### 3. 최근 산책 친구 (중복제거/이름/이미지)
+expected: 최근 산책 친구 섹션에 중복 없이 고유한 파트너가 표시됩니다. 각 파트너는 반려견 이름(또는 닉네임)과 프로필 이미지가 올바르게 표시됩니다. memberId 대신 실제 이름이 보여야 합니다. 콘솔에 중복 key 에러가 없어야 합니다.
+result: pass
+
+### 4. 리뷰 알림 플로팅 디자인
+expected: 미작성 리뷰가 있으면 우하단에 amber 색상의 작고 둥근 플로팅 알림이 나타납니다. 대시보드 그리드 레이아웃에 영향을 주지 않아야 합니다. 미작성 리뷰가 없으면 알림이 보이지 않아야 합니다.
 result: issue
-reported: "유저 닉네임, 매너점수, 대표강아지 프로필사진, 위치 아무것도 적용이 안되어 있어."
-severity: major
-
-### 2. AI Banner - Top Hotspot Display
-expected: The AI Banner section shows the top hotspot from nearby thread data (location name and thread count). If no hotspot data exists, the banner shows a fallback/empty state rather than crashing.
-result: pass
-
-### 3. Local Feed Preview - Thread Cards
-expected: The Local Feed Preview section shows thread cards with title, description, place name, time range, and participant count. Each card has status and chat type badges. Cards link to /around-me. If no threads exist, an empty state message is shown.
-result: issue
-reported: "카드가 보이지만 해당카드들은 나의 위치 주변에 있는 스레드에 해당하는 카드는 아닌것 같아. 또한, 해당 카드를 선택하면, around-me 화면으로 그냥 넘어가기만해. around-me 화면으로 넘어가서 해당 카드에 관련된 스레드가 선택된 상태가 되어야 하지 않을까?"
-severity: major
-
-### 4. Pending Review Card - Conditional Display
-expected: If you have completed walk sessions without a review, a dark navy notification card appears at the top of the dashboard showing the pending review count. If all walks are reviewed (or no walk rooms exist), the card does not appear.
-result: pass
-note: Design suggestion - move to right margin with smaller, cuter notification style instead of full-width top placement
-
-### 5. Pending Review Modal - Write Review Flow
-expected: Clicking the Pending Review Card opens a modal listing walk sessions awaiting review (showing partner info). Selecting one opens the WalkReviewModal form. After submitting, the pending count decreases.
-result: pass
-
-### 6. Dashboard Render Order
-expected: Dashboard sections appear in this order top-to-bottom: Pending Review Card (if visible) > AI Banner > Dashboard Hero > Recent Friends > Local Feed Preview.
-result: pass
-
-### 7. Per-Section Independent Loading
-expected: Each dashboard section loads independently. If one section is slow or fails, other sections still render normally. A failed section shows an error state with a retry button that refetches only that section.
-result: pass
-
-### 8. Legacy Imports Eliminated
-expected: The dashboard page loads without console errors related to missing imports, undefined services, or type mismatches. No references to old threadService, memberService, or DraftNotification appear in the UI.
-result: issue
-reported: "최근 산책한 친구들 항목에 함께 산책한 강아지의 이미지가 제대로 안나타나. 강아지 이름도 그냥 주인의 memberId값이 나타나고 있어. 또한, 이것들 같은 카드들이 중복으로 나타나. 콘솔 로그에 RecentFriends.tsx:54에서 동일한 key '9004' 중복 에러 발생."
-severity: major
+reported: "플로팅 알림과 기능도 잘 작동하는데, 프로필 이미지가, 아무것도 없는 기본 프로필 이미지야. 해당 회원의 프로필 이미지를 띄워줘야겠어."
+severity: minor
+fix: "PendingReviewCard에 profileImageUrl prop 추가, page.tsx에서 userProfile.avatar 전달"
 
 ## Summary
 
-total: 8
-passed: 5
-issues: 3
+total: 4
+passed: 3
+issues: 1
 pending: 0
 skipped: 0
 
 ## Gaps
 
-- truth: "Dashboard Hero shows user's nickname, manner score, representative dog profile photo, and location"
+- truth: "플로팅 리뷰 알림에 해당 회원의 실제 프로필 이미지가 표시되어야 함"
   status: resolved
-  reason: "User reported: 유저 닉네임, 매너점수, 대표강아지 프로필사진, 위치 아무것도 적용이 안되어 있어."
-  severity: major
-  test: 1
-  root_cause: "DashboardHero greeting shows dog name instead of nickname; mapMemberToUser() hardcodes location:'' and dogs:[]; mainDog fallback always triggers because userProfile.dogs is always empty"
-  artifacts:
-    - path: "aini-inu-frontend/src/store/useUserStore.ts"
-      issue: "mapMemberToUser() hardcodes location:'' and dogs:[] -- no data source in MemberResponse"
-    - path: "aini-inu-frontend/src/components/dashboard/DashboardHero.tsx"
-      issue: "Line 59 greets with mainDog.name instead of userProfile.nickname"
-    - path: "aini-inu-frontend/src/app/dashboard/page.tsx"
-      issue: "Lines 52-56 mainDog fallback always triggers since userProfile.dogs is []"
-  missing:
-    - "Change greeting to use userProfile.nickname instead of mainDog.name"
-    - "Fetch user's pets via getMemberPets(userId) in page orchestrator"
-    - "Pass representative pet to DashboardHero for dog profile photo"
-    - "Derive location from another source (last walk, user settings) or add to backend MemberResponse"
-  debug_session: ".planning/debug/dashboard-hero-missing-data.md"
-
-- truth: "Local Feed Preview shows nearby threads based on user location, and clicking a card navigates to /around-me with that thread selected"
-  status: resolved
-  reason: "User reported: 카드가 보이지만 나의 위치 주변 스레드가 아님. 카드 선택시 around-me로 넘어가기만 하고 해당 스레드가 선택된 상태가 아님."
-  severity: major
-  test: 3
-  root_cause: "fetchThreads() calls getThreads({page:0, size:3}) without passing latitude/longitude/radius; LocalFeedPreview card links use bare /around-me without threadId query param"
-  artifacts:
-    - path: "aini-inu-frontend/src/app/dashboard/page.tsx"
-      issue: "Line 95 fetchThreads does not pass latitude/longitude/radius to getThreads()"
-    - path: "aini-inu-frontend/src/components/dashboard/LocalFeedPreview.tsx"
-      issue: "Line 71 card Link uses bare /around-me href without ?threadId={thread.id}"
-    - path: "aini-inu-frontend/src/app/around-me/page.tsx"
-      issue: "No logic to read threadId query param and auto-select thread on mount"
-  missing:
-    - "Pass user coordinates (from Geolocation or location store) to getThreads() with latitude, longitude, radius"
-    - "Add threadId query param to card links: /around-me?threadId={thread.id}"
-    - "Read threadId from searchParams in around-me/page.tsx and call selectThread()"
-  debug_session: ".planning/debug/local-feed-no-location-filter.md"
-
-- truth: "RecentFriends shows unique walk partner cards with correct dog image, dog name, and no duplicate keys"
-  status: resolved
-  reason: "User reported: 강아지 이미지 미표시, 강아지 이름 대신 memberId 표시, 동일 카드 중복, RecentFriends.tsx:54에서 key '9004' 중복 에러."
-  severity: major
-  test: 8
-  root_cause: "fetchRecentFriends builds friend objects with non-unique key (memberId reused across rooms), fallback name shows memberId instead of nickname, hardcoded placeholder image, and no deduplication of same partner"
-  artifacts:
-    - path: "aini-inu-frontend/src/app/dashboard/page.tsx"
-      issue: "Lines 163-191: id uses memberId (non-unique), name fallback shows memberId, image hardcoded to logo, no dedup"
-  missing:
-    - "Use chatRoomId as key or deduplicate by memberId first"
-    - "Change name fallback to petNames || partner.nickname || Member ${memberId}"
-    - "Use partner.profileImageUrl || fallback instead of hardcoded logo"
-    - "Add Map<memberId, friend> deduplication before building friends array"
-  debug_session: ".planning/debug/recent-friends-bugs.md"
-
-- truth: "Pending Review Card uses smaller, cuter notification style on right margin instead of full-width top placement"
-  status: resolved
-  reason: "User suggested: 디자인적으로 최상단 전체폭보다 대시보드 오른쪽 여백에 작고 귀여운 형태로 나타나는 것이 좋겠다."
-  severity: cosmetic
+  reason: "User reported: 플로팅 알림과 기능도 잘 작동하는데, 프로필 이미지가, 아무것도 없는 기본 프로필 이미지야. 해당 회원의 프로필 이미지를 띄워줘야겠어."
+  severity: minor
   test: 4
-  root_cause: "PendingReviewCard uses full-width dark navy card at top of dashboard; user prefers smaller floating notification on right margin"
+  root_cause: "PendingReviewCard에 profileImageUrl prop이 없어서 항상 amber 아이콘만 표시. userProfile.avatar는 page.tsx에서 사용 가능하지만 전달하지 않음."
   artifacts:
     - path: "aini-inu-frontend/src/components/dashboard/PendingReviewCard.tsx"
-      issue: "Full-width top placement design"
-  missing:
-    - "Redesign as smaller, cuter floating notification card positioned in right margin area"
-  debug_session: ""
+      issue: "profileImageUrl prop 미존재, 하드코딩된 아이콘"
+    - path: "aini-inu-frontend/src/app/dashboard/page.tsx"
+      issue: "userProfile.avatar를 PendingReviewCard에 미전달"
+  missing: []

@@ -252,6 +252,7 @@ export default function DashboardPage() {
         <PendingReviewCard
           pendingCount={pendingReviews.length}
           onClick={() => setPendingReviewModalOpen(true)}
+          profileImageUrl={userProfile?.avatar}
         />
 
         {/* (2) AI Banner -- hotspots */}
