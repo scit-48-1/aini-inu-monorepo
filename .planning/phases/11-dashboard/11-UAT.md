@@ -1,9 +1,9 @@
 ---
-status: diagnosed
+status: resolved
 phase: 11-dashboard
 source: 11-01-SUMMARY.md, 11-02-SUMMARY.md
 started: 2026-03-08T00:00:00Z
-updated: 2026-03-08T02:10:00Z
+updated: 2026-03-08T12:00:00Z
 ---
 
 ## Current Test
@@ -62,7 +62,7 @@ skipped: 0
 ## Gaps
 
 - truth: "Dashboard Hero shows user's nickname, manner score, representative dog profile photo, and location"
-  status: failed
+  status: resolved
   reason: "User reported: 유저 닉네임, 매너점수, 대표강아지 프로필사진, 위치 아무것도 적용이 안되어 있어."
   severity: major
   test: 1
@@ -82,7 +82,7 @@ skipped: 0
   debug_session: ".planning/debug/dashboard-hero-missing-data.md"
 
 - truth: "Local Feed Preview shows nearby threads based on user location, and clicking a card navigates to /around-me with that thread selected"
-  status: failed
+  status: resolved
   reason: "User reported: 카드가 보이지만 나의 위치 주변 스레드가 아님. 카드 선택시 around-me로 넘어가기만 하고 해당 스레드가 선택된 상태가 아님."
   severity: major
   test: 3
@@ -101,7 +101,7 @@ skipped: 0
   debug_session: ".planning/debug/local-feed-no-location-filter.md"
 
 - truth: "RecentFriends shows unique walk partner cards with correct dog image, dog name, and no duplicate keys"
-  status: failed
+  status: resolved
   reason: "User reported: 강아지 이미지 미표시, 강아지 이름 대신 memberId 표시, 동일 카드 중복, RecentFriends.tsx:54에서 key '9004' 중복 에러."
   severity: major
   test: 8
@@ -117,7 +117,7 @@ skipped: 0
   debug_session: ".planning/debug/recent-friends-bugs.md"
 
 - truth: "Pending Review Card uses smaller, cuter notification style on right margin instead of full-width top placement"
-  status: failed
+  status: resolved
   reason: "User suggested: 디자인적으로 최상단 전체폭보다 대시보드 오른쪽 여백에 작고 귀여운 형태로 나타나는 것이 좋겠다."
   severity: cosmetic
   test: 4
