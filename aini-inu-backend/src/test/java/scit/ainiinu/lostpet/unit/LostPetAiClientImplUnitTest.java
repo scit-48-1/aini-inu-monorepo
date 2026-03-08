@@ -204,7 +204,7 @@ class LostPetAiClientImplUnitTest {
         verify(vectorStore).add(captor.capture());
         assertThat(captor.getValue()).hasSize(1);
         Document indexed = captor.getValue().get(0);
-        assertThat(indexed.getId()).isEqualTo("sighting-501");
+        assertThat(indexed.getId()).matches("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
         assertThat(indexed.getMetadata()).containsEntry("sightingId", 501L);
         assertThat(indexed.getMetadata()).containsEntry("finderId", 20L);
     }

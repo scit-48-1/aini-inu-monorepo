@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
@@ -107,7 +108,7 @@ public class LostPetAiClientImpl implements LostPetAiClient {
         metadata.put("photoUrl", sighting.getPhotoUrl());
         metadata.put("memo", sighting.getMemo());
 
-        return new Document("sighting-" + sighting.getId(), content, metadata);
+        return new Document(UUID.randomUUID().toString(), content, metadata);
     }
 
     private String buildAnalyzeQueryText(LostPetAnalyzeRequest request) {
