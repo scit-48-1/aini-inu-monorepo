@@ -122,45 +122,39 @@ export default function DashboardPage() {
 
   const detectPendingReviews = useCallback(async () => {
     try {
-      const roomsRes = await getRooms({ page: 0, size: 20 });
+      const roomsRes = await getRooms({ page: 0, size: 20, origin: 'WALK' });
       const rooms = roomsRes.content;
       if (rooms.length === 0) {
         setPendingReviews([]);
         return;
       }
 
-      // Check review status for each room
-      const reviewResults = await Promise.allSettled(
-        rooms.map((r) => getMyReview(r.chatRoomId)),
-      );
-
-      // Find rooms without reviews
-      const roomsWithoutReview = rooms.filter((_, i) => {
-        const result = reviewResults[i];
-        return result.status === 'fulfilled' && !result.value.exists;
-      });
-
-      if (roomsWithoutReview.length === 0) {
-        setPendingReviews([]);
-        return;
-      }
-
-      // Get room details to extract partner info
-      const detailResults = await Promise.allSettled(
-        roomsWithoutReview.map((r) => getRoom(r.chatRoomId)),
-      );
+      // Fetch room details and review status in parallel
+      const [detailResults, reviewResults] = await Promise.all([
+        Promise.allSettled(rooms.map((r) => getRoom(r.chatRoomId))),
+        Promise.allSettled(rooms.map((r) => getMyReview(r.chatRoomId))),
+      ]);
 
       const currentId = Number(useUserStore.getState().profile?.id) || 0;
       const pending: PendingReview[] = [];
 
-      detailResults.forEach((res, i) => {
-        if (res.status !== 'fulfilled') return;
-        const detail = res.value;
+      rooms.forEach((room, i) => {
+        // Skip if review already exists
+        const reviewResult = reviewResults[i];
+        if (reviewResult.status !== 'fulfilled' || reviewResult.value.exists) return;
+
+        // Skip if room detail fetch failed or walk not confirmed
+        const detailResult = detailResults[i];
+        if (detailResult.status !== 'fulfilled') return;
+        const detail = detailResult.value;
+        if (!detail.walkConfirmed) return;
+
         const partner = detail.participants.find((p) => p.memberId !== currentId && !p.left);
         if (!partner) return;
+
         pending.push({
           chatRoomId: detail.chatRoomId,
-          displayName: roomsWithoutReview[i].displayName,
+          displayName: room.displayName,
           partnerId: partner.memberId,
           partnerNickname: partner.nickname || `Member ${partner.memberId}`,
           profileImageUrl: partner.profileImageUrl,

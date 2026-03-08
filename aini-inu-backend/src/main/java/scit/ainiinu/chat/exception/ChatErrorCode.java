@@ -16,6 +16,8 @@ public enum ChatErrorCode implements ErrorCode {
 
     ROOM_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CH403_ROOM_ACCESS_DENIED", "채팅방 접근 권한이 없습니다"),
 
+    WALK_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "CH400_WALK_NOT_COMPLETED", "산책이 완료되지 않은 채팅방에는 리뷰를 작성할 수 없습니다"),
+
     ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CH404_ROOM_NOT_FOUND", "채팅방을 찾을 수 없습니다"),
     MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "CH404_MESSAGE_NOT_FOUND", "메시지를 찾을 수 없습니다"),
 

@@ -11,10 +11,13 @@ import scit.ainiinu.chat.dto.response.MemberReviewResponse;
 import scit.ainiinu.chat.dto.response.MemberReviewSummaryResponse;
 import scit.ainiinu.chat.dto.response.MyChatReviewResponse;
 import scit.ainiinu.chat.entity.ChatReview;
+import scit.ainiinu.chat.entity.ChatRoom;
+import scit.ainiinu.chat.entity.ChatRoomOrigin;
 import scit.ainiinu.chat.exception.ChatErrorCode;
 import scit.ainiinu.chat.exception.ChatException;
 import scit.ainiinu.chat.repository.ChatParticipantRepository;
 import scit.ainiinu.chat.repository.ChatReviewRepository;
+import scit.ainiinu.chat.repository.ChatRoomRepository;
 import scit.ainiinu.common.response.SliceResponse;
 import scit.ainiinu.member.entity.Member;
 import scit.ainiinu.member.repository.MemberRepository;
@@ -32,10 +35,18 @@ public class ChatReviewService {
 
     private final ChatParticipantRepository chatParticipantRepository;
     private final ChatReviewRepository chatReviewRepository;
+    private final ChatRoomRepository chatRoomRepository;
     private final MemberRepository memberRepository;
 
     @Transactional
     public ChatReviewResponse createReview(Long memberId, Long chatRoomId, ChatReviewCreateRequest request) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new ChatException(ChatErrorCode.ROOM_NOT_FOUND));
+
+        if (chatRoom.getOrigin() != ChatRoomOrigin.WALK || !chatRoom.getWalkConfirmed()) {
+            throw new ChatException(ChatErrorCode.WALK_NOT_COMPLETED);
+        }
+
         validateParticipant(memberId, chatRoomId);
         validateParticipant(request.getRevieweeId(), chatRoomId);
         if (memberId.equals(request.getRevieweeId())) {

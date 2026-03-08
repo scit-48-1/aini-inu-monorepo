@@ -362,9 +362,14 @@ class ChatServiceCoverageTest {
             request.setScore(5);
             request.setComment("좋아요");
 
+            ChatRoom walkRoom = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.WALK, null);
+            ReflectionTestUtils.setField(walkRoom, "id", 10L);
+            walkRoom.updateWalkConfirmed(true);
+
             ChatReview saved = ChatReview.create(10L, 1L, 2L, 5, "좋아요");
             ReflectionTestUtils.setField(saved, "id", 77L);
 
+            given(chatRoomRepository.findById(10L)).willReturn(Optional.of(walkRoom));
             given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(10L, 1L)).willReturn(true);
             given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(10L, 2L)).willReturn(true);
             given(chatReviewRepository.existsByChatRoomIdAndReviewerIdAndRevieweeId(10L, 1L, 2L)).willReturn(false);
