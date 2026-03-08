@@ -213,11 +213,13 @@ Plans:
   2. Walk recommendation cards appear based on hotspot data, and latest neighborhood threads are summarized
   3. Pending review modal appears for rooms with unwritten reviews, with submit and failure retry working
   4. If any individual section's API call fails, only that section shows an error fallback -- other sections remain functional
-**Plans**: 2 plans
+**Plans**: 4 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — Rewire DashboardHero, AIBanner, LocalFeedPreview to canonical API types + walkStatsGrid utility + delete DraftNotification
-- [ ] 11-02-PLAN.md — PendingReviewCard + PendingReviewModal + page.tsx orchestrator rewire with per-section state management
+- [x] 11-01-PLAN.md — Rewire DashboardHero, AIBanner, LocalFeedPreview to canonical API types + walkStatsGrid utility + delete DraftNotification
+- [x] 11-02-PLAN.md — PendingReviewCard + PendingReviewModal + page.tsx orchestrator rewire with per-section state management
+- [ ] 11-03-PLAN.md — UAT gap closure: fix hero greeting to nickname, fetch pets for dog photo, dedup RecentFriends with correct names/images
+- [ ] 11-04-PLAN.md — UAT gap closure: location-filtered threads, threadId deep link to around-me, compact floating PendingReviewCard
 
 ### Phase 12: Settings + Integration UAT
 **Goal**: Settings screen works, and the entire frontend passes full integration verification against all 73 endpoints, 34 FR requirements, and 31 DEC policies with zero runtime errors
@@ -253,7 +255,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 8. Chat System | 5/5 | Complete   | 2026-03-07 |
 | 9. Community Feed | 7/7 | Complete   | 2026-03-07 |
 | 10. Lost Pet | 2/2 | Complete    | 2026-03-07 |
-| 11. Dashboard | 2/2 | Complete    | 2026-03-07 |
+| 11. Dashboard | 2/4 | In Progress | - |
 | 12. Settings + Integration UAT | 0/3 | Not started | - |
 
 ---
