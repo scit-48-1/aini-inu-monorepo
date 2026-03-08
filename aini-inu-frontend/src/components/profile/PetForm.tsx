@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Loader2, Dog, Camera } from 'lucide-react';
+import { Loader2, Dog } from 'lucide-react';
 import { toast } from 'sonner';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -166,9 +166,6 @@ export const PetForm: React.FC<PetFormProps> = ({
               <Loader2 className="animate-spin text-white" size={20} />
             </div>
           )}
-          <div className="absolute bottom-1 right-1 bg-amber-500 rounded-full p-1">
-            <Camera size={12} className="text-white" />
-          </div>
         </div>
         <input
           ref={fileInputRef}
