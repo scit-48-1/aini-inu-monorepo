@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import DaumPostcode from 'react-daum-postcode';
 import { createThread, updateThread, getThread } from '@/api/threads';
 import type { PetResponse } from '@/api/pets';
+import { locationService } from '@/services/api/locationService';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -67,6 +68,17 @@ export const RecruitForm: React.FC<RecruitFormProps> = ({
 
   // Chat type tooltip display
   const [showTooltip, setShowTooltip] = useState<'INDIVIDUAL' | 'GROUP' | null>(null);
+
+  // -------------------------------------------------------------------------
+  // Sync coordinates prop → form state (e.g. parent location modal change)
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    setForm((f) => ({
+      ...f,
+      latitude: coordinates[0],
+      longitude: coordinates[1],
+    }));
+  }, [coordinates]);
 
   // -------------------------------------------------------------------------
   // Edit mode: fetch existing thread and pre-fill
@@ -241,16 +253,25 @@ export const RecruitForm: React.FC<RecruitFormProps> = ({
   };
 
   // -------------------------------------------------------------------------
-  // DaumPostcode complete handler
+  // DaumPostcode complete handler — geocode via locationService (Nominatim)
   // -------------------------------------------------------------------------
-  const handleAddressComplete = (data: { address: string; buildingName?: string }) => {
-    setForm((f) => ({
-      ...f,
-      placeName: data.buildingName || data.address,
-      address: data.address,
-      // Keep lat/lng from GPS coordinates
-    }));
+  const handleAddressComplete = async (data: { address: string; buildingName?: string }) => {
+    const address = data.address;
+    const placeName = data.buildingName || address;
+
+    // Update address text immediately
+    setForm((f) => ({ ...f, placeName, address }));
     setShowAddressSearch(false);
+
+    // Geocode the address to get lat/lng
+    const coords = await locationService.getCoordinates(address);
+    if (coords) {
+      setForm((f) => ({
+        ...f,
+        latitude: coords[0],
+        longitude: coords[1],
+      }));
+    }
   };
 
   // -------------------------------------------------------------------------
