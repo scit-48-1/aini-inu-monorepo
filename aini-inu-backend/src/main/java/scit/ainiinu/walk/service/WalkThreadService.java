@@ -398,12 +398,32 @@ public class WalkThreadService {
         Map<Long, Long> countMap = batchCountByStatus(threadIds, WalkThreadApplicationStatus.JOINED);
         Set<Long> appliedSet = batchAppliedSet(threadIds, memberId, WalkThreadApplicationStatus.JOINED);
 
+        // Batch fetch first pet image for each thread (same logic as getMapThreads)
+        List<WalkThreadPet> allThreadPets = walkThreadPetRepository.findAllByThreadIdIn(threadIds);
+        Map<Long, Long> threadFirstPetMap = new HashMap<>();
+        for (WalkThreadPet tp : allThreadPets) {
+            threadFirstPetMap.putIfAbsent(tp.getThreadId(), tp.getPetId());
+        }
+        List<Long> petIds = new ArrayList<>(new HashSet<>(threadFirstPetMap.values()));
+        Map<Long, String> petPhotoMap = new HashMap<>();
+        if (!petIds.isEmpty()) {
+            for (Pet pet : petRepository.findAllById(petIds)) {
+                if (pet.getPhotoUrl() != null) {
+                    petPhotoMap.put(pet.getId(), pet.getPhotoUrl());
+                }
+            }
+        }
+
         return threads.stream()
-                .map(thread -> toSummaryResponse(thread, countMap.getOrDefault(thread.getId(), 0L) + 1, appliedSet.contains(thread.getId())))
+                .map(thread -> {
+                    Long firstPetId = threadFirstPetMap.get(thread.getId());
+                    String petImageUrl = firstPetId != null ? petPhotoMap.get(firstPetId) : null;
+                    return toSummaryResponse(thread, countMap.getOrDefault(thread.getId(), 0L) + 1, appliedSet.contains(thread.getId()), petImageUrl);
+                })
                 .toList();
     }
 
-    private ThreadSummaryResponse toSummaryResponse(WalkThread thread, long currentParticipants, boolean isApplied) {
+    private ThreadSummaryResponse toSummaryResponse(WalkThread thread, long currentParticipants, boolean isApplied, String petImageUrl) {
         return ThreadSummaryResponse.builder()
                 .id(thread.getId())
                 .title(thread.getTitle())
@@ -417,6 +437,7 @@ public class WalkThreadService {
                 .startTime(thread.getStartTime())
                 .endTime(thread.getEndTime())
                 .status(thread.getStatus().name())
+                .petImageUrl(petImageUrl)
                 .isApplied(isApplied)
                 .build();
     }

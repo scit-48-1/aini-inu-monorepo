@@ -28,6 +28,7 @@ import scit.ainiinu.walk.entity.WalkThreadApplicationStatus;
 import scit.ainiinu.walk.entity.WalkThreadPet;
 import scit.ainiinu.walk.entity.WalkThreadStatus;
 import scit.ainiinu.walk.exception.ThreadErrorCode;
+import scit.ainiinu.pet.entity.Pet;
 import scit.ainiinu.walk.repository.WalkThreadApplicationPetRepository;
 import scit.ainiinu.walk.repository.WalkThreadApplicationRepository;
 import scit.ainiinu.walk.repository.WalkThreadFilterRepository;
@@ -43,6 +44,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -196,6 +198,8 @@ class WalkThreadServicePhase06Test {
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
+                    .willReturn(List.of());
 
             // when
             SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, null, null, null, null, null);
@@ -223,6 +227,8 @@ class WalkThreadServicePhase06Test {
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
+                    .willReturn(List.of());
 
             // when
             SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, startDate, null, null, null, null);
@@ -248,6 +254,8 @@ class WalkThreadServicePhase06Test {
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
                     .willReturn(List.of());
 
             // when
@@ -275,6 +283,8 @@ class WalkThreadServicePhase06Test {
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
                     .willReturn(List.of());
 
             // when
@@ -312,6 +322,8 @@ class WalkThreadServicePhase06Test {
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
                     .willReturn(List.of());
 
             // when
@@ -359,6 +371,8 @@ class WalkThreadServicePhase06Test {
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
+                    .willReturn(List.of());
 
             // when
             SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, null, null, null, null, null);
@@ -385,6 +399,8 @@ class WalkThreadServicePhase06Test {
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
                     .willReturn(List.of());
 
             // when
@@ -587,6 +603,8 @@ class WalkThreadServicePhase06Test {
                     .willReturn(List.<Object[]>of(new Object[]{10L, 1L}));
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(10L), memberId, WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of(app1));
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(10L)))
+                    .willReturn(List.of());
 
             // when
             List<ThreadSummaryResponse> result = walkThreadService.getMyJoinedThreads(memberId);
@@ -670,6 +688,171 @@ class WalkThreadServicePhase06Test {
             // then
             assertThat(result).isEmpty();
             then(walkThreadRepository).should(never()).findAllById(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("ThreadSummaryResponse petImageUrl")
+    class SummaryPetImageUrl {
+
+        @Test
+        @DisplayName("getMyActiveThread: 반려견 사진이 있으면 petImageUrl에 포함된다")
+        void getMyActiveThread_withPetPhoto_returnsPetImageUrl() {
+            // given
+            Long memberId = 1L;
+            WalkThread thread = buildFutureThread(1L, memberId);
+
+            given(walkThreadRepository.findAllByAuthorIdAndStatus(memberId, WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(thread));
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+
+            WalkThreadPet threadPet = WalkThreadPet.of(1L, 100L);
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
+                    .willReturn(List.of(threadPet));
+
+            Pet pet = Pet.builder().memberId(memberId).build();
+            ReflectionTestUtils.setField(pet, "id", 100L);
+            ReflectionTestUtils.setField(pet, "photoUrl", "https://cdn.example.com/dog.jpg");
+            given(petRepository.findAllById(List.of(100L)))
+                    .willReturn(List.of(pet));
+
+            // when
+            List<ThreadSummaryResponse> result = walkThreadService.getMyActiveThread(memberId);
+
+            // then
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).getPetImageUrl()).isEqualTo("https://cdn.example.com/dog.jpg");
+        }
+
+        @Test
+        @DisplayName("getMyActiveThread: 반려견이 없으면 petImageUrl이 null이다")
+        void getMyActiveThread_noPet_nullPetImageUrl() {
+            // given
+            Long memberId = 1L;
+            WalkThread thread = buildFutureThread(1L, memberId);
+
+            given(walkThreadRepository.findAllByAuthorIdAndStatus(memberId, WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(thread));
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
+                    .willReturn(List.of());
+
+            // when
+            List<ThreadSummaryResponse> result = walkThreadService.getMyActiveThread(memberId);
+
+            // then
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).getPetImageUrl()).isNull();
+        }
+
+        @Test
+        @DisplayName("getMyJoinedThreads: 반려견 사진이 있으면 petImageUrl에 포함된다")
+        void getMyJoinedThreads_withPetPhoto_returnsPetImageUrl() {
+            // given
+            Long memberId = 5L;
+            WalkThread thread = buildFutureThread(10L, 1L);
+
+            WalkThreadApplication app = WalkThreadApplication.joined(10L, memberId, 100L);
+
+            given(walkThreadApplicationRepository.findAllByMemberIdAndStatus(memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of(app));
+            given(walkThreadRepository.findAllById(List.of(10L)))
+                    .willReturn(List.of(thread));
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(10L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.<Object[]>of(new Object[]{10L, 1L}));
+            given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(10L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of(app));
+
+            WalkThreadPet threadPet = WalkThreadPet.of(10L, 200L);
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(10L)))
+                    .willReturn(List.of(threadPet));
+
+            Pet pet = Pet.builder().memberId(1L).build();
+            ReflectionTestUtils.setField(pet, "id", 200L);
+            ReflectionTestUtils.setField(pet, "photoUrl", "https://cdn.example.com/joined-pet.jpg");
+            given(petRepository.findAllById(List.of(200L)))
+                    .willReturn(List.of(pet));
+
+            // when
+            List<ThreadSummaryResponse> result = walkThreadService.getMyJoinedThreads(memberId);
+
+            // then
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).getPetImageUrl()).isEqualTo("https://cdn.example.com/joined-pet.jpg");
+        }
+
+        @Test
+        @DisplayName("getThreads: 반려견 사진이 있으면 petImageUrl에 포함된다")
+        void getThreads_withPetPhoto_returnsPetImageUrl() {
+            // given
+            Long memberId = 1L;
+            Pageable pageable = PageRequest.of(0, 20);
+            WalkThread thread = buildFutureThread(1L, 2L);
+
+            Slice<WalkThread> slice = new SliceImpl<>(List.of(thread), pageable, false);
+            given(walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(WalkThreadStatus.RECRUITING, pageable))
+                    .willReturn(slice);
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+
+            WalkThreadPet threadPet = WalkThreadPet.of(1L, 100L);
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
+                    .willReturn(List.of(threadPet));
+
+            Pet pet = Pet.builder().memberId(2L).build();
+            ReflectionTestUtils.setField(pet, "id", 100L);
+            ReflectionTestUtils.setField(pet, "photoUrl", "https://cdn.example.com/list-pet.jpg");
+            given(petRepository.findAllById(List.of(100L)))
+                    .willReturn(List.of(pet));
+
+            // when
+            SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, null, null, null, null, null);
+
+            // then
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.getContent().get(0).getPetImageUrl()).isEqualTo("https://cdn.example.com/list-pet.jpg");
+        }
+
+        @Test
+        @DisplayName("getThreads: 반려견 photoUrl이 null이면 petImageUrl도 null이다")
+        void getThreads_petPhotoNull_nullPetImageUrl() {
+            // given
+            Long memberId = 1L;
+            Pageable pageable = PageRequest.of(0, 20);
+            WalkThread thread = buildFutureThread(1L, 2L);
+
+            Slice<WalkThread> slice = new SliceImpl<>(List.of(thread), pageable, false);
+            given(walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(WalkThreadStatus.RECRUITING, pageable))
+                    .willReturn(slice);
+            given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+            given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
+                    .willReturn(List.of());
+
+            WalkThreadPet threadPet = WalkThreadPet.of(1L, 100L);
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(1L)))
+                    .willReturn(List.of(threadPet));
+
+            Pet pet = Pet.builder().memberId(2L).build();
+            ReflectionTestUtils.setField(pet, "id", 100L);
+            // photoUrl is null by default
+            given(petRepository.findAllById(List.of(100L)))
+                    .willReturn(List.of(pet));
+
+            // when
+            SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, null, null, null, null, null);
+
+            // then
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.getContent().get(0).getPetImageUrl()).isNull();
         }
     }
 

@@ -101,6 +101,7 @@ export interface ThreadSummaryResponse {
   startTime: string;
   endTime: string;
   status: string;
+  petImageUrl?: string;
   applied: boolean;
   isApplied: boolean;
 }

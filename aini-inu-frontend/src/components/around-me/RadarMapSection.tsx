@@ -143,13 +143,14 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
       id: String(myActiveThread.id),
       lat: myActiveThread.latitude,
       lng: myActiveThread.longitude,
+      image: myActiveThread.petImageUrl,
     });
   }
 
   // Always include my joined thread markers on the map (even if outside search area)
   for (const jt of (myJoinedThreads ?? [])) {
     if (!threadMarkers.some((m) => m.id === String(jt.id))) {
-      threadMarkers.push({ id: String(jt.id), lat: jt.latitude, lng: jt.longitude });
+      threadMarkers.push({ id: String(jt.id), lat: jt.latitude, lng: jt.longitude, image: jt.petImageUrl });
     }
   }
 

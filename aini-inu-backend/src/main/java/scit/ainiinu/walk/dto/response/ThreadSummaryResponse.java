@@ -38,6 +38,9 @@ public class ThreadSummaryResponse {
     @Schema(description = "상태 코드입니다.", example = "RECRUITING", allowableValues = {"RECRUITING", "EXPIRED", "DELETED"})
     private String status;
 
+    @Schema(description = "첫 번째 참여 강아지의 프로필 이미지 URL입니다.", example = "https://example.com/pet.jpg")
+    private String petImageUrl;
+
     @JsonProperty("isApplied")
     @Schema(description = "isApplied 값입니다.", example = "true")
     private boolean isApplied;

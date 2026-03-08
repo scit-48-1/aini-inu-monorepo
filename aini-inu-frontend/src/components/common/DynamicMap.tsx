@@ -116,7 +116,7 @@ export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideC
     const iconMap = new Map<string, L.DivIcon>();
     for (const m of markers) {
       if (m.lat == null || m.lng == null) continue;
-      const imageUrl = m.image || m.thumbnail || '';
+      const imageUrl = m.image || m.thumbnail || '/AINIINU_ROGO_B.png';
       const isEmergency = !!m.isEmergency;
       const isSelected = m.id === selectedMarkerId;
       const icon = L.divIcon({
@@ -124,7 +124,7 @@ export default function DynamicMap({ center, zoom, markers, onMarkerClick, hideC
         html: `
           <div class="relative group" style="${isSelected ? 'transform: scale(1.3); z-index: 9999; filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.7));' : ''}transition: transform 0.3s ease, filter 0.3s ease;">
             <div class="w-14 h-14 rounded-[22px] bg-white p-1 shadow-xl border-2 ${isSelected ? 'border-amber-400' : isEmergency ? 'border-red-500 animate-pulse' : 'border-amber-500'} transition-transform hover:scale-110 overflow-hidden" style="${isSelected ? 'border-width: 3px; box-shadow: 0 0 20px rgba(245, 158, 11, 0.5), 0 4px 20px rgba(0,0,0,0.15);' : ''}">
-              <img src="${imageUrl}" class="w-full h-full object-cover rounded-[18px]" />
+              <img src="${imageUrl}" onerror="this.onerror=null;this.src='/AINIINU_ROGO_B.png';" class="w-full h-full object-cover rounded-[18px]" />
             </div>
             ${isEmergency && !isSelected ? `
               <div class="absolute -top-2 -right-2 bg-red-500 text-white p-1.5 rounded-full shadow-lg">
