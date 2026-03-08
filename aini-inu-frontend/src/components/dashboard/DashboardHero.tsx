@@ -88,7 +88,7 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({ userProfile, mainD
           <div className="w-full flex justify-center lg:justify-end items-end mb-2">
             <div className="text-center lg:text-right space-y-0.5">
               <Typography variant="label" className="text-amber-600 font-black uppercase tracking-widest text-[9px]">Walk Activity</Typography>
-              <Typography variant="h3" className="text-3xl font-black text-navy-900 leading-none">{totalWalks} <span className="text-sm text-zinc-400 font-medium">Diaries</span></Typography>
+              <Typography variant="h3" className="text-3xl font-black text-navy-900 leading-none">{totalWalks} <span className="text-sm text-zinc-400 font-medium">Activities</span></Typography>
             </div>
           </div>
 
@@ -117,7 +117,7 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({ userProfile, mainD
                           val === 2 ? "bg-amber-400" :
                           val === 3 ? "bg-amber-500" : "bg-amber-600"
                         )}
-                        title={`${val} level walk recorded`}
+                        title={`${val} activity(ies)`}
                       />
                     ))}
                   </div>

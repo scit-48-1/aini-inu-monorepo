@@ -84,7 +84,7 @@ const WalkHeatmap: React.FC<WalkHeatmapProps> = ({ grassData, totalWalks }) => {
             <Typography variant="label" className="text-amber-600 font-black uppercase tracking-widest text-[9px]">Walk Activity</Typography>
           </div>
           <Typography variant="h3" className="text-xl font-black text-navy-900 leading-none">
-            {totalWalks} <span className="text-sm text-zinc-400 font-medium">Diaries</span>
+            {totalWalks} <span className="text-sm text-zinc-400 font-medium">Activities</span>
           </Typography>
         </div>
 
@@ -110,7 +110,7 @@ const WalkHeatmap: React.FC<WalkHeatmapProps> = ({ grassData, totalWalks }) => {
                     val === 2 ? "bg-amber-400" :
                     val === 3 ? "bg-amber-500" : "bg-amber-600"
                   )}
-                  title={`${val} walk(s)`}
+                  title={`${val} activity(ies)`}
                 />
               ))}
             </div>

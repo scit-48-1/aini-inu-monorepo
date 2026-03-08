@@ -8,10 +8,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.test.util.ReflectionTestUtils;
+import scit.ainiinu.common.event.ContentCreatedEvent;
+import scit.ainiinu.common.event.ContentDeletedEvent;
+import scit.ainiinu.common.event.TimelineEventType;
 import scit.ainiinu.common.exception.BusinessException;
 import scit.ainiinu.common.response.SliceResponse;
 import scit.ainiinu.walk.dto.request.WalkDiaryCreateRequest;
@@ -41,6 +45,9 @@ class WalkDiaryServiceTest {
 
     @Mock
     private WalkThreadRepository walkThreadRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private WalkDiaryService walkDiaryService;
@@ -74,6 +81,36 @@ class WalkDiaryServiceTest {
             ArgumentCaptor<WalkDiary> captor = ArgumentCaptor.forClass(WalkDiary.class);
             then(walkDiaryRepository).should().save(captor.capture());
             assertThat(captor.getValue().getIsPublic()).isTrue();
+        }
+
+        @Test
+        @DisplayName("일기 생성 시 ContentCreatedEvent가 발행된다")
+        void create_publishesContentCreatedEvent() {
+            // given
+            WalkDiaryCreateRequest request = new WalkDiaryCreateRequest();
+            request.setTitle("산책 일기");
+            request.setContent("내용");
+            request.setWalkDate(LocalDate.now());
+            request.setPhotoUrls(List.of("https://cdn/thumb.jpg"));
+
+            given(walkDiaryRepository.save(any(WalkDiary.class))).willAnswer(invocation -> {
+                WalkDiary diary = invocation.getArgument(0);
+                ReflectionTestUtils.setField(diary, "id", 5L);
+                return diary;
+            });
+
+            // when
+            walkDiaryService.createDiary(1L, request);
+
+            // then
+            ArgumentCaptor<ContentCreatedEvent> eventCaptor = ArgumentCaptor.forClass(ContentCreatedEvent.class);
+            then(eventPublisher).should().publishEvent(eventCaptor.capture());
+
+            ContentCreatedEvent event = eventCaptor.getValue();
+            assertThat(event.getMemberId()).isEqualTo(1L);
+            assertThat(event.getReferenceId()).isEqualTo(5L);
+            assertThat(event.getEventType()).isEqualTo(TimelineEventType.WALK_DIARY_CREATED);
+            assertThat(event.getThumbnailUrl()).isEqualTo("https://cdn/thumb.jpg");
         }
     }
 
@@ -161,6 +198,27 @@ class WalkDiaryServiceTest {
 
             // then
             assertThat(diary.getDeletedAt()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("일기 삭제 시 ContentDeletedEvent가 발행된다")
+        void delete_publishesContentDeletedEvent() {
+            // given
+            WalkDiary diary = WalkDiary.create(1L, null, "삭제 대상", "내용", List.of(), LocalDate.now(), true);
+            ReflectionTestUtils.setField(diary, "id", 1L);
+            given(walkDiaryRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(diary));
+
+            // when
+            walkDiaryService.deleteDiary(1L, 1L);
+
+            // then
+            ArgumentCaptor<ContentDeletedEvent> eventCaptor = ArgumentCaptor.forClass(ContentDeletedEvent.class);
+            then(eventPublisher).should().publishEvent(eventCaptor.capture());
+
+            ContentDeletedEvent event = eventCaptor.getValue();
+            assertThat(event.getMemberId()).isEqualTo(1L);
+            assertThat(event.getReferenceId()).isEqualTo(1L);
+            assertThat(event.getEventType()).isEqualTo(TimelineEventType.WALK_DIARY_CREATED);
         }
     }
 

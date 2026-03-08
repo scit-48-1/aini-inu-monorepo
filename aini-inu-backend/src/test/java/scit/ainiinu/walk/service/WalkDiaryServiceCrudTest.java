@@ -8,6 +8,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 import scit.ainiinu.common.exception.BusinessException;
 import scit.ainiinu.walk.dto.request.WalkDiaryCreateRequest;
@@ -40,6 +41,9 @@ class WalkDiaryServiceCrudTest {
 
     @Mock
     private WalkThreadRepository walkThreadRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private WalkDiaryService walkDiaryService;

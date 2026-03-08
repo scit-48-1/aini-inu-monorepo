@@ -26,10 +26,12 @@ import scit.ainiinu.member.repository.MemberFollowRepository;
 import scit.ainiinu.member.repository.MemberPersonalityRepository;
 import scit.ainiinu.member.repository.MemberPersonalityTypeRepository;
 import scit.ainiinu.member.repository.MemberRepository;
-import scit.ainiinu.walk.repository.WalkDiaryDailyCountProjection;
-import scit.ainiinu.walk.repository.WalkDiaryRepository;
+import scit.ainiinu.timeline.repository.ActivityDailyCountProjection;
+import scit.ainiinu.timeline.repository.TimelineEventRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +51,7 @@ public class MemberService {
     private final MemberPersonalityTypeRepository memberPersonalityTypeRepository;
     private final MemberPersonalityRepository memberPersonalityRepository;
     private final MemberFollowRepository memberFollowRepository;
-    private final WalkDiaryRepository walkDiaryRepository;
+    private final TimelineEventRepository timelineEventRepository;
 
     /**
      * 회원가입 완료 (프로필 생성)
@@ -188,11 +190,14 @@ public class MemberService {
         LocalDate endDate = LocalDate.now(WALK_STATS_ZONE);
         LocalDate startDate = endDate.minusDays(WALK_STATS_WINDOW_DAYS - 1L);
 
-        Map<LocalDate, Integer> dailyCountMap = walkDiaryRepository.countDailyWalks(memberId, startDate, endDate)
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+        Map<LocalDate, Integer> dailyCountMap = timelineEventRepository.countDailyActivities(memberId, startDateTime, endDateTime)
                 .stream()
                 .collect(Collectors.toMap(
-                        WalkDiaryDailyCountProjection::getWalkDate,
-                        projection -> Math.toIntExact(projection.getWalkCount())
+                        ActivityDailyCountProjection::getActivityDate,
+                        projection -> Math.toIntExact(projection.getActivityCount())
                 ));
 
         List<WalkStatsPointResponse> points = new ArrayList<>(WALK_STATS_WINDOW_DAYS);

@@ -1,10 +1,14 @@
 package scit.ainiinu.walk.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import scit.ainiinu.common.event.ContentCreatedEvent;
+import scit.ainiinu.common.event.ContentDeletedEvent;
+import scit.ainiinu.common.event.TimelineEventType;
 import scit.ainiinu.common.exception.BusinessException;
 import scit.ainiinu.common.response.SliceResponse;
 import scit.ainiinu.walk.dto.request.WalkDiaryCreateRequest;
@@ -27,6 +31,7 @@ public class WalkDiaryService {
 
     private final WalkDiaryRepository walkDiaryRepository;
     private final WalkThreadRepository walkThreadRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public WalkDiaryResponse createDiary(Long memberId, WalkDiaryCreateRequest request) {
@@ -43,6 +48,14 @@ public class WalkDiaryService {
         );
 
         WalkDiary savedDiary = walkDiaryRepository.save(walkDiary);
+
+        String thumbnailUrl = (request.getPhotoUrls() != null && !request.getPhotoUrls().isEmpty())
+                ? request.getPhotoUrls().get(0) : null;
+        eventPublisher.publishEvent(ContentCreatedEvent.of(
+                memberId, savedDiary.getId(), TimelineEventType.WALK_DIARY_CREATED,
+                savedDiary.getTitle(), savedDiary.getContent(), thumbnailUrl
+        ));
+
         return toResponse(savedDiary);
     }
 
@@ -104,6 +117,10 @@ public class WalkDiaryService {
         }
 
         walkDiary.softDelete(LocalDateTime.now());
+
+        eventPublisher.publishEvent(ContentDeletedEvent.of(
+                memberId, diaryId, TimelineEventType.WALK_DIARY_CREATED
+        ));
     }
 
     public SliceResponse<WalkDiaryResponse> getFollowingDiaries(Long memberId, Pageable pageable) {

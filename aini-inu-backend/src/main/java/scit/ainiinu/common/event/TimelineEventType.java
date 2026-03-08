@@ -21,5 +21,8 @@ public enum TimelineEventType {
     LOST_PET_REPORT_CREATED,
 
     @Schema(description = "실종 반려동물 목격 제보 등록")
-    SIGHTING_CREATED
+    SIGHTING_CREATED,
+
+    @Schema(description = "산책 일기 작성")
+    WALK_DIARY_CREATED
 }

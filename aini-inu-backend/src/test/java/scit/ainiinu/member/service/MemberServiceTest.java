@@ -30,11 +30,12 @@ import scit.ainiinu.member.repository.MemberFollowRepository;
 import scit.ainiinu.member.repository.MemberPersonalityRepository;
 import scit.ainiinu.member.repository.MemberPersonalityTypeRepository;
 import scit.ainiinu.member.repository.MemberRepository;
-import scit.ainiinu.walk.repository.WalkDiaryDailyCountProjection;
-import scit.ainiinu.walk.repository.WalkDiaryRepository;
+import scit.ainiinu.timeline.repository.ActivityDailyCountProjection;
+import scit.ainiinu.timeline.repository.TimelineEventRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -64,7 +65,7 @@ class MemberServiceTest {
     private MemberFollowRepository memberFollowRepository;
 
     @Mock
-    private WalkDiaryRepository walkDiaryRepository;
+    private TimelineEventRepository timelineEventRepository;
 
     @Nested
     @DisplayName("프로필 생성")
@@ -429,29 +430,29 @@ class MemberServiceTest {
             ReflectionTestUtils.setField(member, "id", 1L);
             given(memberRepository.findById(1L)).willReturn(Optional.of(member));
 
-            WalkDiaryDailyCountProjection projection1 = new WalkDiaryDailyCountProjection() {
+            ActivityDailyCountProjection projection1 = new ActivityDailyCountProjection() {
                 @Override
-                public LocalDate getWalkDate() {
+                public LocalDate getActivityDate() {
                     return LocalDate.now().minusDays(1);
                 }
 
                 @Override
-                public long getWalkCount() {
+                public long getActivityCount() {
                     return 2L;
                 }
             };
-            WalkDiaryDailyCountProjection projection2 = new WalkDiaryDailyCountProjection() {
+            ActivityDailyCountProjection projection2 = new ActivityDailyCountProjection() {
                 @Override
-                public LocalDate getWalkDate() {
+                public LocalDate getActivityDate() {
                     return LocalDate.now();
                 }
 
                 @Override
-                public long getWalkCount() {
+                public long getActivityCount() {
                     return 1L;
                 }
             };
-            given(walkDiaryRepository.countDailyWalks(eq(1L), any(LocalDate.class), any(LocalDate.class)))
+            given(timelineEventRepository.countDailyActivities(eq(1L), any(LocalDateTime.class), any(LocalDateTime.class)))
                     .willReturn(List.of(projection1, projection2));
 
             var response = memberService.getWalkStats(1L);
