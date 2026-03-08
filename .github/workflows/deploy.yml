@@ -9,6 +9,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
+        jobs:                                                                                                  
+    build-and-deploy:                                                                                    
+      runs-on: ubuntu-latest                                                                             
+      steps:                                                                                             
+        - name: Checkout Code                                                                            
+          uses: actions/checkout@v4                                                                      
+                                                                                                         
+        - name: Debug paths                                                                              
+          run: |                                                                                         
+            pwd                                                                                          
+            ls -la                                                                                       
+            ls -la aini-inu-monorepo-main                                                                
+            ls -la aini-inu-backend                                                                      
+                                                                                                         
+        - name: Set up JDK 21                                                                            
+          uses: actions/setup-java@v4                                                                    
+          with:                                                                                          
+            java-version: "21"                                                                           
+            distribution: "temurin"  
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
@@ -47,7 +66,10 @@ jobs:
 
             NEW_JAR=$(ls -t *.jar 2>/dev/null | grep -vE '(^aini-inu\.jar$|-plain\.jar$)' | head -n 1)
             if [ -n "$NEW_JAR" ]; then
-              mv "$NEW_JAR" aini-inu.jar
+              mv "$NEW_JAR" aini-inu.jar              
             fi
 
             sudo systemctl restart ainiinu
+
+                                                                                          
+
