@@ -15,6 +15,8 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import scit.ainiinu.lostpet.domain.Sighting;
 import scit.ainiinu.lostpet.dto.LostPetAnalyzeRequest;
 
@@ -37,6 +39,7 @@ public class LostPetAiClientImpl implements LostPetAiClient {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void indexSighting(Sighting sighting) {
         VectorStore vectorStore = vectorStoreProvider.getIfAvailable();
         if (vectorStore == null) {
