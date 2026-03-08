@@ -7,6 +7,7 @@ import { RadarMapSection } from '@/components/around-me/RadarMapSection';
 import { RadarSidebar } from '@/components/around-me/RadarSidebar';
 import { RecruitForm } from '@/components/around-me/RecruitForm';
 import { EmergencySubTabs } from '@/components/around-me/EmergencySubTabs';
+import { WalkingStatusSection } from '@/components/around-me/WalkingStatusSection';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import DaumPostcode from 'react-daum-postcode';
@@ -189,6 +190,10 @@ export default function AroundMePage() {
 
         {activeTab === 'EMERGENCY' && (
           <EmergencySubTabs />
+        )}
+
+        {activeTab === 'WALKING' && (
+          <WalkingStatusSection />
         )}
       </div>
 

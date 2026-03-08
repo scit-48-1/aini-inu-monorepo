@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { MapPin, Edit2, Footprints, PlusCircle, Siren, RefreshCw, CalendarDays, Radar } from 'lucide-react';
+import { MapPin, Edit2, Footprints, PlusCircle, Siren, Activity, RefreshCw, CalendarDays, Radar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Typography } from '@/components/ui/Typography';
 
-type SubView = 'FIND' | 'RECRUIT' | 'EMERGENCY';
+type SubView = 'FIND' | 'RECRUIT' | 'EMERGENCY' | 'WALKING';
 
 interface AroundMeHeaderProps {
   currentLocation: string;
@@ -100,6 +100,7 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
           { id: 'FIND', label: '산책', icon: Footprints },
           { id: 'RECRUIT', label: '모집', icon: PlusCircle },
           { id: 'EMERGENCY', label: '제보', icon: Siren },
+          { id: 'WALKING', label: '산책중', icon: Activity },
         ].map(tab => (
           <button
             key={tab.id}
