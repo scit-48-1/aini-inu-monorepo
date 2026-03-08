@@ -11,6 +11,7 @@ export interface PendingReview {
   displayName: string;
   partnerId: number;
   partnerNickname: string;
+  profileImageUrl: string | null;
 }
 
 interface PendingReviewModalProps {
@@ -104,9 +105,9 @@ export const PendingReviewModal: React.FC<PendingReviewModalProps> = ({
               >
                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0 overflow-hidden">
                   <img
-                    src="/AINIINU_ROGO_B.png"
+                    src={review.profileImageUrl || '/AINIINU_ROGO_B.png'}
                     alt={review.partnerNickname}
-                    className="w-8 h-8 object-contain"
+                    className={review.profileImageUrl ? 'w-12 h-12 object-cover' : 'w-8 h-8 object-contain'}
                   />
                 </div>
                 <div className="flex-1 min-w-0">

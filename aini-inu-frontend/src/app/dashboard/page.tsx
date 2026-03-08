@@ -163,6 +163,7 @@ export default function DashboardPage() {
           displayName: roomsWithoutReview[i].displayName,
           partnerId: partner.memberId,
           partnerNickname: partner.nickname || `Member ${partner.memberId}`,
+          profileImageUrl: partner.profileImageUrl,
         });
       });
 
@@ -252,7 +253,6 @@ export default function DashboardPage() {
         <PendingReviewCard
           pendingCount={pendingReviews.length}
           onClick={() => setPendingReviewModalOpen(true)}
-          profileImageUrl={userProfile?.avatar}
         />
 
         {/* (2) AI Banner -- hotspots */}
