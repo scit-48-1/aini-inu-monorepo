@@ -82,6 +82,11 @@ public class ChatRoomService {
         Map<Long, List<ChatParticipant>> participantsByRoom = allParticipants.stream()
                 .collect(Collectors.groupingBy(ChatParticipant::getChatRoomId));
 
+        // Batch-fetch unread counts (N+1 prevention)
+        Map<Long, Long> unreadCounts = roomIds.isEmpty()
+                ? Collections.emptyMap()
+                : messageRepository.countUnreadByRoomIds(memberId, roomIds);
+
         Slice<ChatRoomSummaryResponse> mapped = rooms.map(room -> {
             List<ChatParticipant> roomParticipants = participantsByRoom.getOrDefault(room.getId(), List.of());
             String displayName = computeDisplayName(memberId, roomParticipants, nicknamesByMemberId);
@@ -93,7 +98,8 @@ public class ChatRoomService {
                         return m != null ? m.getProfileImageUrl() : null;
                     })
                     .toList();
-            return toSummaryResponse(room, lastMessages.get(room.getId()), displayName, profileImages);
+            int unreadCount = unreadCounts.getOrDefault(room.getId(), 0L).intValue();
+            return toSummaryResponse(room, lastMessages.get(room.getId()), displayName, profileImages, unreadCount);
         });
         return SliceResponse.of(mapped);
     }
@@ -199,7 +205,7 @@ public class ChatRoomService {
         return otherNames.get(0) + ", " + otherNames.get(1) + " 외 " + (otherNames.size() - 2) + "명";
     }
 
-    private ChatRoomSummaryResponse toSummaryResponse(ChatRoom room, Message lastMsg, String displayName, List<String> participantProfileImages) {
+    private ChatRoomSummaryResponse toSummaryResponse(ChatRoom room, Message lastMsg, String displayName, List<String> participantProfileImages, int unreadCount) {
         ChatMessageResponse lastMessage = lastMsg != null ? toMessageResponse(lastMsg) : null;
 
         return ChatRoomSummaryResponse.builder()
@@ -211,6 +217,7 @@ public class ChatRoomService {
                 .displayName(displayName)
                 .participantProfileImages(participantProfileImages)
                 .lastMessage(lastMessage)
+                .unreadCount(unreadCount)
                 .updatedAt(room.getUpdatedAt())
                 .build();
     }

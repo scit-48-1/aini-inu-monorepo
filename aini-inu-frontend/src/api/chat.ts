@@ -12,6 +12,7 @@ export interface ChatRoomSummaryResponse {
   displayName: string;
   participantProfileImages: string[];
   lastMessage: ChatMessageResponse | null;
+  unreadCount: number;
   updatedAt: string;
 }
 

@@ -95,6 +95,8 @@ public class MessageService {
                 request.getClientMessageId()
         ));
 
+        chatRoomRepository.updateLastMessageAt(chatRoomId, saved.getSentAt());
+
         ChatMessageResponse response = toResponse(saved);
         chatRealtimeEventHandler.publishMessageCreated(chatRoomId, response);
         chatRealtimeEventHandler.publishMessageDelivered(chatRoomId, saved.getId(), memberId, OffsetDateTime.now());

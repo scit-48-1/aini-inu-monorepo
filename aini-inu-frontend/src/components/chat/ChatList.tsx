@@ -258,17 +258,31 @@ export function ChatList() {
                           </span>
                         )}
                       </div>
-                      <Typography
-                        variant="label"
-                        className={cn(
-                          'text-[8px] font-black uppercase tracking-tighter shrink-0',
-                          currentId === room.chatRoomId
-                            ? 'text-white/40'
-                            : 'text-zinc-300',
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Typography
+                          variant="label"
+                          className={cn(
+                            'text-[8px] font-black uppercase tracking-tighter',
+                            currentId === room.chatRoomId
+                              ? 'text-white/40'
+                              : 'text-zinc-300',
+                          )}
+                        >
+                          {getDisplayTime(room)}
+                        </Typography>
+                        {room.unreadCount > 0 && (
+                          <span
+                            className={cn(
+                              'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[9px] font-black leading-none',
+                              currentId === room.chatRoomId
+                                ? 'bg-white/20 text-white'
+                                : 'bg-amber-500 text-white',
+                            )}
+                          >
+                            {room.unreadCount > 99 ? '99+' : room.unreadCount}
+                          </span>
                         )}
-                      >
-                        {getDisplayTime(room)}
-                      </Typography>
+                      </div>
                     </div>
 
                     <Typography

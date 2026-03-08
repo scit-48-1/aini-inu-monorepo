@@ -90,6 +90,7 @@ class MessageServiceTest {
             assertThat(response.getContent()).isEqualTo("안녕하세요");
             then(chatRealtimeEventHandler).should().publishMessageCreated(eq(chatRoomId), any());
             then(chatRealtimeEventHandler).should().publishMessageDelivered(eq(chatRoomId), eq(100L), eq(memberId), any());
+            then(chatRoomRepository).should().updateLastMessageAt(eq(chatRoomId), eq(saved.getSentAt()));
         }
 
         @Test

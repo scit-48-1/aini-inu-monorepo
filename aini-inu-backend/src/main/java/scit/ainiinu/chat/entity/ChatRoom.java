@@ -15,6 +15,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import scit.ainiinu.common.entity.BaseTimeEntity;
 
+import java.time.OffsetDateTime;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -45,6 +47,9 @@ public class ChatRoom extends BaseTimeEntity {
 
     @Column(name = "walk_confirmed", nullable = false)
     private Boolean walkConfirmed;
+
+    @Column(name = "last_message_at")
+    private OffsetDateTime lastMessageAt;
 
     @Version
     private Long version;

@@ -14,4 +14,10 @@ public interface MessageRepositoryCustom {
      * Returns a map of chatRoomId → latest Message.
      */
     Map<Long, Message> findLastMessagesByRoomIds(List<Long> chatRoomIds);
+
+    /**
+     * Batch-count unread messages per chat room for a given member.
+     * Returns a map of chatRoomId → unread count.
+     */
+    Map<Long, Long> countUnreadByRoomIds(Long memberId, List<Long> roomIds);
 }

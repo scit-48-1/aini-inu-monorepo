@@ -200,6 +200,7 @@ class ChatControllerSliceTest {
                     .chatRoomId(100L)
                     .chatType("DIRECT")
                     .status("ACTIVE")
+                    .unreadCount(7)
                     .updatedAt(LocalDateTime.now())
                     .build();
             Slice<ChatRoomSummaryResponse> slice = new SliceImpl<>(List.of(room), PageRequest.of(0, 20), false);
@@ -210,7 +211,8 @@ class ChatControllerSliceTest {
                             .param("size", "20"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.content[0].chatRoomId").value(100L));
+                    .andExpect(jsonPath("$.data.content[0].chatRoomId").value(100L))
+                    .andExpect(jsonPath("$.data.content[0].unreadCount").value(7));
         }
 
         @Test

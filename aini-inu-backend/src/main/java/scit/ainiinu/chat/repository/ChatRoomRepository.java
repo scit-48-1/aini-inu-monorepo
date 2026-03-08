@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import scit.ainiinu.chat.entity.ChatRoom;
@@ -12,6 +13,7 @@ import scit.ainiinu.chat.entity.ChatRoomOrigin;
 import scit.ainiinu.chat.entity.ChatRoomStatus;
 import scit.ainiinu.chat.entity.ChatRoomType;
 
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
@@ -101,7 +103,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             )
               and (:status is null or cr.status = :status)
               and (:origin is null or cr.origin = :origin)
-            order by cr.updatedAt desc, cr.id desc
+            order by cr.lastMessageAt desc nulls last, cr.id desc
             """)
     Slice<ChatRoom> findAccessibleRoomsByMemberId(
             @Param("memberId") Long memberId,
@@ -109,4 +111,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             @Param("origin") ChatRoomOrigin origin,
             Pageable pageable
     );
+
+    @Modifying
+    @Query("UPDATE ChatRoom cr SET cr.lastMessageAt = :sentAt WHERE cr.id = :roomId AND (cr.lastMessageAt IS NULL OR cr.lastMessageAt < :sentAt)")
+    void updateLastMessageAt(@Param("roomId") Long roomId, @Param("sentAt") OffsetDateTime sentAt);
 }

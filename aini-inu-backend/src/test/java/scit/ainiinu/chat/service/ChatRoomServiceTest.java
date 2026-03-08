@@ -33,13 +33,16 @@ import scit.ainiinu.pet.repository.PetRepository;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class ChatRoomServiceTest {
@@ -92,6 +95,8 @@ class ChatRoomServiceTest {
             Member partnerMember = createMember(2L, "홍길동");
             given(memberRepository.findAllById(any()))
                     .willReturn(List.of(partnerMember));
+            given(messageRepository.countUnreadByRoomIds(eq(memberId), anyList()))
+                    .willReturn(Collections.emptyMap());
 
             // when
             SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, null, pageable);
@@ -124,6 +129,8 @@ class ChatRoomServiceTest {
 
             given(memberRepository.findAllById(any()))
                     .willReturn(List.of(createMember(2L, "홍길동"), createMember(3L, "김철수")));
+            given(messageRepository.countUnreadByRoomIds(eq(memberId), anyList()))
+                    .willReturn(Collections.emptyMap());
 
             // when
             SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, null, pageable);
@@ -160,6 +167,8 @@ class ChatRoomServiceTest {
                             createMember(3L, "김철수"),
                             createMember(4L, "이영희")
                     ));
+            given(messageRepository.countUnreadByRoomIds(eq(memberId), anyList()))
+                    .willReturn(Collections.emptyMap());
 
             // when
             SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, null, pageable);
@@ -191,6 +200,8 @@ class ChatRoomServiceTest {
 
             given(memberRepository.findAllById(any()))
                     .willReturn(List.of(createMember(2L, "홍길동")));
+            given(messageRepository.countUnreadByRoomIds(eq(memberId), anyList()))
+                    .willReturn(Collections.emptyMap());
 
             // when
             SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, null, pageable);
@@ -216,6 +227,117 @@ class ChatRoomServiceTest {
 
             // then
             assertThat(result.getContent()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("unreadCount가 응답에 포함된다")
+        void unreadCount_includedInResponse() {
+            // given
+            Long memberId = 1L;
+            Pageable pageable = PageRequest.of(0, 20);
+
+            ChatRoom room1 = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
+            setRoomId(room1, 10L);
+            ChatRoom room2 = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
+            setRoomId(room2, 20L);
+
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), any(), any(), eq(pageable)))
+                    .willReturn(new SliceImpl<>(List.of(room1, room2), pageable, false));
+            given(messageRepository.findLastMessagesByRoomIds(anyList()))
+                    .willReturn(Collections.emptyMap());
+
+            ChatParticipant cp1 = createParticipant(1L, 10L, memberId);
+            ChatParticipant cp2 = createParticipant(2L, 10L, 2L);
+            ChatParticipant cp3 = createParticipant(3L, 20L, memberId);
+            ChatParticipant cp4 = createParticipant(4L, 20L, 3L);
+            given(chatParticipantRepository.findAllByChatRoomIdIn(anyList()))
+                    .willReturn(List.of(cp1, cp2, cp3, cp4));
+
+            given(memberRepository.findAllById(any()))
+                    .willReturn(List.of(createMember(2L, "유저2"), createMember(3L, "유저3")));
+
+            // room1: 5건 unread, room2: 0건
+            given(messageRepository.countUnreadByRoomIds(eq(memberId), anyList()))
+                    .willReturn(Map.of(10L, 5L));
+
+            // when
+            SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, null, pageable);
+
+            // then
+            List<ChatRoomSummaryResponse> content = result.getContent();
+            assertThat(content).hasSize(2);
+
+            ChatRoomSummaryResponse summary1 = content.stream()
+                    .filter(r -> r.getChatRoomId().equals(10L)).findFirst().orElseThrow();
+            assertThat(summary1.getUnreadCount()).isEqualTo(5);
+
+            ChatRoomSummaryResponse summary2 = content.stream()
+                    .filter(r -> r.getChatRoomId().equals(20L)).findFirst().orElseThrow();
+            assertThat(summary2.getUnreadCount()).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("unread가 없는 방은 unreadCount가 0이다")
+        void unreadCount_zeroWhenAllRead() {
+            // given
+            Long memberId = 1L;
+            Pageable pageable = PageRequest.of(0, 20);
+
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
+            setRoomId(room, 10L);
+
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), any(), any(), eq(pageable)))
+                    .willReturn(new SliceImpl<>(List.of(room), pageable, false));
+            given(messageRepository.findLastMessagesByRoomIds(anyList()))
+                    .willReturn(Collections.emptyMap());
+
+            ChatParticipant me = createParticipant(1L, 10L, memberId);
+            ChatParticipant partner = createParticipant(2L, 10L, 2L);
+            given(chatParticipantRepository.findAllByChatRoomIdIn(anyList()))
+                    .willReturn(List.of(me, partner));
+            given(memberRepository.findAllById(any()))
+                    .willReturn(List.of(createMember(2L, "홍길동")));
+
+            // 빈 맵 → unread 없음
+            given(messageRepository.countUnreadByRoomIds(eq(memberId), anyList()))
+                    .willReturn(Collections.emptyMap());
+
+            // when
+            SliceResponse<ChatRoomSummaryResponse> result = chatRoomService.getRooms(memberId, null, null, pageable);
+
+            // then
+            assertThat(result.getContent().get(0).getUnreadCount()).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("countUnreadByRoomIds가 호출된다")
+        void countUnreadByRoomIds_called() {
+            // given
+            Long memberId = 1L;
+            Pageable pageable = PageRequest.of(0, 20);
+
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
+            setRoomId(room, 10L);
+
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), any(), any(), eq(pageable)))
+                    .willReturn(new SliceImpl<>(List.of(room), pageable, false));
+            given(messageRepository.findLastMessagesByRoomIds(anyList()))
+                    .willReturn(Collections.emptyMap());
+
+            ChatParticipant me = createParticipant(1L, 10L, memberId);
+            ChatParticipant partner = createParticipant(2L, 10L, 2L);
+            given(chatParticipantRepository.findAllByChatRoomIdIn(anyList()))
+                    .willReturn(List.of(me, partner));
+            given(memberRepository.findAllById(any()))
+                    .willReturn(List.of(createMember(2L, "홍길동")));
+            given(messageRepository.countUnreadByRoomIds(eq(memberId), anyList()))
+                    .willReturn(Collections.emptyMap());
+
+            // when
+            chatRoomService.getRooms(memberId, null, null, pageable);
+
+            // then
+            then(messageRepository).should().countUnreadByRoomIds(eq(memberId), eq(List.of(10L)));
         }
     }
 

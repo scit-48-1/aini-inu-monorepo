@@ -68,4 +68,33 @@ public class MessageRepositoryImpl implements MessageRepositoryCustom {
         }
         return result;
     }
+
+    @Override
+    public Map<Long, Long> countUnreadByRoomIds(Long memberId, List<Long> roomIds) {
+        if (roomIds == null || roomIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        String jpql = """
+                select cp.chatRoomId, count(m)
+                from Message m, ChatParticipant cp
+                where m.chatRoomId = cp.chatRoomId
+                  and cp.memberId = :memberId
+                  and cp.chatRoomId in :roomIds
+                  and cp.leftAt is null
+                  and (cp.lastReadMessageId is null or m.id > cp.lastReadMessageId)
+                group by cp.chatRoomId
+                """;
+
+        List<Object[]> rows = entityManager.createQuery(jpql, Object[].class)
+                .setParameter("memberId", memberId)
+                .setParameter("roomIds", roomIds)
+                .getResultList();
+
+        Map<Long, Long> result = new LinkedHashMap<>();
+        for (Object[] row : rows) {
+            result.put((Long) row[0], (Long) row[1]);
+        }
+        return result;
+    }
 }

@@ -101,6 +101,7 @@ class ChatServiceCoverageTest {
             Slice<ChatRoom> slice = new SliceImpl<>(List.of(room), PageRequest.of(0, 20), false);
             given(chatRoomRepository.findAccessibleRoomsByMemberId(1L, null, null, PageRequest.of(0, 20))).willReturn(slice);
             given(messageRepository.findLastMessagesByRoomIds(List.of(10L))).willReturn(java.util.Collections.emptyMap());
+            given(messageRepository.countUnreadByRoomIds(1L, List.of(10L))).willReturn(java.util.Collections.emptyMap());
 
             SliceResponse<ChatRoomSummaryResponse> response = chatRoomService.getRooms(1L, null, null, PageRequest.of(0, 20));
 
@@ -129,6 +130,7 @@ class ChatServiceCoverageTest {
             ReflectionTestUtils.setField(msg3, "id", 300L);
             given(messageRepository.findLastMessagesByRoomIds(List.of(1L, 2L, 3L)))
                     .willReturn(java.util.Map.of(1L, msg1, 3L, msg3));
+            given(messageRepository.countUnreadByRoomIds(1L, List.of(1L, 2L, 3L))).willReturn(java.util.Collections.emptyMap());
 
             // when
             SliceResponse<ChatRoomSummaryResponse> response = chatRoomService.getRooms(1L, null, null, PageRequest.of(0, 20));

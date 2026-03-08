@@ -27,6 +27,8 @@ public class ChatRoomSummaryResponse {
     private ChatMessageResponse lastMessage;
     @Schema(description = "참여자 프로필 이미지 목록입니다 (본인 제외, 최대 4명).", example = "[\"https://example.com/profile.jpg\"]")
     private List<String> participantProfileImages;
+    @Schema(description = "안 읽은 메시지 수입니다.", example = "3")
+    private int unreadCount;
     @Schema(description = "수정 시각(UTC)입니다.", example = "2026-03-05T01:20:00Z")
     private LocalDateTime updatedAt;
 }
