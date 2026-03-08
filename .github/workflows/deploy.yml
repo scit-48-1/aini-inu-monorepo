@@ -18,7 +18,7 @@ jobs:
           distribution: "temurin"
 
       - name: Build Backend Module
-        working-directory: aini-inu-monorepo-main/aini-inu-backend
+        working-directory: aini-inu-backend
         run: |
           chmod +x gradlew
           ./gradlew build -x test
@@ -29,9 +29,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "aini-inu-monorepo-main/aini-inu-backend/build/libs/*.jar"
+          source: "aini-inu-backend/build/libs/*.jar"
           target: "/home/ubuntu/app"
-          strip_components: 4
+          strip_components: 3
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
