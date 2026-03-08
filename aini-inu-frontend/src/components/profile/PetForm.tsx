@@ -30,6 +30,13 @@ const SIZE_OPTIONS = [
   { value: 'LARGE', label: '대형 (25kg 이상)' },
 ];
 
+const MBTI_TYPES = [
+  'ENFP', 'ENFJ', 'ENTP', 'ENTJ',
+  'ESFP', 'ESFJ', 'ESTP', 'ESTJ',
+  'INFP', 'INFJ', 'INTP', 'INTJ',
+  'ISFP', 'ISFJ', 'ISTP', 'ISTJ',
+] as const;
+
 const TODAY = new Date().toISOString().split('T')[0];
 
 export const PetForm: React.FC<PetFormProps> = ({
@@ -311,14 +318,23 @@ export const PetForm: React.FC<PetFormProps> = ({
       {/* MBTI */}
       <div className="space-y-3">
         <Typography variant="label">MBTI <span className="text-zinc-400 text-xs font-normal">(선택)</span></Typography>
-        <input
-          type="text"
-          placeholder="예: ENFP"
-          maxLength={4}
-          className="w-full bg-zinc-50 border border-zinc-100 rounded-[24px] py-5 px-8 font-bold text-navy-900 outline-none focus:ring-4 ring-amber-500/5 transition-all uppercase"
-          value={mbti}
-          onChange={e => setMbti(e.target.value.toUpperCase())}
-        />
+        <div className="flex flex-wrap gap-2">
+          {MBTI_TYPES.map(type => (
+            <button
+              key={type}
+              type="button"
+              className={cn(
+                'px-4 py-2 rounded-full text-sm font-bold border-2 transition-all',
+                mbti === type
+                  ? 'bg-amber-500 border-amber-500 text-white'
+                  : 'bg-zinc-50 border-zinc-100 text-zinc-500 hover:border-amber-300'
+              )}
+              onClick={() => setMbti(mbti === type ? '' : type)}
+            >
+              {type}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Certification Number */}
