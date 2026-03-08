@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  font-size: 12px; /* 75% of 16px — matches 75% browser zoom for all rem-based values */
+}
+
 :root {
   --background: #FDFCF8; /* 라이트: 따뜻한 미색 */
   --foreground: #0A0A23; /* 라이트: 깊은 네이비 */
