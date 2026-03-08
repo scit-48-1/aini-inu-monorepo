@@ -4,6 +4,7 @@ services:
     container_name: aini-inu-postgres
     restart: unless-stopped
     environment:
+      TZ: Asia/Seoul
       POSTGRES_DB: ainiinu
       POSTGRES_USER: ainiinu
       POSTGRES_PASSWORD: ainiinu
@@ -30,6 +31,7 @@ services:
     env_file:
       - .env.docker
     environment:
+      TZ: Asia/Seoul
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ainiinu
       SPRING_DATASOURCE_USERNAME: ainiinu
       SPRING_DATASOURCE_PASSWORD: ainiinu

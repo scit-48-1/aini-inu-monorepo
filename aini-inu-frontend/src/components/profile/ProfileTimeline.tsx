@@ -32,24 +32,38 @@ const EVENT_CONFIG: Record<TimelineEventType, { icon: LucideIcon; color: string;
   SIGHTING_CREATED: { icon: Eye, color: 'bg-amber-500', label: '목격 제보' },
 };
 
-function formatRelativeTime(dateString: string): string {
-  const now = Date.now();
-  const date = new Date(dateString).getTime();
-  const diff = now - date;
+function formatAbsoluteTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
 
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return '방금 전';
-  if (minutes < 60) return `${minutes}분 전`;
+  const isToday =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
 
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}시간 전`;
+  if (isToday) {
+    return date.toLocaleTimeString('ko-KR', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }
 
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}일 전`;
+  const isThisYear = date.getFullYear() === now.getFullYear();
 
-  return new Date(dateString).toLocaleDateString('ko-KR', {
+  if (isThisYear) {
+    return date.toLocaleString('ko-KR', {
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }
+
+  return date.toLocaleDateString('ko-KR', {
     year: 'numeric',
-    month: 'short',
+    month: 'long',
     day: 'numeric',
   });
 }
@@ -156,7 +170,7 @@ export const ProfileTimeline: React.FC<ProfileTimelineProps> = ({ memberId }) =>
                             {config.label}
                           </span>
                           <span className="text-[10px] text-zinc-400 font-medium">
-                            {formatRelativeTime(event.occurredAt)}
+                            {formatAbsoluteTime(event.occurredAt)}
                           </span>
                         </div>
                         {event.title && (
