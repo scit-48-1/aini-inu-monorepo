@@ -113,7 +113,6 @@ public class LostPetAiClientImpl implements LostPetAiClient {
     private String buildAnalyzeQueryText(LostPetAnalyzeRequest request) {
         StringBuilder builder = new StringBuilder();
         builder.append(safe(request.resolveMode())).append(' ');
-        builder.append(safe(request.resolveImageSource())).append(' ');
         builder.append(safe(request.getQueryText())).append(' ');
         if (request.getLatitude() != null && request.getLongitude() != null) {
             builder.append(request.getLatitude()).append(',').append(request.getLongitude());

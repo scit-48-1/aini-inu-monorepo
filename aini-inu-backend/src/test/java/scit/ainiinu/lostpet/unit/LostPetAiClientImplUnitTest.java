@@ -102,6 +102,77 @@ class LostPetAiClientImplUnitTest {
         }
 
         @Test
+        @DisplayName("쿼리 텍스트에 imageUrl이 포함되지 않고 queryText만 포함된다")
+        void queryTextDoesNotContainImageUrl() {
+            given(vectorStoreProvider.getIfAvailable()).willReturn(vectorStore);
+            given(vectorStore.similaritySearch(any(SearchRequest.class)))
+                    .willReturn(List.of());
+
+            LostPetAnalyzeRequest request = LostPetAnalyzeRequest.builder()
+                    .lostPetId(1L)
+                    .imageUrl("https://cdn/should-not-appear.jpg")
+                    .mode("LOST")
+                    .queryText("하얀 포메라니안 서울시 강남구")
+                    .build();
+
+            lostPetAiClient.analyze(request);
+
+            ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
+            verify(vectorStore).similaritySearch(captor.capture());
+            String query = captor.getValue().getQuery();
+            assertThat(query).doesNotContain("https://cdn/should-not-appear.jpg");
+            assertThat(query).contains("하얀 포메라니안 서울시 강남구");
+            assertThat(query).contains("LOST");
+        }
+
+        @Test
+        @DisplayName("queryText와 좌표가 모두 포함된 쿼리를 생성한다")
+        void queryIncludesQueryTextAndCoordinates() {
+            given(vectorStoreProvider.getIfAvailable()).willReturn(vectorStore);
+            given(vectorStore.similaritySearch(any(SearchRequest.class)))
+                    .willReturn(List.of());
+
+            LostPetAnalyzeRequest request = LostPetAnalyzeRequest.builder()
+                    .lostPetId(1L)
+                    .imageUrl("https://cdn/photo.jpg")
+                    .mode("LOST")
+                    .queryText("갈색 말티즈 빨간 목줄")
+                    .latitude(37.50)
+                    .longitude(127.03)
+                    .build();
+
+            lostPetAiClient.analyze(request);
+
+            ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
+            verify(vectorStore).similaritySearch(captor.capture());
+            String query = captor.getValue().getQuery();
+            assertThat(query).contains("갈색 말티즈 빨간 목줄");
+            assertThat(query).contains("37.5");
+            assertThat(query).contains("127.03");
+            assertThat(query).doesNotContain("cdn/photo.jpg");
+        }
+
+        @Test
+        @DisplayName("queryText가 없으면 mode만으로 쿼리가 구성된다")
+        void queryWithOnlyMode() {
+            given(vectorStoreProvider.getIfAvailable()).willReturn(vectorStore);
+            given(vectorStore.similaritySearch(any(SearchRequest.class)))
+                    .willReturn(List.of());
+
+            LostPetAnalyzeRequest request = LostPetAnalyzeRequest.builder()
+                    .lostPetId(1L)
+                    .imageUrl("https://cdn/photo.jpg")
+                    .build();
+
+            lostPetAiClient.analyze(request);
+
+            ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
+            verify(vectorStore).similaritySearch(captor.capture());
+            String query = captor.getValue().getQuery();
+            assertThat(query).isEqualTo("LOST");
+        }
+
+        @Test
         @DisplayName("spring-ai 파이프라인에서 VectorStore 빈이 없으면 예외를 던진다")
         void analyzeWithSpringAiWithoutVectorStore() {
             given(vectorStoreProvider.getIfAvailable()).willReturn(null);

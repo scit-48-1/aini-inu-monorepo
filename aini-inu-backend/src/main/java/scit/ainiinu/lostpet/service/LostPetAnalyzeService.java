@@ -54,6 +54,7 @@ public class LostPetAnalyzeService {
             throw new LostPetException(LostPetErrorCode.L403_FORBIDDEN);
         }
 
+        enrichQueryTextFromReport(request, report);
         LostPetAiResult result = analyzeWithAiOrThrow(request, report, startedAt);
         List<LostPetAiCandidate> aiCandidates = result.candidates() == null
                 ? List.of()
@@ -112,6 +113,29 @@ public class LostPetAnalyzeService {
                 .summary(result.summary() == null ? "" : result.summary())
                 .candidates(candidates)
                 .build();
+    }
+
+    private void enrichQueryTextFromReport(LostPetAnalyzeRequest request, LostPetReport report) {
+        StringBuilder enriched = new StringBuilder();
+        if (report.getPetName() != null && !report.getPetName().isBlank()) {
+            enriched.append(report.getPetName()).append(' ');
+        }
+        if (report.getBreed() != null && !report.getBreed().isBlank()) {
+            enriched.append(report.getBreed()).append(' ');
+        }
+        if (report.getDescription() != null && !report.getDescription().isBlank()) {
+            enriched.append(report.getDescription()).append(' ');
+        }
+        if (report.getLastSeenLocation() != null && !report.getLastSeenLocation().isBlank()) {
+            enriched.append(report.getLastSeenLocation()).append(' ');
+        }
+        if (request.getQueryText() != null && !request.getQueryText().isBlank()) {
+            enriched.append(request.getQueryText());
+        }
+        String result = enriched.toString().trim();
+        if (!result.isEmpty()) {
+            request.setQueryText(result);
+        }
     }
 
     private LostPetAiResult analyzeWithAiOrThrow(
