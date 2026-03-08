@@ -16,7 +16,8 @@ import java.util.List;
 @NoArgsConstructor
 public class WalkDiaryCreateRequest {
 
-    @Schema(description = "산책 모집글 ID입니다.", example = "101")
+    @NotNull
+    @Schema(description = "산책 모집글 ID입니다.", example = "101", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long threadId;
 
     @Schema(

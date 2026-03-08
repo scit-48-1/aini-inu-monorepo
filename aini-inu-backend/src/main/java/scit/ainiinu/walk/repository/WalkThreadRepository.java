@@ -40,4 +40,18 @@ public interface WalkThreadRepository extends JpaRepository<WalkThread, Long> {
             @Param("status") WalkThreadStatus status,
             @Param("createdAfter") LocalDateTime createdAfter
     );
+
+    @Query("""
+            SELECT t FROM WalkThread t
+            WHERE t.status = 'COMPLETED'
+              AND (t.authorId = :memberId
+                   OR t.id IN (SELECT a.threadId FROM WalkThreadApplication a
+                               WHERE a.memberId = :memberId AND a.status = 'JOINED'))
+              AND t.id NOT IN :excludeThreadIds
+            ORDER BY t.walkDate DESC, t.id DESC
+            """)
+    List<WalkThread> findAvailableThreadsForDiary(
+            @Param("memberId") Long memberId,
+            @Param("excludeThreadIds") List<Long> excludeThreadIds
+    );
 }

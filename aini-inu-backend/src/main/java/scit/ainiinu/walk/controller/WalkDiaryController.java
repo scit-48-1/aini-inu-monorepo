@@ -28,8 +28,11 @@ import scit.ainiinu.common.response.SliceResponse;
 import scit.ainiinu.common.security.annotation.CurrentMember;
 import scit.ainiinu.walk.dto.request.WalkDiaryCreateRequest;
 import scit.ainiinu.walk.dto.request.WalkDiaryPatchRequest;
+import scit.ainiinu.walk.dto.response.AvailableThreadResponse;
 import scit.ainiinu.walk.dto.response.WalkDiaryResponse;
 import scit.ainiinu.walk.service.WalkDiaryService;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -47,6 +50,15 @@ public class WalkDiaryController {
             @Valid @RequestBody WalkDiaryCreateRequest request
     ) {
         WalkDiaryResponse response = walkDiaryService.createDiary(memberId, request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/walk-diaries/available-threads")
+    @Operation(summary = "일기 작성 가능한 스레드 목록 조회", description = "완료된 산책 스레드 중 아직 일기를 작성하지 않은 스레드 목록을 반환합니다.")
+    public ResponseEntity<ApiResponse<List<AvailableThreadResponse>>> getAvailableThreads(
+            @CurrentMember Long memberId
+    ) {
+        List<AvailableThreadResponse> response = walkDiaryService.getAvailableThreads(memberId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

@@ -16,8 +16,10 @@ import scit.ainiinu.walk.dto.request.WalkDiaryPatchRequest;
 import scit.ainiinu.walk.dto.response.WalkDiaryResponse;
 import scit.ainiinu.walk.entity.WalkDiary;
 import scit.ainiinu.walk.entity.WalkThread;
+import scit.ainiinu.walk.entity.WalkThreadStatus;
 import scit.ainiinu.walk.exception.WalkDiaryErrorCode;
 import scit.ainiinu.walk.repository.WalkDiaryRepository;
+import scit.ainiinu.walk.repository.WalkThreadApplicationRepository;
 import scit.ainiinu.walk.repository.WalkThreadRepository;
 
 import java.math.BigDecimal;
@@ -43,6 +45,9 @@ class WalkDiaryServiceCrudTest {
     private WalkThreadRepository walkThreadRepository;
 
     @Mock
+    private WalkThreadApplicationRepository walkThreadApplicationRepository;
+
+    @Mock
     private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
@@ -56,13 +61,20 @@ class WalkDiaryServiceCrudTest {
         @DisplayName("공개 범위 미입력 시 기본값은 PUBLIC(true)다")
         void createDiary_defaultVisibilityPublic_success() {
             // given
+            Long memberId = 1L;
+            Long threadId = 100L;
             WalkDiaryCreateRequest request = new WalkDiaryCreateRequest();
+            request.setThreadId(threadId);
             request.setTitle("한강 산책 일기");
             request.setContent("오늘 날씨가 좋았다");
             request.setWalkDate(LocalDate.now());
             request.setPhotoUrls(List.of("https://cdn/1.jpg"));
             request.setIsPublic(null);
 
+            WalkThread completedThread = createActiveThread();
+            completedThread.complete();
+            given(walkThreadRepository.findById(threadId)).willReturn(Optional.of(completedThread));
+            given(walkDiaryRepository.existsByMemberIdAndThreadIdAndDeletedAtIsNull(memberId, threadId)).willReturn(false);
             given(walkDiaryRepository.save(any(WalkDiary.class))).willAnswer(invocation -> {
                 WalkDiary diary = invocation.getArgument(0);
                 ReflectionTestUtils.setField(diary, "id", 1L);
@@ -70,7 +82,7 @@ class WalkDiaryServiceCrudTest {
             });
 
             // when
-            WalkDiaryResponse response = walkDiaryService.createDiary(1L, request);
+            WalkDiaryResponse response = walkDiaryService.createDiary(memberId, request);
 
             // then
             assertThat(response.isPublic()).isTrue();
@@ -83,15 +95,23 @@ class WalkDiaryServiceCrudTest {
         @DisplayName("사진은 최대 5장까지만 허용한다")
         void createDiary_photoMaxFive_fail() {
             // given
+            Long memberId = 1L;
+            Long threadId = 100L;
             WalkDiaryCreateRequest request = new WalkDiaryCreateRequest();
+            request.setThreadId(threadId);
             request.setTitle("한강 산책 일기");
             request.setContent("본문");
             request.setWalkDate(LocalDate.now());
             request.setPhotoUrls(List.of("1", "2", "3", "4", "5", "6"));
             request.setIsPublic(true);
 
+            WalkThread completedThread = createActiveThread();
+            completedThread.complete();
+            given(walkThreadRepository.findById(threadId)).willReturn(Optional.of(completedThread));
+            given(walkDiaryRepository.existsByMemberIdAndThreadIdAndDeletedAtIsNull(memberId, threadId)).willReturn(false);
+
             // when & then
-            assertThatThrownBy(() -> walkDiaryService.createDiary(1L, request))
+            assertThatThrownBy(() -> walkDiaryService.createDiary(memberId, request))
                     .isInstanceOf(BusinessException.class)
                     .hasFieldOrPropertyWithValue("errorCode", WalkDiaryErrorCode.IMAGE_COUNT_EXCEEDED);
         }
@@ -99,14 +119,22 @@ class WalkDiaryServiceCrudTest {
         @Test
         @DisplayName("본문이 300자를 초과하면 생성할 수 없다")
         void createDiary_contentTooLong_fail() {
+            Long memberId = 1L;
+            Long threadId = 100L;
             WalkDiaryCreateRequest request = new WalkDiaryCreateRequest();
+            request.setThreadId(threadId);
             request.setTitle("한강 산책 일기");
             request.setContent("a".repeat(301));
             request.setWalkDate(LocalDate.now());
             request.setPhotoUrls(List.of());
             request.setIsPublic(true);
 
-            assertThatThrownBy(() -> walkDiaryService.createDiary(1L, request))
+            WalkThread completedThread = createActiveThread();
+            completedThread.complete();
+            given(walkThreadRepository.findById(threadId)).willReturn(Optional.of(completedThread));
+            given(walkDiaryRepository.existsByMemberIdAndThreadIdAndDeletedAtIsNull(memberId, threadId)).willReturn(false);
+
+            assertThatThrownBy(() -> walkDiaryService.createDiary(memberId, request))
                     .isInstanceOf(BusinessException.class)
                     .hasFieldOrPropertyWithValue("errorCode", WalkDiaryErrorCode.INVALID_REQUEST);
         }

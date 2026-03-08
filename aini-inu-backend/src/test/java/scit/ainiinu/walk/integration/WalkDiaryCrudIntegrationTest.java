@@ -15,8 +15,16 @@ import scit.ainiinu.member.entity.enums.MemberType;
 import scit.ainiinu.member.repository.MemberRepository;
 import scit.ainiinu.testsupport.IntegrationTestProfile;
 import scit.ainiinu.walk.dto.request.WalkDiaryCreateRequest;
+import scit.ainiinu.walk.entity.WalkChatType;
+import scit.ainiinu.walk.entity.WalkThread;
+import scit.ainiinu.walk.entity.WalkThreadApplication;
+import scit.ainiinu.walk.entity.WalkThreadStatus;
+import scit.ainiinu.walk.repository.WalkThreadApplicationRepository;
+import scit.ainiinu.walk.repository.WalkThreadRepository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -47,6 +55,12 @@ class WalkDiaryCrudIntegrationTest {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private WalkThreadRepository walkThreadRepository;
+
+    @Autowired
+    private WalkThreadApplicationRepository walkThreadApplicationRepository;
+
     @Test
     @DisplayName("일기 CRUD 전체 흐름과 비작성자 수정 거절이 동작한다")
     void diaryCrudAndOwnerGuard_success() throws Exception {
@@ -65,7 +79,10 @@ class WalkDiaryCrudIntegrationTest {
         String ownerToken = jwtTokenProvider.generateAccessToken(owner.getId());
         String otherToken = jwtTokenProvider.generateAccessToken(other.getId());
 
+        WalkThread thread = createCompletedThread(owner.getId());
+
         WalkDiaryCreateRequest createRequest = new WalkDiaryCreateRequest();
+        createRequest.setThreadId(thread.getId());
         createRequest.setTitle("CRUD 통합 테스트");
         createRequest.setContent("본문");
         createRequest.setWalkDate(LocalDate.now());
@@ -127,7 +144,10 @@ class WalkDiaryCrudIntegrationTest {
                 .build());
         String ownerToken = jwtTokenProvider.generateAccessToken(owner.getId());
 
+        WalkThread thread = createCompletedThread(owner.getId());
+
         WalkDiaryCreateRequest request = new WalkDiaryCreateRequest();
+        request.setThreadId(thread.getId());
         request.setTitle("본문 길이 검증");
         request.setContent("a".repeat(301));
         request.setWalkDate(LocalDate.now());
@@ -141,5 +161,142 @@ class WalkDiaryCrudIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorCode").value("C002"));
+    }
+
+    @Test
+    @DisplayName("미완료 스레드로 일기 생성 시도 → 400 에러코드 검증")
+    void createDiary_threadNotCompleted_fail() throws Exception {
+        Member owner = memberRepository.save(Member.builder()
+                .email("diary-owner4@test.com")
+                .nickname("owner4")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+        String ownerToken = jwtTokenProvider.generateAccessToken(owner.getId());
+
+        WalkThread recruitingThread = walkThreadRepository.save(WalkThread.builder()
+                .authorId(owner.getId())
+                .title("모집중 스레드")
+                .description("설명")
+                .walkDate(LocalDate.now())
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(1))
+                .chatType(WalkChatType.GROUP)
+                .maxParticipants(5)
+                .allowNonPetOwner(true)
+                .isVisibleAlways(true)
+                .placeName("서울숲")
+                .latitude(BigDecimal.valueOf(37.54))
+                .longitude(BigDecimal.valueOf(127.04))
+                .address("성동구")
+                .status(WalkThreadStatus.RECRUITING)
+                .build());
+
+        WalkDiaryCreateRequest request = new WalkDiaryCreateRequest();
+        request.setThreadId(recruitingThread.getId());
+        request.setTitle("일기 제목");
+        request.setContent("일기 내용");
+        request.setWalkDate(LocalDate.now());
+        request.setIsPublic(true);
+
+        mockMvc.perform(post("/api/v1/walk-diaries")
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("WD400_THREAD_NOT_COMPLETED"));
+    }
+
+    @Test
+    @DisplayName("비참여자가 일기 생성 시도 → 403 에러코드 검증")
+    void createDiary_notParticipant_fail() throws Exception {
+        Member author = memberRepository.save(Member.builder()
+                .email("diary-author5@test.com")
+                .nickname("author5")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+        Member nonParticipant = memberRepository.save(Member.builder()
+                .email("diary-nonpart@test.com")
+                .nickname("nonpart")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+
+        String nonPartToken = jwtTokenProvider.generateAccessToken(nonParticipant.getId());
+        WalkThread thread = createCompletedThread(author.getId());
+
+        WalkDiaryCreateRequest request = new WalkDiaryCreateRequest();
+        request.setThreadId(thread.getId());
+        request.setTitle("일기 제목");
+        request.setContent("일기 내용");
+        request.setWalkDate(LocalDate.now());
+        request.setIsPublic(true);
+
+        mockMvc.perform(post("/api/v1/walk-diaries")
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + nonPartToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("WD403_NOT_THREAD_PARTICIPANT"));
+    }
+
+    @Test
+    @DisplayName("GET /walk-diaries/available-threads → 일기 미작성 COMPLETED 스레드만 반환")
+    void getAvailableThreads_success() throws Exception {
+        Member owner = memberRepository.save(Member.builder()
+                .email("diary-owner6@test.com")
+                .nickname("owner6")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+        String ownerToken = jwtTokenProvider.generateAccessToken(owner.getId());
+
+        WalkThread completedThread = createCompletedThread(owner.getId());
+
+        // recruiting thread should not appear
+        walkThreadRepository.save(WalkThread.builder()
+                .authorId(owner.getId())
+                .title("모집중")
+                .description("설명")
+                .walkDate(LocalDate.now())
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(1))
+                .chatType(WalkChatType.GROUP)
+                .maxParticipants(5)
+                .allowNonPetOwner(true)
+                .isVisibleAlways(true)
+                .placeName("한강")
+                .latitude(BigDecimal.valueOf(37.54))
+                .longitude(BigDecimal.valueOf(127.04))
+                .address("마포구")
+                .status(WalkThreadStatus.RECRUITING)
+                .build());
+
+        mockMvc.perform(get("/api/v1/walk-diaries/available-threads")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].threadId").value(completedThread.getId()));
+    }
+
+    private WalkThread createCompletedThread(Long authorId) {
+        WalkThread thread = walkThreadRepository.save(WalkThread.builder()
+                .authorId(authorId)
+                .title("완료 스레드")
+                .description("설명")
+                .walkDate(LocalDate.now())
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(1))
+                .chatType(WalkChatType.GROUP)
+                .maxParticipants(5)
+                .allowNonPetOwner(true)
+                .isVisibleAlways(true)
+                .placeName("서울숲")
+                .latitude(BigDecimal.valueOf(37.54))
+                .longitude(BigDecimal.valueOf(127.04))
+                .address("성동구")
+                .status(WalkThreadStatus.RECRUITING)
+                .build());
+        thread.complete();
+        return walkThreadRepository.save(thread);
     }
 }

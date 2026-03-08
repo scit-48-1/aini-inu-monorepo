@@ -49,6 +49,7 @@ export function useDiaryForm() {
 
   const toCreateRequest = useCallback((): WalkDiaryCreateRequest => {
     const req: WalkDiaryCreateRequest = {
+      threadId: form.threadId!,
       title: form.title,
       content: form.content,
       walkDate: form.walkDate,
@@ -56,9 +57,6 @@ export function useDiaryForm() {
     };
     if (form.photoUrls.length > 0) {
       req.photoUrls = form.photoUrls;
-    }
-    if (form.threadId) {
-      req.threadId = form.threadId;
     }
     return req;
   }, [form]);

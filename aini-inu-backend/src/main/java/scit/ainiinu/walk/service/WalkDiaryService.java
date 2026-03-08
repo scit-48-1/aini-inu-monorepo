@@ -13,15 +13,20 @@ import scit.ainiinu.common.exception.BusinessException;
 import scit.ainiinu.common.response.SliceResponse;
 import scit.ainiinu.walk.dto.request.WalkDiaryCreateRequest;
 import scit.ainiinu.walk.dto.request.WalkDiaryPatchRequest;
+import scit.ainiinu.walk.dto.response.AvailableThreadResponse;
 import scit.ainiinu.walk.dto.response.WalkDiaryResponse;
 import scit.ainiinu.walk.entity.WalkDiary;
 import scit.ainiinu.walk.entity.WalkThread;
+import scit.ainiinu.walk.entity.WalkThreadApplicationStatus;
 import scit.ainiinu.walk.entity.WalkThreadStatus;
 import scit.ainiinu.walk.exception.WalkDiaryErrorCode;
 import scit.ainiinu.walk.repository.WalkDiaryRepository;
+import scit.ainiinu.walk.repository.WalkThreadApplicationRepository;
 import scit.ainiinu.walk.repository.WalkThreadRepository;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -31,11 +36,12 @@ public class WalkDiaryService {
 
     private final WalkDiaryRepository walkDiaryRepository;
     private final WalkThreadRepository walkThreadRepository;
+    private final WalkThreadApplicationRepository walkThreadApplicationRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public WalkDiaryResponse createDiary(Long memberId, WalkDiaryCreateRequest request) {
-        validateThreadId(request.getThreadId());
+        validateThreadForCreate(memberId, request.getThreadId());
 
         WalkDiary walkDiary = WalkDiary.create(
                 memberId,
@@ -149,6 +155,36 @@ public class WalkDiaryService {
         }
 
         return "ACTIVE";
+    }
+
+    public List<AvailableThreadResponse> getAvailableThreads(Long memberId) {
+        List<Long> alreadyWrittenThreadIds = walkDiaryRepository.findThreadIdsByMemberIdAndDeletedAtIsNull(memberId);
+        List<Long> excludeIds = alreadyWrittenThreadIds.isEmpty() ? Collections.singletonList(-1L) : alreadyWrittenThreadIds;
+
+        List<WalkThread> threads = walkThreadRepository.findAvailableThreadsForDiary(memberId, excludeIds);
+        return threads.stream()
+                .map(AvailableThreadResponse::from)
+                .toList();
+    }
+
+    private void validateThreadForCreate(Long memberId, Long threadId) {
+        WalkThread thread = walkThreadRepository.findById(threadId)
+                .orElseThrow(() -> new BusinessException(WalkDiaryErrorCode.THREAD_NOT_FOUND));
+
+        if (thread.getStatus() != WalkThreadStatus.COMPLETED) {
+            throw new BusinessException(WalkDiaryErrorCode.THREAD_NOT_COMPLETED);
+        }
+
+        boolean isParticipant = thread.isAuthor(memberId)
+                || walkThreadApplicationRepository.findByThreadIdAndMemberIdAndStatus(
+                        threadId, memberId, WalkThreadApplicationStatus.JOINED).isPresent();
+        if (!isParticipant) {
+            throw new BusinessException(WalkDiaryErrorCode.NOT_THREAD_PARTICIPANT);
+        }
+
+        if (walkDiaryRepository.existsByMemberIdAndThreadIdAndDeletedAtIsNull(memberId, threadId)) {
+            throw new BusinessException(WalkDiaryErrorCode.DIARY_ALREADY_EXISTS);
+        }
     }
 
     private void validateThreadId(Long threadId) {

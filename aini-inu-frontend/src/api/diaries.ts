@@ -3,8 +3,16 @@ import type { PaginationParams, SliceResponse } from './types';
 
 // --- Types ---
 
+export interface AvailableThreadResponse {
+  threadId: number;
+  title: string;
+  walkDate: string;
+  placeName: string;
+  startTime: string;
+}
+
 export interface WalkDiaryCreateRequest {
-  threadId?: number;
+  threadId: number;
   title: string;
   content: string;
   photoUrls?: string[];
@@ -72,4 +80,8 @@ export async function deleteDiary(diaryId: number): Promise<void> {
 export async function getFollowingDiaries(params?: PaginationParams): Promise<SliceResponse<WalkDiaryResponse>> {
   const query = buildQuery({ ...params });
   return apiClient.get<SliceResponse<WalkDiaryResponse>>(`/walk-diaries/following${query}`);
+}
+
+export async function getAvailableThreads(): Promise<AvailableThreadResponse[]> {
+  return apiClient.get<AvailableThreadResponse[]>('/walk-diaries/available-threads');
 }

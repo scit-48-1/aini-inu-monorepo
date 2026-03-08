@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { useDiaryForm } from '@/hooks/forms/useDiaryForm';
 import { uploadImageFlow } from '@/api/upload';
-import type { WalkDiaryCreateRequest, WalkDiaryPatchRequest, WalkDiaryResponse } from '@/api/diaries';
+import { getAvailableThreads } from '@/api/diaries';
+import type { WalkDiaryCreateRequest, WalkDiaryPatchRequest, WalkDiaryResponse, AvailableThreadResponse } from '@/api/diaries';
 import { toast } from 'sonner';
 
 interface DiaryCreateModalProps {
@@ -37,6 +38,8 @@ export const DiaryCreateModal: React.FC<DiaryCreateModalProps> = ({
 
   const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [availableThreads, setAvailableThreads] = useState<AvailableThreadResponse[]>([]);
+  const [isLoadingThreads, setIsLoadingThreads] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = !!editDiary;
@@ -47,6 +50,14 @@ export const DiaryCreateModal: React.FC<DiaryCreateModalProps> = ({
       loadForEdit(editDiary);
     } else {
       resetForm();
+      setIsLoadingThreads(true);
+      getAvailableThreads()
+        .then(setAvailableThreads)
+        .catch(() => {
+          toast.error('스레드 목록을 불러오지 못했습니다.');
+          setAvailableThreads([]);
+        })
+        .finally(() => setIsLoadingThreads(false));
     }
     setErrors({});
   }, [isOpen, editDiary, loadForEdit, resetForm]);
@@ -55,6 +66,9 @@ export const DiaryCreateModal: React.FC<DiaryCreateModalProps> = ({
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
+    if (!isEditMode && !form.threadId) {
+      newErrors.threadId = '산책 스레드를 선택해주세요.';
+    }
     if (!form.title.trim()) {
       newErrors.title = '제목을 입력해주세요.';
     }
@@ -265,24 +279,51 @@ export const DiaryCreateModal: React.FC<DiaryCreateModalProps> = ({
             ) : null}
           </div>
 
-          {/* Thread ID (optional) */}
-          <div>
-            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
-              연결된 산책 스레드 (선택사항)
-            </label>
-            <input
-              type="number"
-              value={form.threadId ?? ''}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  threadId: e.target.value ? Number(e.target.value) : undefined,
-                }))
-              }
-              placeholder="스레드 번호"
-              className="w-full px-4 py-3 rounded-2xl border border-zinc-200 bg-zinc-50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
-            />
-          </div>
+          {/* Thread selector (required for create, hidden for edit) */}
+          {!isEditMode ? (
+            <div>
+              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
+                완료된 산책 스레드
+              </label>
+              {isLoadingThreads ? (
+                <div className="flex items-center gap-2 px-4 py-3 text-sm text-zinc-400">
+                  <Loader2 size={14} className="animate-spin" />
+                  불러오는 중...
+                </div>
+              ) : availableThreads.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-zinc-400 bg-zinc-50 rounded-2xl border border-zinc-200">
+                  완료된 산책이 없습니다.
+                </p>
+              ) : (
+                <select
+                  value={form.threadId ?? ''}
+                  onChange={(e) => {
+                    const selectedId = e.target.value ? Number(e.target.value) : undefined;
+                    const selectedThread = availableThreads.find((t) => t.threadId === selectedId);
+                    setForm((prev) => ({
+                      ...prev,
+                      threadId: selectedId,
+                      walkDate: selectedThread?.walkDate ?? prev.walkDate,
+                    }));
+                  }}
+                  className={cn(
+                    'w-full px-4 py-3 rounded-2xl border bg-zinc-50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50 transition-all',
+                    errors.threadId ? 'border-red-400' : 'border-zinc-200',
+                  )}
+                >
+                  <option value="">스레드를 선택해주세요</option>
+                  {availableThreads.map((thread) => (
+                    <option key={thread.threadId} value={thread.threadId}>
+                      {thread.title} — {thread.placeName} ({thread.walkDate})
+                    </option>
+                  ))}
+                </select>
+              )}
+              {errors.threadId ? (
+                <p className="text-red-500 text-xs mt-1">{errors.threadId}</p>
+              ) : null}
+            </div>
+          ) : null}
 
           {/* isPublic toggle */}
           <div className="flex items-center justify-between py-2">

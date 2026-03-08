@@ -30,6 +30,11 @@ public interface WalkDiaryRepository extends JpaRepository<WalkDiary, Long> {
             """)
     Slice<WalkDiary> findFollowingPublicSlice(@Param("memberId") Long memberId, Pageable pageable);
 
+    @Query("SELECT d.threadId FROM WalkDiary d WHERE d.memberId = :memberId AND d.threadId IS NOT NULL AND d.deletedAt IS NULL")
+    List<Long> findThreadIdsByMemberIdAndDeletedAtIsNull(@Param("memberId") Long memberId);
+
+    boolean existsByMemberIdAndThreadIdAndDeletedAtIsNull(Long memberId, Long threadId);
+
     @Query("""
             select d.walkDate as walkDate, count(d) as walkCount
             from WalkDiary d
