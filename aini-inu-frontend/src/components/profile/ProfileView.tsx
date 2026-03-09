@@ -9,6 +9,7 @@ import { DogType, UserType } from '@/types';
 import type { PostResponse } from '@/api/community';
 import type { WalkDiaryResponse } from '@/api/diaries';
 import type { MemberResponse } from '@/api/members';
+import { getFollowers, getFollowing } from '@/api/members';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileTabs, ProfileTab } from '@/components/profile/ProfileTabs';
 import { Typography } from '@/components/ui/Typography';
@@ -50,6 +51,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
   const [dogs, setDogs] = useState<DogType[]>([]);
   const [posts, setPosts] = useState<PostResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
   const [isFollowingInit, setIsFollowingInit] = useState(false);
   const [activeTab, setActiveTab] = useState<ProfileTab>('TIMELINE');
 
@@ -100,6 +103,18 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
       setDogs(dogsRes || []);
       await fetchDiaries(0);
 
+      // Fetch accurate follower/following counts
+      const numericId = Number(isTargetMe ? userRes?.id : memberId);
+      if (numericId) {
+        Promise.all([
+          getFollowers({ memberId: numericId, size: 1000 }),
+          getFollowing({ memberId: numericId, size: 1000 }),
+        ]).then(([followersRes, followingRes]) => {
+          setFollowerCount(followersRes.content.length);
+          setFollowingCount(followingRes.content.length);
+        }).catch(() => {});
+      }
+
       if (!isTargetMe) {
         try {
           const following = await memberService.getFollowing();
@@ -123,8 +138,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
     isLoading: isFollowLoading,
     toggle: handleFollowToggle,
   } = useFollowToggle(profile?.id ? Number(profile.id) : 0, isFollowingInit, {
-    onFollow: () => setProfile(prev => prev ? { ...prev, followerCount: (prev.followerCount ?? 0) + 1 } : prev),
-    onUnfollow: () => setProfile(prev => prev ? { ...prev, followerCount: Math.max(0, (prev.followerCount ?? 0) - 1) } : prev),
+    onFollow: () => setFollowerCount(c => c + 1),
+    onUnfollow: () => setFollowerCount(c => Math.max(0, c - 1)),
   });
 
   if (isLoading && !profile) {
@@ -169,8 +184,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
           isVerified: false,
         } as MemberResponse : null}
         postCount={posts.length}
-        followerCount={profile?.followerCount || 0}
-        followingCount={profile?.followingCount || 0}
+        followerCount={followerCount}
+        followingCount={followingCount}
         isMe={isMe}
         isFollowing={isFollowing}
         hasRecentDiary={hasRecentDiary}

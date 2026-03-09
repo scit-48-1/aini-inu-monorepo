@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { getMember, getMemberPets, getFollowStatus, getFollowers, getMemberActivityStats } from '@/api/members';
+import { getMember, getMemberPets, getFollowStatus, getFollowers, getFollowing, getMemberActivityStats } from '@/api/members';
 import type { MemberResponse, PetResponse, ActivityStatsResponse } from '@/api/members';
 import { ActivityHeatmap } from '@/components/profile/ActivityHeatmap';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
@@ -31,7 +31,7 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
   const [error, setError] = useState<string | null>(null);
 
   const [followerCount, setFollowerCount] = useState(0);
-  const [followingCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
   const [initialIsFollowing, setInitialIsFollowing] = useState(false);
   const [followStateLoaded, setFollowStateLoaded] = useState(false);
 
@@ -75,9 +75,12 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
       ]);
       setMember(memberData);
       setPets(petsData);
-      // Get accurate follower count for this member
+      // Get accurate follower/following counts for this member
       getFollowers({ memberId, size: 1000 }).then(res => {
         setFollowerCount(res.content.length);
+      }).catch(() => {});
+      getFollowing({ memberId, size: 1000 }).then(res => {
+        setFollowingCount(res.content.length);
       }).catch(() => {});
     } catch {
       setError('프로필을 불러오는데 실패했습니다.');
