@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { MessageList } from '@/components/chat/MessageList';
 import { ChatInput } from '@/components/chat/ChatInput';
-import { ProfileExplorer } from '@/components/chat/ProfileExplorer';
 import { ParticipantListPanel } from '@/components/chat/ParticipantListPanel';
 import {
   getRoom,
@@ -313,13 +312,6 @@ export default function ChatRoomPage() {
     }
   }, [room?.threadId, router]);
 
-  const isWalkRoom = room?.origin === 'WALK';
-
-  // Derive partnerId for ProfileExplorer
-  const partnerId =
-    room?.participants.find((p) => p.memberId !== currentMemberId)?.memberId ??
-    0;
-
   // Error state
   if (error) {
     return (
@@ -396,21 +388,13 @@ export default function ChatRoomPage() {
         />
       </div>
 
-      {/* Side panel: ParticipantListPanel for WALK rooms, ProfileExplorer for others */}
-      {isWalkRoom ? (
-        <ParticipantListPanel
-          participants={room.participants}
-          currentMemberId={currentMemberId}
-          isOpen={isProfileOpen}
-          onClose={() => setIsProfileOpen(false)}
-        />
-      ) : (
-        <ProfileExplorer
-          partnerId={partnerId}
-          isOpen={isProfileOpen}
-          onClose={() => setIsProfileOpen(false)}
-        />
-      )}
+      {/* Side panel: participant list for all room types */}
+      <ParticipantListPanel
+        participants={room.participants}
+        currentMemberId={currentMemberId}
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+      />
 
       {/* Walk Review Modal */}
       <WalkReviewModal
