@@ -11,6 +11,10 @@ import scit.ainiinu.chat.exception.ChatErrorCode;
 import scit.ainiinu.chat.exception.ChatException;
 import scit.ainiinu.chat.repository.ChatParticipantRepository;
 import scit.ainiinu.chat.repository.ChatRoomRepository;
+import scit.ainiinu.member.entity.Member;
+import scit.ainiinu.member.repository.MemberRepository;
+import scit.ainiinu.notification.entity.NotificationType;
+import scit.ainiinu.notification.service.NotificationService;
 import scit.ainiinu.walk.repository.WalkThreadRepository;
 
 import java.util.List;
@@ -23,6 +27,8 @@ public class WalkConfirmService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final WalkThreadRepository walkThreadRepository;
+    private final NotificationService notificationService;
+    private final MemberRepository memberRepository;
 
     @Transactional
     public WalkConfirmResponse confirmWalk(Long memberId, Long chatRoomId) {
@@ -33,7 +39,12 @@ public class WalkConfirmService {
                 .orElseThrow(() -> new ChatException(ChatErrorCode.ROOM_ACCESS_DENIED));
 
         me.confirmWalk();
-        return buildResponse(chatRoomId, memberId, me, true);
+        WalkConfirmResponse response = buildResponse(chatRoomId, memberId, me, true);
+
+        // 산책 완료 확인 알림 발행
+        publishWalkConfirmNotifications(memberId, chatRoomId, response);
+
+        return response;
     }
 
     @Transactional
@@ -102,5 +113,37 @@ public class WalkConfirmService {
                 .allConfirmed(allConfirmed)
                 .confirmedMemberIds(confirmedMemberIds)
                 .build();
+    }
+
+    private void publishWalkConfirmNotifications(Long confirmerId, Long chatRoomId, WalkConfirmResponse response) {
+        List<ChatParticipant> activeParticipants = chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(chatRoomId);
+        Member confirmer = memberRepository.findById(confirmerId).orElse(null);
+        String confirmerNickname = confirmer != null ? confirmer.getNickname() : "알 수 없는 사용자";
+
+        if (response.isAllConfirmed()) {
+            for (ChatParticipant p : activeParticipants) {
+                notificationService.createAndPublish(
+                        p.getMemberId(),
+                        NotificationType.WALK_CONFIRM,
+                        "산책 완료",
+                        "모든 참여자가 산책 완료를 확인했습니다!",
+                        chatRoomId,
+                        "CHAT_ROOM"
+                );
+            }
+        } else {
+            for (ChatParticipant p : activeParticipants) {
+                if (!p.getMemberId().equals(confirmerId)) {
+                    notificationService.createAndPublish(
+                            p.getMemberId(),
+                            NotificationType.WALK_CONFIRM,
+                            "산책 완료 확인",
+                            confirmerNickname + "님이 산책 완료를 확인했습니다.",
+                            chatRoomId,
+                            "CHAT_ROOM"
+                    );
+                }
+            }
+        }
     }
 }

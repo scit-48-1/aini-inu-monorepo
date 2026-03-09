@@ -104,7 +104,11 @@ class OpenApiAuthContractTest {
 
                     String name = parameter.path("name").asText();
                     if ("authorId".equals(name)) {
-                        violations.add(method.toUpperCase() + " " + path + " has forbidden query parameter: authorId");
+                        // GET /api/v1/posts?authorId= 는 프로필 페이지에서 특정 사용자의 게시글 필터링용 정당한 파라미터
+                        boolean isPostListFilter = "/api/v1/posts".equals(path) && "get".equals(method);
+                        if (!isPostListFilter) {
+                            violations.add(method.toUpperCase() + " " + path + " has forbidden query parameter: authorId");
+                        }
                         continue;
                     }
 

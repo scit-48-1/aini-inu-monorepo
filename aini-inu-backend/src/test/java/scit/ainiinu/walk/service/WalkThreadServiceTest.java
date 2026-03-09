@@ -40,6 +40,7 @@ import scit.ainiinu.walk.repository.WalkThreadRepository;
 
 import scit.ainiinu.walk.entity.WalkThreadApplicationPet;
 import scit.ainiinu.walk.entity.WalkThreadApplicationStatus;
+import scit.ainiinu.notification.entity.NotificationType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -53,6 +54,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -91,6 +93,9 @@ class WalkThreadServiceTest {
 
     @Mock
     private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private scit.ainiinu.notification.service.NotificationService notificationService;
 
     @InjectMocks
     private WalkThreadService walkThreadService;
@@ -203,6 +208,11 @@ class WalkThreadServiceTest {
             assertThat(response.isIdempotentReplay()).isTrue();
             assertThat(response.getChatRoomId()).isEqualTo(9001L);
             assertThat(response.getApplicationStatus()).isEqualTo("JOINED");
+
+            // 멱등 재시도에는 알림을 발행하지 않아야 한다
+            then(notificationService).should(never()).createAndPublish(
+                    anyLong(), any(), anyString(), anyString(), anyLong(), anyString()
+            );
         }
 
         @Test
@@ -248,6 +258,15 @@ class WalkThreadServiceTest {
             ReflectionTestUtils.setField(savedApplication, "id", 1L);
             given(walkThreadApplicationRepository.save(any(WalkThreadApplication.class))).willReturn(savedApplication);
 
+            // 신청자 닉네임 조회용 memberRepository stub
+            Member applicant = Member.builder()
+                    .email("applicant@test.com")
+                    .nickname("신청자")
+                    .memberType(MemberType.PET_OWNER)
+                    .build();
+            ReflectionTestUtils.setField(applicant, "id", 2L);
+            given(memberRepository.findById(2L)).willReturn(Optional.of(applicant));
+
             // when
             ThreadApplyResponse response = walkThreadService.applyThread(2L, 1L, request);
 
@@ -257,6 +276,16 @@ class WalkThreadServiceTest {
             assertThat(response.getApplicationStatus()).isEqualTo("JOINED");
             then(chatRoomRepository).should().save(any(ChatRoom.class));
             then(chatParticipantRepository).should(times(2)).save(any());
+
+            // 스레드 작성자(10L)에게 WALK_APPLICATION 알림이 발행되어야 한다
+            then(notificationService).should().createAndPublish(
+                    eq(10L),
+                    eq(NotificationType.WALK_APPLICATION),
+                    eq("산책 참여신청"),
+                    eq("신청자님이 산책에 참여를 신청했습니다."),
+                    eq(1L),
+                    eq("WALK_THREAD")
+            );
         }
     }
 
@@ -288,9 +317,16 @@ class WalkThreadServiceTest {
             given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 10L)).willReturn(Optional.empty());
             given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 2L)).willReturn(Optional.empty());
             given(walkThreadApplicationRepository.save(any(WalkThreadApplication.class))).willReturn(savedApplication);
+            given(memberRepository.findById(2L)).willReturn(Optional.empty());
 
             // when
             walkThreadService.applyThread(2L, 1L, request);
+
+            // then — 알림이 스레드 작성자에게 발행된다
+            then(notificationService).should().createAndPublish(
+                    eq(10L), eq(NotificationType.WALK_APPLICATION),
+                    anyString(), anyString(), eq(1L), eq("WALK_THREAD")
+            );
 
             // then — 2 pets saved for application ID 55
             ArgumentCaptor<WalkThreadApplicationPet> captor = ArgumentCaptor.forClass(WalkThreadApplicationPet.class);
@@ -325,9 +361,16 @@ class WalkThreadServiceTest {
             given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 10L)).willReturn(Optional.empty());
             given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 2L)).willReturn(Optional.empty());
             given(walkThreadApplicationRepository.save(any(WalkThreadApplication.class))).willReturn(savedApplication);
+            given(memberRepository.findById(2L)).willReturn(Optional.empty());
 
             // when
             walkThreadService.applyThread(2L, 1L, request);
+
+            // then — 알림이 스레드 작성자에게 발행된다
+            then(notificationService).should().createAndPublish(
+                    eq(10L), eq(NotificationType.WALK_APPLICATION),
+                    anyString(), anyString(), eq(1L), eq("WALK_THREAD")
+            );
 
             // then
             then(walkThreadApplicationPetRepository).should(never()).save(any(WalkThreadApplicationPet.class));
@@ -356,9 +399,16 @@ class WalkThreadServiceTest {
             given(chatRoomRepository.save(any(ChatRoom.class))).willReturn(savedRoom);
             given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 10L)).willReturn(Optional.empty());
             given(chatParticipantRepository.findByChatRoomIdAndMemberId(101L, 2L)).willReturn(Optional.empty());
+            given(memberRepository.findById(2L)).willReturn(Optional.empty());
 
             // when
             walkThreadService.applyThread(2L, 1L, request);
+
+            // then — 알림이 스레드 작성자에게 발행된다
+            then(notificationService).should().createAndPublish(
+                    eq(10L), eq(NotificationType.WALK_APPLICATION),
+                    anyString(), anyString(), eq(1L), eq("WALK_THREAD")
+            );
 
             // then — old pets deleted, new pet saved
             then(walkThreadApplicationPetRepository).should().deleteAllByApplicationId(77L);

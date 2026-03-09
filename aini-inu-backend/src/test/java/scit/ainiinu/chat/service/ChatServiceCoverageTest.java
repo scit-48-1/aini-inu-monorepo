@@ -54,7 +54,10 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -79,6 +82,8 @@ class ChatServiceCoverageTest {
     private ChatReviewRepository chatReviewRepository;
     @Mock
     private WalkThreadRepository walkThreadRepository;
+    @Mock
+    private scit.ainiinu.notification.service.NotificationService notificationService;
 
     @InjectMocks
     private ChatRoomService chatRoomService;
@@ -263,11 +268,22 @@ class ChatServiceCoverageTest {
             given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(1L, 1L)).willReturn(Optional.of(me));
             given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(1L)).willReturn(List.of(me));
             given(chatRoomRepository.findById(1L)).willReturn(Optional.of(room));
+            given(memberRepository.findById(1L)).willReturn(Optional.empty());
 
             WalkConfirmResponse response = walkConfirmService.confirmWalk(1L, 1L);
 
             assertThat(response.getMyState()).isEqualTo("CONFIRMED");
             assertThat(response.isAllConfirmed()).isTrue();
+
+            // 전원 확정이므로 모든 참여자에게 WALK_CONFIRM 알림이 발행되어야 한다
+            then(notificationService).should().createAndPublish(
+                    eq(1L),
+                    eq(scit.ainiinu.notification.entity.NotificationType.WALK_CONFIRM),
+                    eq("산책 완료"),
+                    eq("모든 참여자가 산책 완료를 확인했습니다!"),
+                    eq(1L),
+                    eq("CHAT_ROOM")
+            );
         }
 
         @Test
@@ -307,11 +323,22 @@ class ChatServiceCoverageTest {
             given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(1L)).willReturn(List.of(me));
             given(chatRoomRepository.findById(1L)).willReturn(Optional.of(room));
             given(walkThreadRepository.findById(threadId)).willReturn(Optional.of(walkThread));
+            given(memberRepository.findById(1L)).willReturn(Optional.empty());
 
             WalkConfirmResponse response = walkConfirmService.confirmWalk(1L, 1L);
 
             assertThat(response.isAllConfirmed()).isTrue();
             assertThat(walkThread.getStatus()).isEqualTo(WalkThreadStatus.COMPLETED);
+
+            // 전원 확정 시 알림이 발행되어야 한다
+            then(notificationService).should().createAndPublish(
+                    eq(1L),
+                    eq(scit.ainiinu.notification.entity.NotificationType.WALK_CONFIRM),
+                    eq("산책 완료"),
+                    eq("모든 참여자가 산책 완료를 확인했습니다!"),
+                    eq(1L),
+                    eq("CHAT_ROOM")
+            );
         }
 
         @Test
@@ -325,11 +352,19 @@ class ChatServiceCoverageTest {
             given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(1L, 1L)).willReturn(Optional.of(me));
             given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(1L)).willReturn(List.of(me));
             given(chatRoomRepository.findById(1L)).willReturn(Optional.of(room));
+            given(memberRepository.findById(1L)).willReturn(Optional.empty());
 
             WalkConfirmResponse response = walkConfirmService.confirmWalk(1L, 1L);
 
             assertThat(response.isAllConfirmed()).isTrue();
             verify(walkThreadRepository, never()).findById(anyLong());
+
+            // 전원 확정이므로 알림은 발행되어야 한다
+            then(notificationService).should().createAndPublish(
+                    eq(1L),
+                    eq(scit.ainiinu.notification.entity.NotificationType.WALK_CONFIRM),
+                    anyString(), anyString(), eq(1L), eq("CHAT_ROOM")
+            );
         }
 
         @Test

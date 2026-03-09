@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import scit.ainiinu.common.event.ContentCreatedEvent;
 import scit.ainiinu.common.event.ContentDeletedEvent;
 import scit.ainiinu.common.event.TimelineEventType;
+import scit.ainiinu.notification.entity.NotificationType;
+import scit.ainiinu.notification.service.NotificationService;
 import scit.ainiinu.chat.entity.ChatParticipant;
 import scit.ainiinu.chat.entity.ChatRoom;
 import scit.ainiinu.chat.entity.ChatRoomOrigin;
@@ -75,6 +77,7 @@ public class WalkThreadService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final NotificationService notificationService;
 
     @Transactional
     public ThreadResponse createThread(Long memberId, ThreadCreateRequest request) {
@@ -337,6 +340,18 @@ public class WalkThreadService {
             WalkThreadApplication savedApplication = walkThreadApplicationRepository.save(application);
             saveApplicationPets(savedApplication.getId(), request.getPetIds());
         }
+
+        // 산책 참여신청 알림 발행
+        Member applicant = memberRepository.findById(memberId).orElse(null);
+        String applicantNickname = applicant != null ? applicant.getNickname() : "알 수 없는 사용자";
+        notificationService.createAndPublish(
+                thread.getAuthorId(),
+                NotificationType.WALK_APPLICATION,
+                "산책 참여신청",
+                applicantNickname + "님이 산책에 참여를 신청했습니다.",
+                thread.getId(),
+                "WALK_THREAD"
+        );
 
         return ThreadApplyResponse.builder()
                 .threadId(threadId)

@@ -29,6 +29,7 @@ import scit.ainiinu.chat.repository.ChatRoomRepository;
 import scit.ainiinu.chat.repository.MessageRepository;
 import scit.ainiinu.common.event.NotificationEvent;
 import scit.ainiinu.common.response.CursorResponse;
+import scit.ainiinu.notification.entity.NotificationType;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -60,6 +62,9 @@ class MessageServiceTest {
 
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
+
+    @Mock
+    private scit.ainiinu.notification.service.NotificationService notificationService;
 
     @InjectMocks
     private MessageService messageService;
@@ -193,14 +198,14 @@ class MessageServiceTest {
             messageService.createMessage(senderId, chatRoomId, request);
 
             // then
-            ArgumentCaptor<NotificationEvent> captor = ArgumentCaptor.forClass(NotificationEvent.class);
-            then(applicationEventPublisher).should(times(1)).publishEvent(captor.capture());
-
-            NotificationEvent event = captor.getValue();
-            assertThat(event.getRecipientMemberId()).isEqualTo(recipientId);
-            assertThat(event.getType()).isEqualTo("CHAT_NEW_MESSAGE");
-            assertThat(event.getPayload()).containsEntry("roomId", chatRoomId);
-            assertThat(event.getPayload()).containsEntry("senderMemberId", senderId);
+            then(notificationService).should(times(1)).createAndPublish(
+                    eq(recipientId),
+                    eq(NotificationType.CHAT_NEW_MESSAGE),
+                    anyString(),
+                    anyString(),
+                    eq(chatRoomId),
+                    eq("CHAT_ROOM")
+            );
         }
 
         @Test
@@ -235,12 +240,14 @@ class MessageServiceTest {
             messageService.createMessage(senderId, chatRoomId, request);
 
             // then
-            ArgumentCaptor<NotificationEvent> captor = ArgumentCaptor.forClass(NotificationEvent.class);
-            then(applicationEventPublisher).should(times(2)).publishEvent(captor.capture());
-
-            List<NotificationEvent> events = captor.getAllValues();
-            assertThat(events).extracting(NotificationEvent::getRecipientMemberId)
-                    .containsExactlyInAnyOrder(2L, 3L);
+            then(notificationService).should(times(2)).createAndPublish(
+                    anyLong(),
+                    eq(NotificationType.CHAT_NEW_MESSAGE),
+                    anyString(),
+                    anyString(),
+                    eq(chatRoomId),
+                    eq("CHAT_ROOM")
+            );
         }
 
         @Test
@@ -273,7 +280,9 @@ class MessageServiceTest {
             messageService.createMessage(senderId, chatRoomId, request);
 
             // then
-            then(applicationEventPublisher).should(never()).publishEvent(any(NotificationEvent.class));
+            then(notificationService).should(never()).createAndPublish(
+                    anyLong(), any(), anyString(), anyString(), anyLong(), anyString()
+            );
         }
     }
 

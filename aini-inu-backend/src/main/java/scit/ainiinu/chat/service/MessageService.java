@@ -21,6 +21,8 @@ import scit.ainiinu.chat.repository.ChatRoomRepository;
 import scit.ainiinu.chat.repository.MessageRepository;
 import scit.ainiinu.common.event.NotificationEvent;
 import scit.ainiinu.common.response.CursorResponse;
+import scit.ainiinu.notification.entity.NotificationType;
+import scit.ainiinu.notification.service.NotificationService;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -41,6 +43,7 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ChatRealtimeEventHandler chatRealtimeEventHandler;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final NotificationService notificationService;
 
     public CursorResponse<ChatMessageResponse> getMessages(
             Long memberId,
@@ -202,16 +205,14 @@ public class MessageService {
                 .findAllByChatRoomIdAndLeftAtIsNull(chatRoomId);
         for (ChatParticipant p : participants) {
             if (!p.getMemberId().equals(senderId)) {
-                applicationEventPublisher.publishEvent(NotificationEvent.of(
+                notificationService.createAndPublish(
                         p.getMemberId(),
-                        "CHAT_NEW_MESSAGE",
-                        Map.of(
-                                "roomId", chatRoomId,
-                                "senderMemberId", senderId,
-                                "messagePreview", truncateContent(content, 50),
-                                "sentAt", saved.getSentAt().toString()
-                        )
-                ));
+                        NotificationType.CHAT_NEW_MESSAGE,
+                        "새 메시지",
+                        truncateContent(content, 50),
+                        chatRoomId,
+                        "CHAT_ROOM"
+                );
             }
         }
     }

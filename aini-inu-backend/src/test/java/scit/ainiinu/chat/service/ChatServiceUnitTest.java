@@ -31,6 +31,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -55,6 +57,12 @@ class ChatServiceUnitTest {
 
     @Mock
     private PetRepository petRepository;
+
+    @Mock
+    private scit.ainiinu.notification.service.NotificationService notificationService;
+
+    @Mock
+    private scit.ainiinu.walk.repository.WalkThreadRepository walkThreadRepository;
 
     @InjectMocks
     private ChatRoomService chatRoomService;
@@ -292,6 +300,7 @@ class ChatServiceUnitTest {
             given(chatRoomRepository.findByIdForUpdate(100L)).willReturn(Optional.of(room));
             given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(100L, 1L)).willReturn(Optional.of(me));
             given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(100L)).willReturn(List.of(me, other));
+            given(memberRepository.findById(1L)).willReturn(Optional.empty());
 
             // when
             WalkConfirmResponse response = walkConfirmService.updateWalkConfirm(1L, 100L, request);
@@ -299,6 +308,13 @@ class ChatServiceUnitTest {
             // then
             assertThat(response.getMyState()).isEqualTo("CONFIRMED");
             assertThat(response.getConfirmedMemberIds()).containsExactly(1L);
+
+            // 아직 전원 확정이 아니므로 확인자 외 다른 참여자에게만 알림이 발행되어야 한다
+            then(notificationService).should().createAndPublish(
+                    eq(2L),
+                    eq(scit.ainiinu.notification.entity.NotificationType.WALK_CONFIRM),
+                    anyString(), anyString(), eq(100L), eq("CHAT_ROOM")
+            );
         }
 
         @Test

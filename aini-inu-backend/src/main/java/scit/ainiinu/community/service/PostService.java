@@ -27,6 +27,8 @@ import scit.ainiinu.community.repository.PostLikeRepository;
 import scit.ainiinu.community.repository.PostRepository;
 import scit.ainiinu.member.entity.Member;
 import scit.ainiinu.member.repository.MemberRepository;
+import scit.ainiinu.notification.entity.NotificationType;
+import scit.ainiinu.notification.service.NotificationService;
 
 import java.util.Collection;
 import java.util.List;
@@ -48,6 +50,7 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final MemberRepository memberRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final NotificationService notificationService;
 
     /**
      * 게시글 목록 조회 (무한 스크롤)
@@ -270,6 +273,21 @@ public class PostService {
 
         // 3. 게시글 댓글 수 증가
         post.increaseComment();
+
+        // 4. 댓글 알림 발행 (자기 게시글에 자기가 댓글 달 경우 제외)
+        if (!memberId.equals(post.getAuthorId())) {
+            Map<Long, Member> commentAuthorMap = loadMemberMap(List.of(memberId));
+            String nickname = commentAuthorMap.containsKey(memberId)
+                    ? commentAuthorMap.get(memberId).getNickname() : UNKNOWN_AUTHOR_NICKNAME;
+            notificationService.createAndPublish(
+                    post.getAuthorId(),
+                    NotificationType.COMMENT_ON_POST,
+                    "새 댓글",
+                    nickname + "님이 회원님의 게시글에 댓글을 남겼습니다.",
+                    post.getId(),
+                    "POST"
+            );
+        }
 
         Map<Long, Member> memberMap = loadMemberMap(List.of(savedComment.getAuthorId()));
         return CommentResponse.from(savedComment, resolveAuthor(savedComment.getAuthorId(), memberMap));
