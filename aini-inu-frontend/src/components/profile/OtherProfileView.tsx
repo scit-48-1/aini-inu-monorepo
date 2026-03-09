@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { getMember, getMemberPets, getFollowStatus, getFollowers } from '@/api/members';
-import type { MemberResponse, PetResponse } from '@/api/members';
+import { getMember, getMemberPets, getFollowStatus, getFollowers, getMemberActivityStats } from '@/api/members';
+import type { MemberResponse, PetResponse, ActivityStatsResponse } from '@/api/members';
+import { ActivityHeatmap } from '@/components/profile/ActivityHeatmap';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileTabs } from '@/components/profile/ProfileTabs';
 import type { ProfileTab } from '@/components/profile/ProfileTabs';
@@ -25,6 +26,7 @@ interface OtherProfileViewProps {
 export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) => {
   const [member, setMember] = useState<MemberResponse | null>(null);
   const [pets, setPets] = useState<PetResponse[]>([]);
+  const [activityStats, setActivityStats] = useState<ActivityStatsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +50,21 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
     loadMore: loadMoreReviews,
   } = useMemberReviews(memberId);
 
+  const grassData = useMemo(() => {
+    if (!activityStats) return [];
+    const { startDate, points, windowDays } = activityStats;
+    const start = new Date(startDate);
+    const data = new Array(windowDays).fill(0);
+    const dateMap = new Map(points.map(p => [p.date, p.count]));
+    for (let i = 0; i < windowDays; i++) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      const key = d.toISOString().slice(0, 10);
+      data[i] = dateMap.get(key) ?? 0;
+    }
+    return data;
+  }, [activityStats]);
+
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -66,6 +83,13 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
       setError('프로필을 불러오는데 실패했습니다.');
     } finally {
       setIsLoading(false);
+    }
+    // Fetch activity stats separately (non-blocking)
+    try {
+      const stats = await getMemberActivityStats(memberId);
+      setActivityStats(stats);
+    } catch {
+      // Activity stats failure is non-fatal
     }
   }, [memberId]);
 
@@ -151,6 +175,10 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
         pets={pets}
         onPetClick={(pet) => setSelectedPet(pet)}
       />
+
+      {grassData.length > 0 && (
+        <ActivityHeatmap grassData={grassData} totalActivities={activityStats?.totalActivities || 0} />
+      )}
 
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
 

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { WalkStatsResponse } from '@/api/members';
+import type { ActivityStatsResponse } from '@/api/members';
 import type { ThreadHotspotResponse, ThreadSummaryResponse } from '@/api/threads';
 import type { PetResponse } from '@/api/pets';
 
@@ -22,7 +22,7 @@ export interface RecentFriend {
 }
 
 interface DashboardState {
-  walkStats: SectionState<WalkStatsResponse>;
+  activityStats: SectionState<ActivityStatsResponse>;
   hotspots: SectionState<ThreadHotspotResponse[]>;
   threads: SectionState<ThreadSummaryResponse[]>;
   myPets: PetResponse[];
@@ -32,7 +32,7 @@ interface DashboardState {
   lastFetchedAt: number | null;
 
   // Actions
-  setWalkStats: (state: SectionState<WalkStatsResponse>) => void;
+  setActivityStats: (state: SectionState<ActivityStatsResponse>) => void;
   setHotspots: (state: SectionState<ThreadHotspotResponse[]>) => void;
   setThreads: (state: SectionState<ThreadSummaryResponse[]>) => void;
   setMyPets: (pets: PetResponse[]) => void;
@@ -45,7 +45,7 @@ interface DashboardState {
 const STALE_MS = 30_000; // 30 seconds
 
 const initialState = {
-  walkStats: { status: 'idle' as const },
+  activityStats: { status: 'idle' as const },
   hotspots: { status: 'idle' as const },
   threads: { status: 'idle' as const },
   myPets: [] as PetResponse[],
@@ -58,7 +58,7 @@ const initialState = {
 export const useDashboardStore = create<DashboardState>((set, get) => ({
   ...initialState,
 
-  setWalkStats: (state) => set({ walkStats: state }),
+  setActivityStats: (state) => set({ activityStats: state }),
   setHotspots: (state) => set({ hotspots: state }),
   setThreads: (state) => set({ threads: state }),
   setMyPets: (pets) => set({ myPets: pets, myPetsLoaded: true }),

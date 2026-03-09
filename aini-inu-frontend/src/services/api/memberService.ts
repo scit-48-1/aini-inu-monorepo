@@ -18,5 +18,5 @@ export const memberService = {
   follow: (targetId: string) => apiClient.post<{ isFollowing: boolean }>(`/members/me/follow/${targetId}`),
   unfollow: (targetId: string) => apiClient.delete<{ isFollowing: boolean }>(`/members/me/follow/${targetId}`),
   submitReview: (partnerId: string, review: any) => apiClient.post(`/members/${partnerId}/reviews`, review),
-  getWalkStats: () => apiClient.get<number[]>('/members/me/stats/walk'),
+  getActivityStats: () => apiClient.get<number[]>('/members/me/stats/activity'),
 };

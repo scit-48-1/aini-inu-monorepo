@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { getWalkStats } from '@/api/members';
+import { getActivityStats } from '@/api/members';
 import { getHotspots, getThreads } from '@/api/threads';
 import { getRooms, getRoom, getMyReview } from '@/api/chat';
 import { getMyPets } from '@/api/pets';
@@ -59,7 +59,7 @@ export default function DashboardPage() {
   }, [fetchProfile]);
 
   // Dashboard store — subscribe to individual slices (Zustand only re-renders when selected value changes)
-  const walkStats = useDashboardStore((s) => s.walkStats);
+  const activityStats = useDashboardStore((s) => s.activityStats);
   const hotspots = useDashboardStore((s) => s.hotspots);
   const threads = useDashboardStore((s) => s.threads);
   const myPets = useDashboardStore((s) => s.myPets);
@@ -100,7 +100,7 @@ export default function DashboardPage() {
     // Set loading states upfront (single batch via direct store access)
     if (!isRefresh) {
       useDashboardStore.setState({
-        walkStats: { status: 'loading' },
+        activityStats: { status: 'loading' },
         hotspots: { status: 'loading' },
         threads: { status: 'loading' },
       });
@@ -108,15 +108,15 @@ export default function DashboardPage() {
 
     try {
       await Promise.allSettled([
-        // walkStats
+        // activityStats
         (async () => {
           try {
-            const data = await getWalkStats();
-            useDashboardStore.setState({ walkStats: { status: 'success', data } });
+            const data = await getActivityStats();
+            useDashboardStore.setState({ activityStats: { status: 'success', data } });
           } catch {
             const s = useDashboardStore.getState();
-            if (!hasData(s.walkStats)) {
-              useDashboardStore.setState({ walkStats: { status: 'error', message: '산책 활동을 불러오지 못했습니다.' } });
+            if (!hasData(s.activityStats)) {
+              useDashboardStore.setState({ activityStats: { status: 'error', message: '활동 통계를 불러오지 못했습니다.' } });
             }
           }
         })(),
@@ -248,13 +248,13 @@ export default function DashboardPage() {
 
   // --- Retry handlers (stable refs) ---
 
-  const retryWalkStats = useCallback(async () => {
-    useDashboardStore.setState({ walkStats: { status: 'loading' } });
+  const retryActivityStats = useCallback(async () => {
+    useDashboardStore.setState({ activityStats: { status: 'loading' } });
     try {
-      const data = await getWalkStats();
-      useDashboardStore.setState({ walkStats: { status: 'success', data } });
+      const data = await getActivityStats();
+      useDashboardStore.setState({ activityStats: { status: 'success', data } });
     } catch {
-      useDashboardStore.setState({ walkStats: { status: 'error', message: '산책 활동을 불러오지 못했습니다.' } });
+      useDashboardStore.setState({ activityStats: { status: 'error', message: '활동 통계를 불러오지 못했습니다.' } });
     }
   }, []);
 
@@ -327,16 +327,16 @@ export default function DashboardPage() {
           <AIBanner hotspots={hotspots.data} dogName={mainDog.name} />
         )}
 
-        {/* (3) Dashboard Hero -- walkStats + myPets must both be ready */}
-        {(isLoading(walkStats) || !myPetsLoaded) && <SectionSkeleton />}
-        {walkStats.status === 'error' && myPetsLoaded && (
-          <SectionErrorFallback message={walkStats.message} onRetry={retryWalkStats} />
+        {/* (3) Dashboard Hero -- activityStats + myPets must both be ready */}
+        {(isLoading(activityStats) || !myPetsLoaded) && <SectionSkeleton />}
+        {activityStats.status === 'error' && myPetsLoaded && (
+          <SectionErrorFallback message={activityStats.message} onRetry={retryActivityStats} />
         )}
-        {myPetsLoaded && (hasData(walkStats) || walkStats.status === 'empty') && (
+        {myPetsLoaded && (hasData(activityStats) || activityStats.status === 'empty') && (
           <DashboardHero
             userProfile={heroProfile}
             mainDog={mainDog}
-            walkStats={hasData(walkStats) ? walkStats.data : null}
+            activityStats={hasData(activityStats) ? activityStats.data : null}
           />
         )}
 

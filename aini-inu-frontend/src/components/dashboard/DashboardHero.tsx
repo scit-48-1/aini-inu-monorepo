@@ -8,8 +8,8 @@ import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
-import type { WalkStatsResponse } from '@/api/members';
-import { pointsToGridCounts } from '@/utils/walkStatsGrid';
+import type { ActivityStatsResponse } from '@/api/members';
+import { pointsToGridCounts } from '@/utils/activityStatsGrid';
 
 interface DashboardHeroProps {
   userProfile: {
@@ -19,12 +19,12 @@ interface DashboardHeroProps {
     dogs?: { name: string; image: string }[];
   };
   mainDog: { name: string; image: string };
-  walkStats: WalkStatsResponse | null;
+  activityStats: ActivityStatsResponse | null;
 }
 
-export const DashboardHero: React.FC<DashboardHeroProps> = React.memo(({ userProfile, mainDog, walkStats }) => {
-  const grassData = walkStats ? pointsToGridCounts(walkStats) : [];
-  const totalWalks = walkStats?.totalWalks ?? 0;
+export const DashboardHero: React.FC<DashboardHeroProps> = React.memo(({ userProfile, mainDog, activityStats }) => {
+  const grassData = activityStats ? pointsToGridCounts(activityStats) : [];
+  const totalActivities = activityStats?.totalActivities ?? 0;
 
   // Real Streak Calculation
   const streak = React.useMemo(() => {
@@ -39,8 +39,8 @@ export const DashboardHero: React.FC<DashboardHeroProps> = React.memo(({ userPro
   // Real Success Rate Calculation
   const successRate = React.useMemo(() => {
     if (grassData.length === 0) return 0;
-    return Math.round((totalWalks / grassData.length) * 100);
-  }, [grassData, totalWalks]);
+    return Math.round((totalActivities / grassData.length) * 100);
+  }, [grassData, totalActivities]);
 
   return (
     <section className="w-full">
@@ -86,12 +86,12 @@ export const DashboardHero: React.FC<DashboardHeroProps> = React.memo(({ userPro
         <div className="hidden lg:block w-px h-[350px] self-stretch bg-gradient-to-b from-transparent via-zinc-300 to-transparent shrink-0 mx-4" />
         <div className="lg:hidden w-full h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent my-4" />
 
-        {/* Right Part: Walk Activity (Walk Grass) */}
+        {/* Right Part: Activity (Walk Grass) */}
         <div className="flex flex-col items-center lg:items-end gap-6 lg:pl-8 w-full lg:w-[40%] shrink-0">
           <div className="w-full flex justify-center lg:justify-end items-end mb-2">
             <div className="text-center lg:text-right space-y-0.5">
-              <Typography variant="label" className="text-amber-600 font-black uppercase tracking-widest text-[9px]">Walk Activity</Typography>
-              <Typography variant="h3" className="text-3xl font-black text-navy-900 leading-none">{totalWalks} <span className="text-sm text-zinc-400 font-medium">Activities</span></Typography>
+              <Typography variant="label" className="text-amber-600 font-black uppercase tracking-widest text-[9px]">Activity</Typography>
+              <Typography variant="h3" className="text-3xl font-black text-navy-900 leading-none">{totalActivities} <span className="text-sm text-zinc-400 font-medium">Activities</span></Typography>
             </div>
           </div>
 

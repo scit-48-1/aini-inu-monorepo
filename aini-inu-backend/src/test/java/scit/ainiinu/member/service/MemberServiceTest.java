@@ -420,12 +420,12 @@ class MemberServiceTest {
     }
 
     @Nested
-    @DisplayName("산책 통계")
-    class WalkStats {
+    @DisplayName("활동 통계")
+    class ActivityStats {
 
         @Test
-        @DisplayName("산책 통계 조회 시 126일 포인트와 합계를 반환한다")
-        void getWalkStats_success() {
+        @DisplayName("활동 통계 조회 시 126일 포인트와 합계를 반환한다")
+        void getActivityStats_success() {
             Member member = Member.builder().email("me@test.com").nickname("me").build();
             ReflectionTestUtils.setField(member, "id", 1L);
             given(memberRepository.findById(1L)).willReturn(Optional.of(member));
@@ -455,11 +455,45 @@ class MemberServiceTest {
             given(timelineEventRepository.countDailyActivities(eq(1L), any(LocalDateTime.class), any(LocalDateTime.class)))
                     .willReturn(List.of(projection1, projection2));
 
-            var response = memberService.getWalkStats(1L);
+            var response = memberService.getActivityStats(1L);
 
             assertThat(response.getWindowDays()).isEqualTo(126);
             assertThat(response.getPoints()).hasSize(126);
-            assertThat(response.getTotalWalks()).isEqualTo(3);
+            assertThat(response.getTotalActivities()).isEqualTo(3);
+            assertThat(response.getTimezone()).isEqualTo("Asia/Seoul");
+            assertThat(response.getStartDate()).isNotNull();
+            assertThat(response.getEndDate()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 회원 ID로 활동 통계를 조회하면 MEMBER_NOT_FOUND 예외가 발생한다")
+        void getActivityStats_memberNotFound_throwsException() {
+            given(memberRepository.findById(999L)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> memberService.getActivityStats(999L))
+                    .isInstanceOf(MemberException.class)
+                    .satisfies(exception -> {
+                        MemberException memberException = (MemberException) exception;
+                        assertThat(memberException.getErrorCode()).isEqualTo(MemberErrorCode.MEMBER_NOT_FOUND);
+                    });
+        }
+
+        @Test
+        @DisplayName("활동 데이터가 없을 때 totalActivities=0이고 모든 포인트의 count가 0이다")
+        void getActivityStats_noData_returnsZeroCounts() {
+            Member member = Member.builder().email("me@test.com").nickname("me").build();
+            ReflectionTestUtils.setField(member, "id", 1L);
+            given(memberRepository.findById(1L)).willReturn(Optional.of(member));
+            given(timelineEventRepository.countDailyActivities(eq(1L), any(LocalDateTime.class), any(LocalDateTime.class)))
+                    .willReturn(List.of());
+
+            var response = memberService.getActivityStats(1L);
+
+            assertThat(response.getTotalActivities()).isEqualTo(0);
+            assertThat(response.getPoints()).hasSize(126);
+            assertThat(response.getPoints()).allSatisfy(point ->
+                    assertThat(point.getCount()).isEqualTo(0)
+            );
         }
     }
 }

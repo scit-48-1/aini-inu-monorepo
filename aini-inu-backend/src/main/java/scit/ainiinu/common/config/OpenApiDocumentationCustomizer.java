@@ -242,7 +242,7 @@ public class OpenApiDocumentationCustomizer {
             Map.entry("count", "개수입니다."),
             Map.entry("petName", "반려견 이름입니다."),
             Map.entry("breed", "견종명 또는 견종 코드입니다."),
-            Map.entry("totalWalks", "총 산책 횟수입니다."),
+            Map.entry("totalActivities", "총 활동 횟수입니다."),
             Map.entry("likeCount", "좋아요 수입니다."),
             Map.entry("commentCount", "댓글 수입니다."),
             Map.entry("windowDays", "집계 윈도우 일수입니다."),

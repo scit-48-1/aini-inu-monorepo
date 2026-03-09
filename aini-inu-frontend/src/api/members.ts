@@ -76,16 +76,16 @@ export interface FollowStatusResponse {
   isFollowing: boolean;
 }
 
-export interface WalkStatsResponse {
+export interface ActivityStatsResponse {
   windowDays: number;
   startDate: string;
   endDate: string;
   timezone: string;
-  totalWalks: number;
-  points: WalkStatsPointResponse[];
+  totalActivities: number;
+  points: ActivityStatsPointResponse[];
 }
 
-export interface WalkStatsPointResponse {
+export interface ActivityStatsPointResponse {
   date: string;
   count: number;
 }
@@ -158,8 +158,12 @@ export async function getFollowStatus(targetId: number): Promise<FollowStatusRes
   return apiClient.get<FollowStatusResponse>(`/members/me/follows/${targetId}`);
 }
 
-export async function getWalkStats(): Promise<WalkStatsResponse> {
-  return apiClient.get<WalkStatsResponse>('/members/me/stats/walk');
+export async function getActivityStats(): Promise<ActivityStatsResponse> {
+  return apiClient.get<ActivityStatsResponse>('/members/me/stats/activity');
+}
+
+export async function getMemberActivityStats(memberId: number): Promise<ActivityStatsResponse> {
+  return apiClient.get<ActivityStatsResponse>(`/members/${memberId}/stats/activity`);
 }
 
 export async function searchMembers(q: string, params?: PaginationParams): Promise<SliceResponse<MemberResponse>> {

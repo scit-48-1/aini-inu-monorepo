@@ -1,11 +1,11 @@
-import type { WalkStatsResponse } from '@/api/members';
+import type { ActivityStatsResponse } from '@/api/members';
 
 /**
- * Transforms WalkStatsResponse.points into a flat number[] for CSS grid rendering.
+ * Transforms ActivityStatsResponse.points into a flat number[] for CSS grid rendering.
  * Iterates from startDate for windowDays days, filling missing dates with 0.
  * The resulting array works with CSS grid-flow-col + grid-rows-7 layout.
  */
-export function pointsToGridCounts(stats: WalkStatsResponse): number[] {
+export function pointsToGridCounts(stats: ActivityStatsResponse): number[] {
   const lookup = new Map<string, number>();
   for (const p of stats.points) {
     lookup.set(p.date, p.count);

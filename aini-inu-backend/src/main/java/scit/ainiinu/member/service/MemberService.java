@@ -14,8 +14,8 @@ import scit.ainiinu.member.dto.response.FollowStatusResponse;
 import scit.ainiinu.member.dto.response.MemberFollowResponse;
 import scit.ainiinu.member.dto.response.MemberPersonalityTypeResponse;
 import scit.ainiinu.member.dto.response.MemberResponse;
-import scit.ainiinu.member.dto.response.WalkStatsPointResponse;
-import scit.ainiinu.member.dto.response.WalkStatsResponse;
+import scit.ainiinu.member.dto.response.ActivityStatsPointResponse;
+import scit.ainiinu.member.dto.response.ActivityStatsResponse;
 import scit.ainiinu.member.entity.Member;
 import scit.ainiinu.member.entity.MemberFollow;
 import scit.ainiinu.member.entity.MemberPersonality;
@@ -44,8 +44,8 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class MemberService {
 
-    private static final int WALK_STATS_WINDOW_DAYS = 126;
-    private static final ZoneId WALK_STATS_ZONE = ZoneId.of("Asia/Seoul");
+    private static final int ACTIVITY_STATS_WINDOW_DAYS = 126;
+    private static final ZoneId ACTIVITY_STATS_ZONE = ZoneId.of("Asia/Seoul");
 
     private final MemberRepository memberRepository;
     private final MemberPersonalityTypeRepository memberPersonalityTypeRepository;
@@ -184,11 +184,11 @@ public class MemberService {
         return new FollowStatusResponse(false);
     }
 
-    public WalkStatsResponse getWalkStats(Long memberId) {
+    public ActivityStatsResponse getActivityStats(Long memberId) {
         findMember(memberId);
 
-        LocalDate endDate = LocalDate.now(WALK_STATS_ZONE);
-        LocalDate startDate = endDate.minusDays(WALK_STATS_WINDOW_DAYS - 1L);
+        LocalDate endDate = LocalDate.now(ACTIVITY_STATS_ZONE);
+        LocalDate startDate = endDate.minusDays(ACTIVITY_STATS_WINDOW_DAYS - 1L);
 
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
@@ -200,24 +200,24 @@ public class MemberService {
                         projection -> Math.toIntExact(projection.getActivityCount())
                 ));
 
-        List<WalkStatsPointResponse> points = new ArrayList<>(WALK_STATS_WINDOW_DAYS);
-        int totalWalks = 0;
-        for (int i = 0; i < WALK_STATS_WINDOW_DAYS; i++) {
+        List<ActivityStatsPointResponse> points = new ArrayList<>(ACTIVITY_STATS_WINDOW_DAYS);
+        int totalActivities = 0;
+        for (int i = 0; i < ACTIVITY_STATS_WINDOW_DAYS; i++) {
             LocalDate date = startDate.plusDays(i);
             int count = dailyCountMap.getOrDefault(date, 0);
-            totalWalks += count;
-            points.add(WalkStatsPointResponse.builder()
+            totalActivities += count;
+            points.add(ActivityStatsPointResponse.builder()
                     .date(date)
                     .count(count)
                     .build());
         }
 
-        return WalkStatsResponse.builder()
-                .windowDays(WALK_STATS_WINDOW_DAYS)
+        return ActivityStatsResponse.builder()
+                .windowDays(ACTIVITY_STATS_WINDOW_DAYS)
                 .startDate(startDate)
                 .endDate(endDate)
-                .timezone(WALK_STATS_ZONE.getId())
-                .totalWalks(totalWalks)
+                .timezone(ACTIVITY_STATS_ZONE.getId())
+                .totalActivities(totalActivities)
                 .points(points)
                 .build();
     }

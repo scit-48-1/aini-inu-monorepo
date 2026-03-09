@@ -9,7 +9,7 @@ import java.time.LocalDate;
 
 @Getter
 @Builder
-public class WalkStatsPointResponse {
+public class ActivityStatsPointResponse {
     @Schema(description = "date 값입니다.", example = "2026-03-05")
     private LocalDate date;
     @Schema(description = "개수입니다.", example = "20")

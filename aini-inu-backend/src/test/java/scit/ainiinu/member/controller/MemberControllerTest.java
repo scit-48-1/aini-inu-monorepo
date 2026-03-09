@@ -21,8 +21,8 @@ import scit.ainiinu.member.dto.request.MemberSignupRequest;
 import scit.ainiinu.member.dto.response.FollowStatusResponse;
 import scit.ainiinu.member.dto.response.MemberFollowResponse;
 import scit.ainiinu.member.dto.response.MemberResponse;
-import scit.ainiinu.member.dto.response.WalkStatsPointResponse;
-import scit.ainiinu.member.dto.response.WalkStatsResponse;
+import scit.ainiinu.member.dto.response.ActivityStatsPointResponse;
+import scit.ainiinu.member.dto.response.ActivityStatsResponse;
 import scit.ainiinu.member.entity.enums.Gender;
 import scit.ainiinu.member.entity.enums.MemberType;
 import scit.ainiinu.member.service.AuthService;
@@ -421,32 +421,95 @@ class  MemberControllerTest {
     }
 
     @Nested
-    @DisplayName("산책 통계")
-    class WalkStats {
+    @DisplayName("활동 통계")
+    class ActivityStats {
 
         @Test
         @WithMockUser
-        @DisplayName("산책 통계 조회 API를 호출하면 구조화된 통계를 반환한다")
-        void getWalkStats_success() throws Exception {
-            WalkStatsResponse response = WalkStatsResponse.builder()
+        @DisplayName("내 활동 통계 조회 API를 호출하면 구조화된 통계를 반환한다")
+        void getMyActivityStats_success() throws Exception {
+            ActivityStatsResponse response = ActivityStatsResponse.builder()
                     .windowDays(126)
                     .startDate(LocalDate.of(2025, 11, 1))
                     .endDate(LocalDate.of(2026, 3, 6))
                     .timezone("Asia/Seoul")
-                    .totalWalks(3)
+                    .totalActivities(3)
                     .points(List.of(
-                            WalkStatsPointResponse.builder().date(LocalDate.of(2026, 3, 4)).count(2).build(),
-                            WalkStatsPointResponse.builder().date(LocalDate.of(2026, 3, 5)).count(1).build()
+                            ActivityStatsPointResponse.builder().date(LocalDate.of(2026, 3, 4)).count(2).build(),
+                            ActivityStatsPointResponse.builder().date(LocalDate.of(2026, 3, 5)).count(1).build()
                     ))
                     .build();
-            given(memberService.getWalkStats(1L)).willReturn(response);
+            given(memberService.getActivityStats(1L)).willReturn(response);
 
-            mockMvc.perform(get("/api/v1/members/me/stats/walk"))
+            mockMvc.perform(get("/api/v1/members/me/stats/activity"))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.windowDays").value(126))
-                    .andExpect(jsonPath("$.data.totalWalks").value(3))
+                    .andExpect(jsonPath("$.data.totalActivities").value(3))
                     .andExpect(jsonPath("$.data.points[0].count").value(2));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("특정 회원 활동 통계 조회 API를 호출하면 구조화된 통계를 반환한다")
+        void getMemberActivityStats_success() throws Exception {
+            ActivityStatsResponse response = ActivityStatsResponse.builder()
+                    .windowDays(126)
+                    .startDate(LocalDate.of(2025, 11, 1))
+                    .endDate(LocalDate.of(2026, 3, 6))
+                    .timezone("Asia/Seoul")
+                    .totalActivities(5)
+                    .points(List.of(
+                            ActivityStatsPointResponse.builder().date(LocalDate.of(2026, 3, 4)).count(3).build(),
+                            ActivityStatsPointResponse.builder().date(LocalDate.of(2026, 3, 5)).count(2).build()
+                    ))
+                    .build();
+            given(memberService.getActivityStats(2L)).willReturn(response);
+
+            mockMvc.perform(get("/api/v1/members/{memberId}/stats/activity", 2L))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.windowDays").value(126))
+                    .andExpect(jsonPath("$.data.totalActivities").value(5))
+                    .andExpect(jsonPath("$.data.points[0].count").value(3));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("존재하지 않는 회원의 활동 통계 조회 시 에러를 반환한다")
+        void getMemberActivityStats_memberNotFound() throws Exception {
+            given(memberService.getActivityStats(999L))
+                    .willThrow(new scit.ainiinu.member.exception.MemberException(
+                            scit.ainiinu.member.exception.MemberErrorCode.MEMBER_NOT_FOUND));
+
+            mockMvc.perform(get("/api/v1/members/{memberId}/stats/activity", 999L))
+                    .andDo(print())
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("내 활동 통계 조회 시 응답의 모든 필드가 정상 반환된다")
+        void getMyActivityStats_allFieldsReturned() throws Exception {
+            ActivityStatsResponse response = ActivityStatsResponse.builder()
+                    .windowDays(126)
+                    .startDate(LocalDate.of(2025, 11, 1))
+                    .endDate(LocalDate.of(2026, 3, 6))
+                    .timezone("Asia/Seoul")
+                    .totalActivities(0)
+                    .points(List.of())
+                    .build();
+            given(memberService.getActivityStats(1L)).willReturn(response);
+
+            mockMvc.perform(get("/api/v1/members/me/stats/activity"))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.windowDays").value(126))
+                    .andExpect(jsonPath("$.data.startDate").value("2025-11-01"))
+                    .andExpect(jsonPath("$.data.endDate").value("2026-03-06"))
+                    .andExpect(jsonPath("$.data.timezone").value("Asia/Seoul"))
+                    .andExpect(jsonPath("$.data.totalActivities").value(0))
+                    .andExpect(jsonPath("$.data.points").isArray());
         }
     }
 }

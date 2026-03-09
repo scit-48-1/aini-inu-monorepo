@@ -36,7 +36,7 @@ import scit.ainiinu.member.dto.response.FollowStatusResponse;
 import scit.ainiinu.member.dto.response.LoginResponse;
 import scit.ainiinu.member.dto.response.MemberFollowResponse;
 import scit.ainiinu.member.dto.response.MemberResponse;
-import scit.ainiinu.member.dto.response.WalkStatsResponse;
+import scit.ainiinu.member.dto.response.ActivityStatsResponse;
 import scit.ainiinu.member.service.AuthService;
 import scit.ainiinu.member.service.MemberService;
 import scit.ainiinu.chat.dto.response.MemberReviewSummaryResponse;
@@ -342,11 +342,19 @@ public class MemberController {
         return ResponseEntity.ok(ApiResponse.success(chatReviewService.getMemberReviews(memberId, pageable)));
     }
 
-    @GetMapping("/me/stats/walk")
-    @Operation(summary = "산책 통계 조회", description = "현재 로그인한 회원의 산책 통계를 조회합니다.")
-    public ResponseEntity<ApiResponse<WalkStatsResponse>> getWalkStats(
+    @GetMapping("/me/stats/activity")
+    @Operation(summary = "활동 통계 조회", description = "현재 로그인한 회원의 활동 통계를 조회합니다.")
+    public ResponseEntity<ApiResponse<ActivityStatsResponse>> getMyActivityStats(
             @CurrentMember Long memberId
     ) {
-        return ResponseEntity.ok(ApiResponse.success(memberService.getWalkStats(memberId)));
+        return ResponseEntity.ok(ApiResponse.success(memberService.getActivityStats(memberId)));
+    }
+
+    @GetMapping("/{memberId}/stats/activity")
+    @Operation(summary = "회원 활동 통계 조회", description = "특정 회원의 활동 통계를 조회합니다.")
+    public ResponseEntity<ApiResponse<ActivityStatsResponse>> getMemberActivityStats(
+            @PathVariable("memberId") Long memberId
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(memberService.getActivityStats(memberId)));
     }
 }
