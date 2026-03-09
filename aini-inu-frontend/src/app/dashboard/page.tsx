@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useProfile } from '@/hooks/useProfile';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { getWalkStats } from '@/api/members';
 import { getHotspots, getThreads } from '@/api/threads';
 import { getRooms, getRoom, getMyReview } from '@/api/chat';
@@ -22,6 +21,10 @@ import { Button } from '@/components/ui/Button';
 
 function hasData<T>(state: SectionState<T>): state is { status: 'success'; data: T } | { status: 'refreshing'; data: T } {
   return state.status === 'success' || state.status === 'refreshing';
+}
+
+function isLoading<T>(state: SectionState<T>) {
+  return state.status === 'idle' || state.status === 'loading';
 }
 
 // --- Section error fallback ---
@@ -46,213 +49,254 @@ function SectionSkeleton() {
 }
 
 export default function DashboardPage() {
-  const { profile: userProfile } = useProfile();
+  // Subscribe to profile with a stable selector (not entire store)
+  const userProfile = useUserStore((s) => s.profile);
+  const fetchProfile = useUserStore((s) => s.fetchProfile);
 
-  // Dashboard store selectors
+  // Trigger profile fetch on mount (same as useProfile but without full-store subscription)
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  // Dashboard store — subscribe to individual slices (Zustand only re-renders when selected value changes)
   const walkStats = useDashboardStore((s) => s.walkStats);
   const hotspots = useDashboardStore((s) => s.hotspots);
   const threads = useDashboardStore((s) => s.threads);
   const myPets = useDashboardStore((s) => s.myPets);
+  const myPetsLoaded = useDashboardStore((s) => s.myPetsLoaded);
   const recentFriends = useDashboardStore((s) => s.recentFriends);
-  const setWalkStats = useDashboardStore((s) => s.setWalkStats);
-  const setHotspots = useDashboardStore((s) => s.setHotspots);
-  const setThreads = useDashboardStore((s) => s.setThreads);
-  const setMyPets = useDashboardStore((s) => s.setMyPets);
-  const setRecentFriends = useDashboardStore((s) => s.setRecentFriends);
-  const markFetched = useDashboardStore((s) => s.markFetched);
-  const shouldFetch = useDashboardStore((s) => s.shouldFetch);
+  const recentFriendsLoaded = useDashboardStore((s) => s.recentFriendsLoaded);
 
-  const mainPet = myPets.find(p => p.isMain) || myPets[0];
-  const mainDog = mainPet
-    ? { name: mainPet.name, image: mainPet.photoUrl || '/images/dog-portraits/Mixed Breed.png', breed: mainPet.breed?.name || '믹스견' }
-    : { name: '댕댕이', image: '/images/dog-portraits/Mixed Breed.png', breed: '믹스견' };
+  // Stable mainDog — only recompute when myPets actually changes
+  const mainDog = useMemo(() => {
+    const mainPet = myPets.find(p => p.isMain) || myPets[0];
+    return mainPet
+      ? { name: mainPet.name, image: mainPet.photoUrl || '/images/dog-portraits/Mixed Breed.png', breed: mainPet.breed?.name || '믹스견' }
+      : { name: '댕댕이', image: '/images/dog-portraits/Mixed Breed.png', breed: '믹스견' };
+  }, [myPets]);
+
+  // Stable userProfile subset for DashboardHero (avoid passing full profile object)
+  const heroProfile = useMemo(() => ({
+    nickname: userProfile?.nickname,
+    mannerScore: userProfile?.mannerScore,
+    location: userProfile?.location,
+  }), [userProfile?.nickname, userProfile?.mannerScore, userProfile?.location]);
 
   // Pending reviews (local state — not cached)
   const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([]);
   const [pendingReviewModalOpen, setPendingReviewModalOpen] = useState(false);
 
-  // --- Fetch functions with stale-while-revalidate ---
+  // --- Fetch all dashboard data ---
 
-  const fetchWalkStats = useCallback(async (isRefresh = false) => {
-    if (isRefresh && hasData(walkStats)) {
-      setWalkStats({ status: 'refreshing', data: walkStats.data });
-    } else if (!hasData(walkStats)) {
-      setWalkStats({ status: 'loading' });
+  const fetchingRef = useRef(false);
+
+  const fetchAllData = useCallback(async () => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+
+    const store = useDashboardStore.getState();
+    const isRefresh = store.lastFetchedAt !== null;
+
+    // Set loading states upfront (single batch via direct store access)
+    if (!isRefresh) {
+      useDashboardStore.setState({
+        walkStats: { status: 'loading' },
+        hotspots: { status: 'loading' },
+        threads: { status: 'loading' },
+      });
     }
+
+    try {
+      await Promise.allSettled([
+        // walkStats
+        (async () => {
+          try {
+            const data = await getWalkStats();
+            useDashboardStore.setState({ walkStats: { status: 'success', data } });
+          } catch {
+            const s = useDashboardStore.getState();
+            if (!hasData(s.walkStats)) {
+              useDashboardStore.setState({ walkStats: { status: 'error', message: '산책 활동을 불러오지 못했습니다.' } });
+            }
+          }
+        })(),
+        // hotspots
+        (async () => {
+          try {
+            const data = await getHotspots();
+            useDashboardStore.setState({
+              hotspots: data.length === 0 ? { status: 'empty' } : { status: 'success', data },
+            });
+          } catch {
+            const s = useDashboardStore.getState();
+            if (!hasData(s.hotspots)) {
+              useDashboardStore.setState({ hotspots: { status: 'error', message: '추천 정보를 불러오지 못했습니다.' } });
+            }
+          }
+        })(),
+        // threads
+        (async () => {
+          try {
+            let lat = 37.5666;
+            let lng = 126.9784;
+            try {
+              const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
+              );
+              lat = pos.coords.latitude;
+              lng = pos.coords.longitude;
+            } catch {
+              // Use default Seoul coordinates
+            }
+            const res = await getThreads({ page: 0, size: 3, latitude: lat, longitude: lng, radius: 5 });
+            useDashboardStore.setState({
+              threads: res.content.length === 0 ? { status: 'empty' } : { status: 'success', data: res.content },
+            });
+          } catch {
+            const s = useDashboardStore.getState();
+            if (!hasData(s.threads)) {
+              useDashboardStore.setState({ threads: { status: 'error', message: '동네 소식을 불러오지 못했습니다.' } });
+            }
+          }
+        })(),
+        // myPets
+        (async () => {
+          try {
+            const pets = await getMyPets();
+            useDashboardStore.getState().setMyPets(pets);
+          } catch {
+            const s = useDashboardStore.getState();
+            if (s.myPets.length === 0) s.setMyPets([]);
+          }
+        })(),
+        // recentFriends
+        (async () => {
+          try {
+            const roomsRes = await getRooms({ page: 0, size: 5 });
+            const roomSummaries = roomsRes.content.slice(0, 5);
+            const detailResults = await Promise.allSettled(
+              roomSummaries.map((r) => getRoom(r.chatRoomId)),
+            );
+            const currentId = Number(useUserStore.getState().profile?.id) || 0;
+            const seenMembers = new Set<number>();
+            const friends: { id: string; roomId: string; name: string; img: string; score: number }[] = [];
+            for (const res of detailResults) {
+              if (res.status !== 'fulfilled') continue;
+              const detail = res.value;
+              const partner = detail.participants.find((p) => p.memberId !== currentId && !p.left);
+              if (!partner || seenMembers.has(partner.memberId)) continue;
+              seenMembers.add(partner.memberId);
+              const petNames = partner.pets?.map((p) => p.name).join(', ');
+              friends.push({
+                id: String(partner.memberId),
+                roomId: String(detail.chatRoomId),
+                name: petNames || partner.nickname || '산책 친구',
+                img: partner.profileImageUrl || '/AINIINU_ROGO_B.png',
+                score: 7.0,
+              });
+            }
+            useDashboardStore.getState().setRecentFriends(friends);
+          } catch {
+            const s = useDashboardStore.getState();
+            if (s.recentFriends.length === 0) s.setRecentFriends([]);
+          }
+        })(),
+        // pendingReviews
+        (async () => {
+          try {
+            const roomsRes = await getRooms({ page: 0, size: 20, origin: 'WALK' });
+            const rooms = roomsRes.content;
+            if (rooms.length === 0) {
+              setPendingReviews([]);
+              return;
+            }
+            const [detailResults, reviewResults] = await Promise.all([
+              Promise.allSettled(rooms.map((r) => getRoom(r.chatRoomId))),
+              Promise.allSettled(rooms.map((r) => getMyReview(r.chatRoomId))),
+            ]);
+            const currentId = Number(useUserStore.getState().profile?.id) || 0;
+            const pending: PendingReview[] = [];
+            rooms.forEach((room, i) => {
+              const reviewResult = reviewResults[i];
+              if (reviewResult.status !== 'fulfilled' || reviewResult.value.exists) return;
+              const detailResult = detailResults[i];
+              if (detailResult.status !== 'fulfilled') return;
+              const detail = detailResult.value;
+              if (!detail.walkConfirmed) return;
+              const partner = detail.participants.find((p) => p.memberId !== currentId && !p.left);
+              if (!partner) return;
+              pending.push({
+                chatRoomId: detail.chatRoomId,
+                displayName: room.displayName,
+                partnerId: partner.memberId,
+                partnerNickname: partner.nickname || `Member ${partner.memberId}`,
+                profileImageUrl: partner.profileImageUrl,
+              });
+            });
+            setPendingReviews(pending);
+          } catch {
+            setPendingReviews([]);
+          }
+        })(),
+      ]);
+
+      useDashboardStore.getState().markFetched();
+    } finally {
+      fetchingRef.current = false;
+    }
+  }, []);
+
+  // --- Retry handlers (stable refs) ---
+
+  const retryWalkStats = useCallback(async () => {
+    useDashboardStore.setState({ walkStats: { status: 'loading' } });
     try {
       const data = await getWalkStats();
-      setWalkStats({ status: 'success', data });
+      useDashboardStore.setState({ walkStats: { status: 'success', data } });
     } catch {
-      if (!hasData(walkStats)) {
-        setWalkStats({ status: 'error', message: '산책 활동을 불러오지 못했습니다.' });
-      }
+      useDashboardStore.setState({ walkStats: { status: 'error', message: '산책 활동을 불러오지 못했습니다.' } });
     }
-  }, [walkStats, setWalkStats]);
+  }, []);
 
-  const fetchHotspots = useCallback(async (isRefresh = false) => {
-    if (isRefresh && hasData(hotspots)) {
-      setHotspots({ status: 'refreshing', data: hotspots.data });
-    } else if (!hasData(hotspots)) {
-      setHotspots({ status: 'loading' });
-    }
+  const retryHotspots = useCallback(async () => {
+    useDashboardStore.setState({ hotspots: { status: 'loading' } });
     try {
       const data = await getHotspots();
-      if (data.length === 0) {
-        setHotspots({ status: 'empty' });
-      } else {
-        setHotspots({ status: 'success', data });
-      }
+      useDashboardStore.setState({
+        hotspots: data.length === 0 ? { status: 'empty' } : { status: 'success', data },
+      });
     } catch {
-      if (!hasData(hotspots)) {
-        setHotspots({ status: 'error', message: '추천 정보를 불러오지 못했습니다.' });
-      }
+      useDashboardStore.setState({ hotspots: { status: 'error', message: '추천 정보를 불러오지 못했습니다.' } });
     }
-  }, [hotspots, setHotspots]);
+  }, []);
 
-  const fetchThreads = useCallback(async (isRefresh = false) => {
-    if (isRefresh && hasData(threads)) {
-      setThreads({ status: 'refreshing', data: threads.data });
-    } else if (!hasData(threads)) {
-      setThreads({ status: 'loading' });
-    }
+  const retryThreads = useCallback(async () => {
+    useDashboardStore.setState({ threads: { status: 'loading' } });
     try {
-      let lat = 37.5666;
-      let lng = 126.9784;
+      let lat = 37.5666, lng = 126.9784;
       try {
         const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
           navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
         );
         lat = pos.coords.latitude;
         lng = pos.coords.longitude;
-      } catch {
-        // Use default Seoul coordinates
-      }
+      } catch { /* default coords */ }
       const res = await getThreads({ page: 0, size: 3, latitude: lat, longitude: lng, radius: 5 });
-      if (res.content.length === 0) {
-        setThreads({ status: 'empty' });
-      } else {
-        setThreads({ status: 'success', data: res.content });
-      }
-    } catch {
-      if (!hasData(threads)) {
-        setThreads({ status: 'error', message: '동네 소식을 불러오지 못했습니다.' });
-      }
-    }
-  }, [threads, setThreads]);
-
-  // --- Pending review detection ---
-
-  const detectPendingReviews = useCallback(async () => {
-    try {
-      const roomsRes = await getRooms({ page: 0, size: 20, origin: 'WALK' });
-      const rooms = roomsRes.content;
-      if (rooms.length === 0) {
-        setPendingReviews([]);
-        return;
-      }
-
-      const [detailResults, reviewResults] = await Promise.all([
-        Promise.allSettled(rooms.map((r) => getRoom(r.chatRoomId))),
-        Promise.allSettled(rooms.map((r) => getMyReview(r.chatRoomId))),
-      ]);
-
-      const currentId = Number(useUserStore.getState().profile?.id) || 0;
-      const pending: PendingReview[] = [];
-
-      rooms.forEach((room, i) => {
-        const reviewResult = reviewResults[i];
-        if (reviewResult.status !== 'fulfilled' || reviewResult.value.exists) return;
-
-        const detailResult = detailResults[i];
-        if (detailResult.status !== 'fulfilled') return;
-        const detail = detailResult.value;
-        if (!detail.walkConfirmed) return;
-
-        const partner = detail.participants.find((p) => p.memberId !== currentId && !p.left);
-        if (!partner) return;
-
-        pending.push({
-          chatRoomId: detail.chatRoomId,
-          displayName: room.displayName,
-          partnerId: partner.memberId,
-          partnerNickname: partner.nickname || `Member ${partner.memberId}`,
-          profileImageUrl: partner.profileImageUrl,
-        });
+      useDashboardStore.setState({
+        threads: res.content.length === 0 ? { status: 'empty' } : { status: 'success', data: res.content },
       });
-
-      setPendingReviews(pending);
     } catch {
-      setPendingReviews([]);
+      useDashboardStore.setState({ threads: { status: 'error', message: '동네 소식을 불러오지 못했습니다.' } });
     }
   }, []);
-
-  // --- Fetch my pets ---
-
-  const fetchMyPets = useCallback(async () => {
-    try {
-      const pets = await getMyPets();
-      setMyPets(pets);
-    } catch {
-      if (myPets.length === 0) setMyPets([]);
-    }
-  }, [myPets.length, setMyPets]);
-
-  // --- Recent friends ---
-
-  const fetchRecentFriends = useCallback(async () => {
-    try {
-      const roomsRes = await getRooms({ page: 0, size: 5 });
-      const roomSummaries = roomsRes.content.slice(0, 5);
-      const detailResults = await Promise.allSettled(
-        roomSummaries.map((r) => getRoom(r.chatRoomId)),
-      );
-      const currentId = Number(useUserStore.getState().profile?.id) || 0;
-      const seenMembers = new Set<number>();
-      const friends: { id: string; roomId: string; name: string; img: string; score: number }[] = [];
-      for (const res of detailResults) {
-        if (res.status !== 'fulfilled') continue;
-        const detail = res.value;
-        const partner = detail.participants.find((p) => p.memberId !== currentId && !p.left);
-        if (!partner || seenMembers.has(partner.memberId)) continue;
-        seenMembers.add(partner.memberId);
-        const petNames = partner.pets?.map((p) => p.name).join(', ');
-        friends.push({
-          id: String(partner.memberId),
-          roomId: String(detail.chatRoomId),
-          name: petNames || partner.nickname || '산책 친구',
-          img: partner.profileImageUrl || '/AINIINU_ROGO_B.png',
-          score: 7.0,
-        });
-      }
-      setRecentFriends(friends);
-    } catch {
-      if (recentFriends.length === 0) setRecentFriends([]);
-    }
-  }, [recentFriends.length, setRecentFriends]);
 
   // --- Main data fetch ---
 
   useEffect(() => {
     if (!userProfile) return;
-    if (!shouldFetch()) return;
-
-    const isRefresh = useDashboardStore.getState().lastFetchedAt !== null;
-
-    const fetchAll = async () => {
-      await Promise.allSettled([
-        fetchWalkStats(isRefresh),
-        fetchHotspots(isRefresh),
-        fetchThreads(isRefresh),
-        fetchMyPets(),
-        fetchRecentFriends(),
-        detectPendingReviews(),
-      ]);
-      markFetched();
-    };
-
-    fetchAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userProfile]);
+    if (!useDashboardStore.getState().shouldFetch()) return;
+    fetchAllData();
+  }, [!!userProfile, fetchAllData]);
 
   if (!userProfile) {
     return (
@@ -272,9 +316,9 @@ export default function DashboardPage() {
         />
 
         {/* (2) AI Banner -- hotspots */}
-        {hotspots.status === 'loading' && <SectionSkeleton />}
+        {isLoading(hotspots) && <SectionSkeleton />}
         {hotspots.status === 'error' && (
-          <SectionErrorFallback message={hotspots.message} onRetry={() => fetchHotspots()} />
+          <SectionErrorFallback message={hotspots.message} onRetry={retryHotspots} />
         )}
         {hotspots.status === 'empty' && (
           <AIBanner hotspots={[]} dogName={mainDog.name} />
@@ -283,26 +327,26 @@ export default function DashboardPage() {
           <AIBanner hotspots={hotspots.data} dogName={mainDog.name} />
         )}
 
-        {/* (3) Dashboard Hero -- userProfile from useProfile + walkStats */}
-        {walkStats.status === 'loading' && <SectionSkeleton />}
-        {walkStats.status === 'error' && (
-          <SectionErrorFallback message={walkStats.message} onRetry={() => fetchWalkStats()} />
+        {/* (3) Dashboard Hero -- walkStats + myPets must both be ready */}
+        {(isLoading(walkStats) || !myPetsLoaded) && <SectionSkeleton />}
+        {walkStats.status === 'error' && myPetsLoaded && (
+          <SectionErrorFallback message={walkStats.message} onRetry={retryWalkStats} />
         )}
-        {(hasData(walkStats) || walkStats.status === 'empty') && (
+        {myPetsLoaded && (hasData(walkStats) || walkStats.status === 'empty') && (
           <DashboardHero
-            userProfile={userProfile}
+            userProfile={heroProfile}
             mainDog={mainDog}
             walkStats={hasData(walkStats) ? walkStats.data : null}
           />
         )}
 
-        {/* (4) Recent Friends -- keep existing pattern */}
-        <RecentFriends friends={recentFriends} />
+        {/* (4) Recent Friends */}
+        {!recentFriendsLoaded ? <SectionSkeleton /> : <RecentFriends friends={recentFriends} />}
 
         {/* (5) Local Feed Preview -- threads */}
-        {threads.status === 'loading' && <SectionSkeleton />}
+        {isLoading(threads) && <SectionSkeleton />}
         {threads.status === 'error' && (
-          <LocalFeedPreview threads={[]} error={threads.message} onRetry={() => fetchThreads()} />
+          <LocalFeedPreview threads={[]} error={threads.message} onRetry={retryThreads} />
         )}
         {threads.status === 'empty' && (
           <LocalFeedPreview threads={[]} />
@@ -316,7 +360,7 @@ export default function DashboardPage() {
           isOpen={pendingReviewModalOpen}
           onClose={() => setPendingReviewModalOpen(false)}
           pendingReviews={pendingReviews}
-          onReviewSubmitted={detectPendingReviews}
+          onReviewSubmitted={fetchAllData}
         />
       </div>
     </div>

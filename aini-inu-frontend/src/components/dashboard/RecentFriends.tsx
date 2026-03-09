@@ -20,7 +20,7 @@ interface RecentFriendsProps {
   friends: Friend[];
 }
 
-export const RecentFriends: React.FC<RecentFriendsProps> = ({ friends }) => {
+export const RecentFriends: React.FC<RecentFriendsProps> = React.memo(({ friends }) => {
   const isEmpty = !friends || friends.length === 0;
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -83,4 +83,6 @@ export const RecentFriends: React.FC<RecentFriendsProps> = ({ friends }) => {
       <MemberSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </section>
   );
-};
+});
+
+RecentFriends.displayName = 'RecentFriends';

@@ -57,9 +57,9 @@ export const useUserStore = create<UserState>((set, get) => ({
     // Handle MemberResponse (from API) or UserType (legacy)
     if ('email' in profile && 'mannerTemperature' in profile) {
       // It's a MemberResponse — map it
-      set({ profile: mapMemberToUser(profile as MemberResponse), isAuthenticated: true });
+      set({ profile: mapMemberToUser(profile as MemberResponse), isAuthenticated: true, hasFetched: true });
     } else {
-      set({ profile: profile as UserType, isAuthenticated: !!profile });
+      set({ profile: profile as UserType, isAuthenticated: !!profile, hasFetched: true });
     }
   },
 

@@ -22,7 +22,7 @@ interface DashboardHeroProps {
   walkStats: WalkStatsResponse | null;
 }
 
-export const DashboardHero: React.FC<DashboardHeroProps> = ({ userProfile, mainDog, walkStats }) => {
+export const DashboardHero: React.FC<DashboardHeroProps> = React.memo(({ userProfile, mainDog, walkStats }) => {
   const grassData = walkStats ? pointsToGridCounts(walkStats) : [];
   const totalWalks = walkStats?.totalWalks ?? 0;
 
@@ -159,4 +159,6 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({ userProfile, mainD
       </Card>
     </section>
   );
-};
+});
+
+DashboardHero.displayName = 'DashboardHero';

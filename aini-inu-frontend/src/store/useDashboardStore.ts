@@ -26,7 +26,9 @@ interface DashboardState {
   hotspots: SectionState<ThreadHotspotResponse[]>;
   threads: SectionState<ThreadSummaryResponse[]>;
   myPets: PetResponse[];
+  myPetsLoaded: boolean;
   recentFriends: RecentFriend[];
+  recentFriendsLoaded: boolean;
   lastFetchedAt: number | null;
 
   // Actions
@@ -47,7 +49,9 @@ const initialState = {
   hotspots: { status: 'idle' as const },
   threads: { status: 'idle' as const },
   myPets: [] as PetResponse[],
+  myPetsLoaded: false,
   recentFriends: [] as RecentFriend[],
+  recentFriendsLoaded: false,
   lastFetchedAt: null as number | null,
 };
 
@@ -57,8 +61,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   setWalkStats: (state) => set({ walkStats: state }),
   setHotspots: (state) => set({ hotspots: state }),
   setThreads: (state) => set({ threads: state }),
-  setMyPets: (pets) => set({ myPets: pets }),
-  setRecentFriends: (friends) => set({ recentFriends: friends }),
+  setMyPets: (pets) => set({ myPets: pets, myPetsLoaded: true }),
+  setRecentFriends: (friends) => set({ recentFriends: friends, recentFriendsLoaded: true }),
 
   markFetched: () => set({ lastFetchedAt: Date.now() }),
 
