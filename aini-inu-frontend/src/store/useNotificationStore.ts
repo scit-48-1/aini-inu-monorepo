@@ -30,16 +30,14 @@ export const useNotificationStore = create<NotificationState>()((set) => ({
   incrementUnread: () => set((state) => ({ unreadCount: state.unreadCount + 1 })),
   markAsRead: (id) =>
     set((state) => ({
-      notifications: state.notifications.map((n) =>
-        n.id === id ? { ...n, isRead: true } : n,
-      ),
+      notifications: state.notifications.filter((n) => n.id !== id),
       unreadCount: Math.max(0, state.unreadCount - 1),
     })),
   markAllAsRead: () =>
-    set((state) => ({
-      notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
+    set({
+      notifications: [],
       unreadCount: 0,
-    })),
+    }),
   toggleOpen: () => set((state) => ({ isOpen: !state.isOpen })),
   setOpen: (open) => set({ isOpen: open }),
 }));

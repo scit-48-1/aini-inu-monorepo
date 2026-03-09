@@ -51,8 +51,8 @@ export const NotificationPanel: React.FC = () => {
   if (!isOpen) return null;
 
   const handleItemClick = async (notification: NotificationItemType) => {
+    storeMarkAsRead(notification.id);
     if (!notification.isRead) {
-      storeMarkAsRead(notification.id);
       markAsReadApi(notification.id).catch(() => {});
     }
     setOpen(false);
