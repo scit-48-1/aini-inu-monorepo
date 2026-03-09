@@ -118,34 +118,50 @@ public class WalkThreadService {
     }
 
     public SliceResponse<ThreadSummaryResponse> getThreads(Long memberId, Pageable pageable, LocalDate startDate, LocalDate endDate, Double latitude, Double longitude, Double radiusKm) {
-        Pageable safePageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
-        Slice<WalkThread> slice;
-        if (startDate != null || endDate != null) {
-            LocalDate effectiveStart = startDate != null ? startDate : LocalDate.of(2000, 1, 1);
-            LocalDate effectiveEnd = endDate != null ? endDate : LocalDate.of(2099, 12, 31);
-            slice = walkThreadRepository.findByStatusAndWalkDateRange(
-                    WalkThreadStatus.RECRUITING, effectiveStart, effectiveEnd, safePageable);
-        } else {
-            slice = walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(
-                    WalkThreadStatus.RECRUITING, safePageable);
-        }
-
         LocalDateTime now = LocalDateTime.now();
+        List<WalkThread> allRecruiting = walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING);
+
         final boolean hasLocation = latitude != null && longitude != null && radiusKm != null;
         final double lat = hasLocation ? latitude : 0;
         final double lng = hasLocation ? longitude : 0;
         final double rad = hasLocation ? radiusKm : 0;
 
-        List<WalkThread> filteredThreads = slice.getContent().stream()
-                .filter(thread -> !thread.isExpired(now))
-                .filter(thread -> !hasLocation || distanceInKm(lat, lng,
-                        thread.getLatitude().doubleValue(), thread.getLongitude().doubleValue()) <= rad)
-                .toList();
+        List<WalkThread> filteredThreads = new ArrayList<>();
+        for (WalkThread thread : allRecruiting) {
+            if (thread.isExpired(now)) {
+                continue;
+            }
+            if (startDate != null && thread.getWalkDate().isBefore(startDate)) {
+                continue;
+            }
+            if (endDate != null && thread.getWalkDate().isAfter(endDate)) {
+                continue;
+            }
+            if (hasLocation && distanceInKm(lat, lng,
+                    thread.getLatitude().doubleValue(), thread.getLongitude().doubleValue()) > rad) {
+                continue;
+            }
+            filteredThreads.add(thread);
+        }
 
-        List<ThreadSummaryResponse> content = toBatchSummaryResponses(filteredThreads, memberId);
-        Slice<ThreadSummaryResponse> filtered = new org.springframework.data.domain.SliceImpl<>(
-                content, safePageable, slice.hasNext());
-        return SliceResponse.of(filtered);
+        filteredThreads.sort(Comparator.comparing(WalkThread::getCreatedAt).reversed()
+                .thenComparing(Comparator.comparing(WalkThread::getId).reversed()));
+
+        int pageNumber = pageable.getPageNumber();
+        int pageSize = pageable.getPageSize();
+        int start = pageNumber * pageSize;
+        int end = Math.min(start + pageSize, filteredThreads.size());
+        boolean hasNext = end < filteredThreads.size();
+
+        List<WalkThread> pageContent = start < filteredThreads.size()
+                ? filteredThreads.subList(start, end)
+                : List.of();
+
+        List<ThreadSummaryResponse> content = toBatchSummaryResponses(pageContent, memberId);
+        Pageable safePageable = PageRequest.of(pageNumber, pageSize);
+        Slice<ThreadSummaryResponse> slice = new org.springframework.data.domain.SliceImpl<>(
+                content, safePageable, hasNext);
+        return SliceResponse.of(slice);
     }
 
     public List<ThreadMapResponse> getMapThreads(Long memberId, double latitude, double longitude, double radiusKm, LocalDate startDate, LocalDate endDate) {

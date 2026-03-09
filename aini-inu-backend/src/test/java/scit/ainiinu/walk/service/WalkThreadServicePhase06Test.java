@@ -184,16 +184,16 @@ class WalkThreadServicePhase06Test {
     class GetThreads {
 
         @Test
-        @DisplayName("날짜 필터 없이 조회 시 findByStatusOrderByCreatedAtDescIdDesc 호출")
+        @DisplayName("날짜 필터 없이 조회 시 findByStatus 호출")
         void getThreads_noDateFilter_usesDefaultQuery() {
             // given
             Long memberId = 1L;
             Pageable pageable = PageRequest.of(0, 20);
             WalkThread thread = buildFutureThread(1L, 2L);
+            ReflectionTestUtils.setField(thread, "createdAt", LocalDateTime.now());
 
-            Slice<WalkThread> slice = new SliceImpl<>(List.of(thread), pageable, false);
-            given(walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(WalkThreadStatus.RECRUITING, pageable))
-                    .willReturn(slice);
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(thread));
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
@@ -205,24 +205,25 @@ class WalkThreadServicePhase06Test {
             SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, null, null, null, null, null);
 
             // then
-            then(walkThreadRepository).should().findByStatusOrderByCreatedAtDescIdDesc(WalkThreadStatus.RECRUITING, pageable);
-            then(walkThreadRepository).should(never()).findByStatusAndWalkDateRange(any(), any(), any(), any());
+            then(walkThreadRepository).should().findByStatus(WalkThreadStatus.RECRUITING);
             assertThat(response.getContent()).hasSize(1);
         }
 
         @Test
-        @DisplayName("startDate만 있을 때 effectiveEnd는 2099-12-31")
-        void getThreads_onlyStartDate_effectiveEndIs2099() {
+        @DisplayName("startDate 필터 적용 시 해당 날짜 이후 스레드만 반환")
+        void getThreads_onlyStartDate_filtersCorrectly() {
             // given
             Long memberId = 1L;
             Pageable pageable = PageRequest.of(0, 20);
-            LocalDate startDate = LocalDate.of(2026, 3, 1);
-            WalkThread thread = buildFutureThread(1L, 2L);
+            LocalDate startDate = LocalDate.now().plusDays(2);
 
-            Slice<WalkThread> slice = new SliceImpl<>(List.of(thread), pageable, false);
-            given(walkThreadRepository.findByStatusAndWalkDateRange(
-                    WalkThreadStatus.RECRUITING, startDate, LocalDate.of(2099, 12, 31), pageable))
-                    .willReturn(slice);
+            WalkThread matchThread = buildFutureThreadWithWalkDate(1L, 2L, LocalDate.now().plusDays(3));
+            ReflectionTestUtils.setField(matchThread, "createdAt", LocalDateTime.now());
+            WalkThread earlyThread = buildFutureThreadWithWalkDate(2L, 3L, LocalDate.now());
+            ReflectionTestUtils.setField(earlyThread, "createdAt", LocalDateTime.now());
+
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(matchThread, earlyThread));
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
@@ -234,23 +235,25 @@ class WalkThreadServicePhase06Test {
             SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, startDate, null, null, null, null);
 
             // then
-            then(walkThreadRepository).should().findByStatusAndWalkDateRange(
-                    WalkThreadStatus.RECRUITING, startDate, LocalDate.of(2099, 12, 31), pageable);
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.getContent().get(0).getId()).isEqualTo(1L);
         }
 
         @Test
-        @DisplayName("endDate만 있을 때 effectiveStart는 2000-01-01")
-        void getThreads_onlyEndDate_effectiveStartIs2000() {
+        @DisplayName("endDate 필터 적용 시 해당 날짜 이전 스레드만 반환")
+        void getThreads_onlyEndDate_filtersCorrectly() {
             // given
             Long memberId = 1L;
             Pageable pageable = PageRequest.of(0, 20);
-            LocalDate endDate = LocalDate.of(2026, 12, 31);
-            WalkThread thread = buildFutureThread(1L, 2L);
+            LocalDate endDate = LocalDate.now().plusDays(3);
 
-            Slice<WalkThread> slice = new SliceImpl<>(List.of(thread), pageable, false);
-            given(walkThreadRepository.findByStatusAndWalkDateRange(
-                    WalkThreadStatus.RECRUITING, LocalDate.of(2000, 1, 1), endDate, pageable))
-                    .willReturn(slice);
+            WalkThread matchThread = buildFutureThreadWithWalkDate(1L, 2L, LocalDate.now().plusDays(2));
+            ReflectionTestUtils.setField(matchThread, "createdAt", LocalDateTime.now());
+            WalkThread lateThread = buildFutureThreadWithWalkDate(2L, 3L, LocalDate.now().plusDays(10));
+            ReflectionTestUtils.setField(lateThread, "createdAt", LocalDateTime.now());
+
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(matchThread, lateThread));
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
@@ -262,24 +265,28 @@ class WalkThreadServicePhase06Test {
             SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, null, endDate, null, null, null);
 
             // then
-            then(walkThreadRepository).should().findByStatusAndWalkDateRange(
-                    WalkThreadStatus.RECRUITING, LocalDate.of(2000, 1, 1), endDate, pageable);
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.getContent().get(0).getId()).isEqualTo(1L);
         }
 
         @Test
-        @DisplayName("startDate와 endDate 둘 다 있을 때 findByStatusAndWalkDateRange 호출")
-        void getThreads_bothDates_usesDateRangeQuery() {
+        @DisplayName("startDate와 endDate 둘 다 있을 때 범위 내 스레드만 반환")
+        void getThreads_bothDates_filtersCorrectly() {
             // given
             Long memberId = 1L;
             Pageable pageable = PageRequest.of(0, 20);
-            LocalDate startDate = LocalDate.of(2026, 3, 1);
-            LocalDate endDate = LocalDate.of(2026, 3, 31);
-            WalkThread thread = buildFutureThread(1L, 2L);
+            LocalDate startDate = LocalDate.now().plusDays(2);
+            LocalDate endDate = LocalDate.now().plusDays(5);
 
-            Slice<WalkThread> slice = new SliceImpl<>(List.of(thread), pageable, false);
-            given(walkThreadRepository.findByStatusAndWalkDateRange(
-                    WalkThreadStatus.RECRUITING, startDate, endDate, pageable))
-                    .willReturn(slice);
+            WalkThread matchThread = buildFutureThreadWithWalkDate(1L, 2L, LocalDate.now().plusDays(3));
+            ReflectionTestUtils.setField(matchThread, "createdAt", LocalDateTime.now());
+            WalkThread earlyThread = buildFutureThreadWithWalkDate(2L, 3L, LocalDate.now());
+            ReflectionTestUtils.setField(earlyThread, "createdAt", LocalDateTime.now());
+            WalkThread lateThread = buildFutureThreadWithWalkDate(3L, 4L, LocalDate.now().plusDays(10));
+            ReflectionTestUtils.setField(lateThread, "createdAt", LocalDateTime.now());
+
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(matchThread, earlyThread, lateThread));
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
@@ -291,9 +298,8 @@ class WalkThreadServicePhase06Test {
             SliceResponse<ThreadSummaryResponse> response = walkThreadService.getThreads(memberId, pageable, startDate, endDate, null, null, null);
 
             // then
-            then(walkThreadRepository).should().findByStatusAndWalkDateRange(
-                    WalkThreadStatus.RECRUITING, startDate, endDate, pageable);
-            then(walkThreadRepository).should(never()).findByStatusOrderByCreatedAtDescIdDesc(any(), any());
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.getContent().get(0).getId()).isEqualTo(1L);
         }
 
         @Test
@@ -311,14 +317,15 @@ class WalkThreadServicePhase06Test {
             // Gangnam Station ~5.3km away (within radius)
             WalkThread nearThread = buildFutureThreadWithLocation(1L, 2L,
                     BigDecimal.valueOf(37.4979), BigDecimal.valueOf(127.0276));
+            ReflectionTestUtils.setField(nearThread, "createdAt", LocalDateTime.now());
 
             // Incheon ~30km away (outside radius)
             WalkThread farThread = buildFutureThreadWithLocation(2L, 3L,
                     BigDecimal.valueOf(37.4563), BigDecimal.valueOf(126.7052));
+            ReflectionTestUtils.setField(farThread, "createdAt", LocalDateTime.now());
 
-            Slice<WalkThread> slice = new SliceImpl<>(List.of(nearThread, farThread), pageable, false);
-            given(walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(WalkThreadStatus.RECRUITING, pageable))
-                    .willReturn(slice);
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(nearThread, farThread));
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
@@ -343,6 +350,7 @@ class WalkThreadServicePhase06Test {
             Pageable pageable = PageRequest.of(0, 20);
 
             WalkThread activeThread = buildFutureThread(1L, 2L);
+            ReflectionTestUtils.setField(activeThread, "createdAt", LocalDateTime.now());
 
             // Expired thread: startTime in the past (more than 60 minutes ago)
             WalkThread expiredThread = WalkThread.builder()
@@ -363,10 +371,10 @@ class WalkThreadServicePhase06Test {
                     .status(WalkThreadStatus.RECRUITING)
                     .build();
             ReflectionTestUtils.setField(expiredThread, "id", 2L);
+            ReflectionTestUtils.setField(expiredThread, "createdAt", LocalDateTime.now());
 
-            Slice<WalkThread> slice = new SliceImpl<>(List.of(activeThread, expiredThread), pageable, false);
-            given(walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(WalkThreadStatus.RECRUITING, pageable))
-                    .willReturn(slice);
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(activeThread, expiredThread));
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
@@ -794,10 +802,10 @@ class WalkThreadServicePhase06Test {
             Long memberId = 1L;
             Pageable pageable = PageRequest.of(0, 20);
             WalkThread thread = buildFutureThread(1L, 2L);
+            ReflectionTestUtils.setField(thread, "createdAt", LocalDateTime.now());
 
-            Slice<WalkThread> slice = new SliceImpl<>(List.of(thread), pageable, false);
-            given(walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(WalkThreadStatus.RECRUITING, pageable))
-                    .willReturn(slice);
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(thread));
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))
@@ -828,10 +836,10 @@ class WalkThreadServicePhase06Test {
             Long memberId = 1L;
             Pageable pageable = PageRequest.of(0, 20);
             WalkThread thread = buildFutureThread(1L, 2L);
+            ReflectionTestUtils.setField(thread, "createdAt", LocalDateTime.now());
 
-            Slice<WalkThread> slice = new SliceImpl<>(List.of(thread), pageable, false);
-            given(walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(WalkThreadStatus.RECRUITING, pageable))
-                    .willReturn(slice);
+            given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                    .willReturn(List.of(thread));
             given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(1L), WalkThreadApplicationStatus.JOINED))
                     .willReturn(List.of());
             given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(1L), memberId, WalkThreadApplicationStatus.JOINED))

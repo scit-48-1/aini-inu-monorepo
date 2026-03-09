@@ -89,8 +89,8 @@ class WalkThreadServiceCoverageTest {
         Pageable pageable = PageRequest.of(0, 10);
         Slice<WalkThread> slice = new SliceImpl<>(List.of(thread), pageable, false);
 
-        given(walkThreadRepository.findByStatusOrderByCreatedAtDescIdDesc(eq(WalkThreadStatus.RECRUITING), any(Pageable.class)))
-                .willReturn(slice);
+        given(walkThreadRepository.findByStatus(WalkThreadStatus.RECRUITING))
+                .willReturn(List.of(thread));
         given(walkThreadApplicationRepository.countByThreadIdInAndStatus(List.of(101L), WalkThreadApplicationStatus.JOINED))
                 .willReturn(List.<Object[]>of(new Object[]{101L, 2L}));
         given(walkThreadApplicationRepository.findByThreadIdInAndMemberIdAndStatus(List.of(101L), 1L, WalkThreadApplicationStatus.JOINED))
