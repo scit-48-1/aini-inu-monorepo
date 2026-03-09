@@ -6,6 +6,7 @@ import { ChatHeader } from '@/components/chat/ChatHeader';
 import { MessageList } from '@/components/chat/MessageList';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ParticipantListPanel } from '@/components/chat/ParticipantListPanel';
+import { ProfileExplorer } from '@/components/chat/ProfileExplorer';
 import {
   getRoom,
   getMessages,
@@ -388,13 +389,25 @@ export default function ChatRoomPage() {
         />
       </div>
 
-      {/* Side panel: participant list for all room types */}
-      <ParticipantListPanel
-        participants={room.participants}
-        currentMemberId={currentMemberId}
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-      />
+      {/* Side panel: ProfileExplorer for 1:1 rooms, ParticipantListPanel for group rooms */}
+      {room.chatType === 'GROUP' ? (
+        <ParticipantListPanel
+          participants={room.participants}
+          currentMemberId={currentMemberId}
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+        />
+      ) : (
+        <ProfileExplorer
+          partnerId={
+            room.participants.find(
+              (p) => p.memberId !== currentMemberId && !p.left,
+            )?.memberId ?? 0
+          }
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+        />
+      )}
 
       {/* Walk Review Modal */}
       <WalkReviewModal
