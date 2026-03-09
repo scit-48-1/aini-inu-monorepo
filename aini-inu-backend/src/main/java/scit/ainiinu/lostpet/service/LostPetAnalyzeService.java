@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,8 @@ import scit.ainiinu.lostpet.repository.LostPetReportRepository;
 import scit.ainiinu.lostpet.repository.LostPetSearchCandidateRepository;
 import scit.ainiinu.lostpet.repository.LostPetSearchSessionRepository;
 import scit.ainiinu.lostpet.repository.SightingRepository;
+import scit.ainiinu.member.entity.Member;
+import scit.ainiinu.member.repository.MemberRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +42,7 @@ public class LostPetAnalyzeService {
     private final LostPetSearchSessionRepository lostPetSearchSessionRepository;
     private final LostPetSearchCandidateRepository lostPetSearchCandidateRepository;
     private final LostPetCandidateScoringService lostPetCandidateScoringService;
+    private final MemberRepository memberRepository;
 
     @Value("${lostpet.search.session-ttl-hours:24}")
     private long sessionTtlHours;
@@ -97,8 +102,17 @@ public class LostPetAnalyzeService {
                 ? List.of()
                 : lostPetSearchCandidateRepository.saveAll(entities);
 
+        List<Long> finderIds = savedCandidates.stream()
+                .map(c -> c.getSighting().getFinderId())
+                .distinct()
+                .toList();
+        Map<Long, String> nicknameMap = finderIds.isEmpty()
+                ? Map.of()
+                : memberRepository.findAllById(finderIds).stream()
+                        .collect(Collectors.toMap(Member::getId, Member::getNickname));
+
         List<LostPetAnalyzeCandidateResponse> candidates = savedCandidates.stream()
-                .map(this::toCandidateResponse)
+                .map(c -> toCandidateResponse(c, nicknameMap))
                 .toList();
         log.info(
                 "lostpet.analyze success mode={} lostPetId={} sessionId={} candidateCount={} elapsedMs={}",
@@ -196,10 +210,19 @@ public class LostPetAnalyzeService {
                 .orElseGet(List::of);
     }
 
-    private LostPetAnalyzeCandidateResponse toCandidateResponse(LostPetSearchCandidate candidate) {
+    private LostPetAnalyzeCandidateResponse toCandidateResponse(
+            LostPetSearchCandidate candidate,
+            Map<Long, String> nicknameMap
+    ) {
+        Sighting sighting = candidate.getSighting();
         return LostPetAnalyzeCandidateResponse.builder()
-                .sightingId(candidate.getSighting().getId())
-                .finderId(candidate.getSighting().getFinderId())
+                .sightingId(sighting.getId())
+                .finderId(sighting.getFinderId())
+                .photoUrl(sighting.getPhotoUrl())
+                .foundLocation(sighting.getFoundLocation())
+                .foundAt(sighting.getFoundAt())
+                .memo(sighting.getMemo())
+                .finderNickname(nicknameMap.getOrDefault(sighting.getFinderId(), "알 수 없음"))
                 .scoreSimilarity(candidate.getScoreSimilarity())
                 .scoreDistance(candidate.getScoreDistance())
                 .scoreRecency(candidate.getScoreRecency())

@@ -24,6 +24,7 @@ import scit.ainiinu.chat.repository.MessageRepository;
 import scit.ainiinu.member.repository.MemberRepository;
 import scit.ainiinu.pet.repository.PetRepository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,8 +67,8 @@ class ChatServiceUnitTest {
     class DirectRoomIdempotency {
 
         @Test
-        @DisplayName("같은 참여자 direct 방이 있으면 기존 방을 반환한다")
-        void returnsExistingDirectRoom() {
+        @DisplayName("기존 ACTIVE 방 + 양쪽 참여 중 → 기존 방 반환")
+        void returnsExistingActiveRoom() {
             // given
             ChatRoomDirectCreateRequest request = new ChatRoomDirectCreateRequest();
             request.setPartnerId(2L);
@@ -75,18 +76,130 @@ class ChatServiceUnitTest {
             ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
             setRoomId(room, 10L);
 
+            ChatParticipant me = ChatParticipant.create(10L, 1L);
+            setParticipantId(me, 1L);
+            ChatParticipant partner = ChatParticipant.create(10L, 2L);
+            setParticipantId(partner, 2L);
+
             given(memberRepository.existsById(2L)).willReturn(true);
-            given(chatRoomRepository.findByTypeAndParticipants(ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, 1L, 2L))
-                    .willReturn(Optional.of(room));
-            given(chatParticipantRepository.findAllByChatRoomId(10L)).willReturn(List.of());
+            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L))
+                    .willReturn(List.of(room));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(10L, 1L))
+                    .willReturn(Optional.of(me));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(10L, 2L))
+                    .willReturn(Optional.of(partner));
+            stubDetailResponse(10L, me, partner);
 
             // when
             ChatRoomDetailResponse response = chatRoomService.createDirectRoom(1L, request);
 
             // then
             assertThat(response.getChatRoomId()).isEqualTo(10L);
-            then(chatRoomRepository).should().findByTypeAndParticipants(ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, 1L, 2L);
-            then(chatRoomRepository).shouldHaveNoMoreInteractions();
+            assertThat(room.getStatus()).isEqualTo(ChatRoomStatus.ACTIVE);
+            then(chatRoomRepository).should().findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L);
+        }
+
+        @Test
+        @DisplayName("기존 ACTIVE 방 + 한쪽 나감 → rejoin 후 기존 방 반환")
+        void rejoinsLeftParticipant() {
+            // given
+            ChatRoomDirectCreateRequest request = new ChatRoomDirectCreateRequest();
+            request.setPartnerId(2L);
+
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
+            setRoomId(room, 10L);
+
+            ChatParticipant me = ChatParticipant.create(10L, 1L);
+            setParticipantId(me, 1L);
+            ChatParticipant partner = ChatParticipant.create(10L, 2L);
+            setParticipantId(partner, 2L);
+            partner.leave(); // partner left
+
+            given(memberRepository.existsById(2L)).willReturn(true);
+            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L))
+                    .willReturn(List.of(room));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(10L, 1L))
+                    .willReturn(Optional.of(me));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(10L, 2L))
+                    .willReturn(Optional.of(partner));
+            stubDetailResponse(10L, me, partner);
+
+            // when
+            ChatRoomDetailResponse response = chatRoomService.createDirectRoom(1L, request);
+
+            // then
+            assertThat(response.getChatRoomId()).isEqualTo(10L);
+            assertThat(partner.isLeft()).isFalse(); // partner rejoined
+        }
+
+        @Test
+        @DisplayName("기존 CLOSED 방 → reopen + rejoin 후 기존 방 반환")
+        void reopensClosedRoom() {
+            // given
+            ChatRoomDirectCreateRequest request = new ChatRoomDirectCreateRequest();
+            request.setPartnerId(2L);
+
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
+            setRoomId(room, 10L);
+            room.close(); // room is CLOSED
+
+            ChatParticipant me = ChatParticipant.create(10L, 1L);
+            setParticipantId(me, 1L);
+            me.leave();
+            ChatParticipant partner = ChatParticipant.create(10L, 2L);
+            setParticipantId(partner, 2L);
+            partner.leave();
+
+            given(memberRepository.existsById(2L)).willReturn(true);
+            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L))
+                    .willReturn(List.of(room));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(10L, 1L))
+                    .willReturn(Optional.of(me));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(10L, 2L))
+                    .willReturn(Optional.of(partner));
+            stubDetailResponse(10L, me, partner);
+
+            // when
+            ChatRoomDetailResponse response = chatRoomService.createDirectRoom(1L, request);
+
+            // then
+            assertThat(response.getChatRoomId()).isEqualTo(10L);
+            assertThat(room.getStatus()).isEqualTo(ChatRoomStatus.ACTIVE); // reopened
+            assertThat(me.isLeft()).isFalse(); // rejoined
+            assertThat(partner.isLeft()).isFalse(); // rejoined
+        }
+
+        @Test
+        @DisplayName("방 없음 → 새 방 생성")
+        void createsNewRoomWhenNoneExists() {
+            // given
+            ChatRoomDirectCreateRequest request = new ChatRoomDirectCreateRequest();
+            request.setPartnerId(2L);
+
+            ChatRoom newRoom = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
+            setRoomId(newRoom, 20L);
+
+            ChatParticipant me = ChatParticipant.create(20L, 1L);
+            setParticipantId(me, 1L);
+            ChatParticipant partner = ChatParticipant.create(20L, 2L);
+            setParticipantId(partner, 2L);
+
+            given(memberRepository.existsById(2L)).willReturn(true);
+            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L))
+                    .willReturn(Collections.emptyList());
+            given(chatRoomRepository.save(any(ChatRoom.class))).willReturn(newRoom);
+            given(chatParticipantRepository.save(any(ChatParticipant.class)))
+                    .willReturn(me, partner);
+            given(petRepository.findAllByMemberIdOrderByIsMainDesc(1L)).willReturn(List.of());
+            given(petRepository.findAllByMemberIdOrderByIsMainDesc(2L)).willReturn(List.of());
+            stubDetailResponse(20L, me, partner);
+
+            // when
+            ChatRoomDetailResponse response = chatRoomService.createDirectRoom(1L, request);
+
+            // then
+            assertThat(response.getChatRoomId()).isEqualTo(20L);
+            then(chatRoomRepository).should().save(any(ChatRoom.class));
         }
     }
 
@@ -132,6 +245,13 @@ class ChatServiceUnitTest {
             assertThatThrownBy(() -> walkConfirmService.updateWalkConfirm(1L, 100L, request))
                     .isInstanceOf(ChatException.class);
         }
+    }
+
+    private void stubDetailResponse(Long roomId, ChatParticipant... participants) {
+        given(chatParticipantRepository.findAllByChatRoomId(roomId)).willReturn(List.of(participants));
+        List<Long> participantIds = java.util.Arrays.stream(participants).map(ChatParticipant::getId).toList();
+        given(chatParticipantPetRepository.findAllByChatParticipantIdIn(participantIds)).willReturn(List.of());
+        given(messageRepository.findTopByChatRoomIdOrderByIdDesc(roomId)).willReturn(Optional.empty());
     }
 
     private void setRoomId(ChatRoom room, Long id) {

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ShieldCheck, Trophy } from 'lucide-react';
+import { ShieldCheck, Trophy, MapPin, Clock, MessageSquare, User } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -19,6 +19,21 @@ interface AICandidateListProps {
   candidates: CandidateType[];
   onApprove: (sightingId: number) => void;
   approving?: boolean;
+}
+
+function formatDateTime(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return dateStr;
+  }
 }
 
 export const AICandidateList: React.FC<AICandidateListProps> = ({
@@ -76,6 +91,23 @@ export const AICandidateList: React.FC<AICandidateListProps> = ({
               key={`${candidate.sightingId}-${candidate.rank}`}
               className="group overflow-hidden rounded-[40px] border-none shadow-2xl bg-white flex flex-col hover:scale-[1.02] transition-transform duration-500"
             >
+              {/* Photo */}
+              <div className="relative w-full aspect-[4/3] bg-zinc-100 overflow-hidden">
+                {candidate.photoUrl ? (
+                  <img
+                    src={candidate.photoUrl}
+                    alt={`제보 #${candidate.sightingId}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-zinc-300">
+                    <Typography variant="body" className="text-sm">
+                      사진 없음
+                    </Typography>
+                  </div>
+                )}
+              </div>
+
               {/* Score header */}
               <div className="p-6 pb-0">
                 <div className="flex items-center justify-between mb-4">
@@ -101,6 +133,36 @@ export const AICandidateList: React.FC<AICandidateListProps> = ({
               </div>
 
               <div className="p-6 pt-2 flex-1 flex flex-col justify-between space-y-5">
+                {/* Sighting details */}
+                <div className="space-y-2.5">
+                  <div className="flex items-start gap-2 text-sm">
+                    <MapPin size={14} className="text-zinc-400 mt-0.5 shrink-0" />
+                    <Typography variant="body" className="text-zinc-600 text-sm">
+                      {candidate.foundLocation}
+                    </Typography>
+                  </div>
+                  <div className="flex items-start gap-2 text-sm">
+                    <Clock size={14} className="text-zinc-400 mt-0.5 shrink-0" />
+                    <Typography variant="body" className="text-zinc-600 text-sm">
+                      {formatDateTime(candidate.foundAt)}
+                    </Typography>
+                  </div>
+                  {candidate.memo && (
+                    <div className="flex items-start gap-2 text-sm">
+                      <MessageSquare size={14} className="text-zinc-400 mt-0.5 shrink-0" />
+                      <Typography variant="body" className="text-zinc-600 text-sm line-clamp-2">
+                        {candidate.memo}
+                      </Typography>
+                    </div>
+                  )}
+                  <div className="flex items-start gap-2 text-sm">
+                    <User size={14} className="text-zinc-400 mt-0.5 shrink-0" />
+                    <Typography variant="body" className="text-zinc-600 text-sm">
+                      {candidate.finderNickname}
+                    </Typography>
+                  </div>
+                </div>
+
                 {/* Score breakdown */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
@@ -145,19 +207,6 @@ export const AICandidateList: React.FC<AICandidateListProps> = ({
                       {candidate.scoreRecency.toFixed(1)}
                     </Typography>
                   </div>
-                </div>
-
-                {/* Sighting info */}
-                <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-1">
-                  <Typography
-                    variant="label"
-                    className="text-zinc-400 text-[10px] font-black uppercase"
-                  >
-                    Sighting #{candidate.sightingId}
-                  </Typography>
-                  <Typography variant="body" className="text-zinc-500 text-xs">
-                    상태: {candidate.status}
-                  </Typography>
                 </div>
 
                 {/* Approve button */}

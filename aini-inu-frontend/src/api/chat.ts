@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient, type ApiRequestOptions } from './client';
 import { SliceResponse, CursorResponse, PaginationParams, CursorPaginationParams } from './types';
 
 // --- Types ---
@@ -139,8 +139,9 @@ export async function getRooms(
 
 export async function createDirectRoom(
   data: ChatRoomDirectCreateRequest,
+  options?: ApiRequestOptions,
 ): Promise<ChatRoomDetailResponse> {
-  return apiClient.post<ChatRoomDetailResponse>('/chat-rooms/direct', data);
+  return apiClient.post<ChatRoomDetailResponse>('/chat-rooms/direct', data, options);
 }
 
 export async function getRoom(

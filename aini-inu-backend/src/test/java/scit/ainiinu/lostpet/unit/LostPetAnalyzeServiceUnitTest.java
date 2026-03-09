@@ -9,6 +9,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -21,11 +22,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import scit.ainiinu.lostpet.domain.LostPetReport;
+import scit.ainiinu.lostpet.domain.LostPetSearchCandidate;
 import scit.ainiinu.lostpet.domain.LostPetSearchSession;
+import scit.ainiinu.lostpet.domain.Sighting;
+import scit.ainiinu.lostpet.dto.LostPetAnalyzeCandidateResponse;
 import scit.ainiinu.lostpet.dto.LostPetAnalyzeRequest;
 import scit.ainiinu.lostpet.dto.LostPetAnalyzeResponse;
 import scit.ainiinu.lostpet.error.LostPetErrorCode;
 import scit.ainiinu.lostpet.error.LostPetException;
+import scit.ainiinu.lostpet.integration.ai.LostPetAiCandidate;
 import scit.ainiinu.lostpet.integration.ai.LostPetAiClient;
 import scit.ainiinu.lostpet.integration.ai.LostPetAiResult;
 import scit.ainiinu.lostpet.repository.LostPetReportRepository;
@@ -34,6 +39,9 @@ import scit.ainiinu.lostpet.repository.LostPetSearchSessionRepository;
 import scit.ainiinu.lostpet.repository.SightingRepository;
 import scit.ainiinu.lostpet.service.LostPetCandidateScoringService;
 import scit.ainiinu.lostpet.service.LostPetAnalyzeService;
+import scit.ainiinu.member.entity.Member;
+import scit.ainiinu.member.entity.enums.MemberType;
+import scit.ainiinu.member.repository.MemberRepository;
 
 import java.util.Optional;
 
@@ -58,6 +66,9 @@ class LostPetAnalyzeServiceUnitTest {
     @Mock
     private LostPetCandidateScoringService lostPetCandidateScoringService;
 
+    @Mock
+    private MemberRepository memberRepository;
+
     @InjectMocks
     private LostPetAnalyzeService lostPetAnalyzeService;
 
@@ -66,7 +77,7 @@ class LostPetAnalyzeServiceUnitTest {
     class Analyze {
 
         @Test
-        @DisplayName("외부 분석이 성공하면 후보를 반환한다")
+        @DisplayName("외부 분석이 성공하고 후보가 없으면 빈 리스트를 반환한다")
         void success() {
             LostPetReport report = LostPetReport.create(
                     1L,
@@ -102,6 +113,85 @@ class LostPetAnalyzeServiceUnitTest {
 
             assertThat(response.summary()).isEqualTo("ok");
             assertThat(response.sessionId()).isEqualTo(101L);
+            assertThat(response.candidates()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("AI 후보가 있을 때 제보 상세 정보와 제보자 닉네임이 포함된다")
+        void successWithCandidatesIncludesSightingDetails() {
+            // given
+            ReflectionTestUtils.setField(lostPetAnalyzeService, "topN", 20);
+            ReflectionTestUtils.setField(lostPetAnalyzeService, "sessionTtlHours", 24L);
+            Long finderId = 33L;
+            LocalDateTime foundAt = LocalDateTime.of(2025, 7, 1, 10, 0);
+            LostPetReport report = LostPetReport.create(
+                    1L, "초코", "말티즈", "https://cdn/choco.jpg", "갈색 소형견",
+                    LocalDateTime.now(), "서울시 강남구"
+            );
+            report.assignIdForTest(10L);
+
+            Sighting sighting = Sighting.create(
+                    finderId, "https://cdn/found.jpg", foundAt, "서울시 서초구 반포동", "골목에서 발견"
+            );
+            sighting.assignIdForTest(5L);
+
+            LostPetSearchSession session = LostPetSearchSession.create(
+                    1L, report, "LOST", "https://cdn/choco.jpg", null,
+                    LocalDateTime.now().plusHours(24)
+            );
+            ReflectionTestUtils.setField(session, "id", 101L);
+
+            LostPetAiCandidate aiCandidate = new LostPetAiCandidate(5L, finderId, new BigDecimal("0.85"));
+            given(lostPetReportRepository.findById(anyLong())).willReturn(Optional.of(report));
+            given(lostPetSearchSessionRepository.save(any(LostPetSearchSession.class))).willReturn(session);
+            given(lostPetAiClient.analyze(any()))
+                    .willReturn(new LostPetAiResult("발견", List.of(aiCandidate)));
+            given(sightingRepository.findById(5L)).willReturn(Optional.of(sighting));
+            given(lostPetCandidateScoringService.normalizeSimilarity(any()))
+                    .willReturn(new BigDecimal("4.25000"));
+            given(lostPetCandidateScoringService.computeDistanceScore(any(), any()))
+                    .willReturn(new BigDecimal("3.00000"));
+            given(lostPetCandidateScoringService.computeRecencyScore(any(), any()))
+                    .willReturn(new BigDecimal("2.50000"));
+            given(lostPetCandidateScoringService.computeTotalScore(any(), any(), any()))
+                    .willReturn(new BigDecimal("9.75000"));
+
+            LostPetSearchCandidate savedCandidate = LostPetSearchCandidate.create(
+                    session, sighting,
+                    new BigDecimal("4.25000"), new BigDecimal("3.00000"),
+                    new BigDecimal("2.50000"), new BigDecimal("9.75000"), 1
+            );
+            given(lostPetSearchCandidateRepository.saveAll(any()))
+                    .willReturn(List.of(savedCandidate));
+
+            Member finder = Member.builder()
+                    .email("finder@test.com")
+                    .nickname("동물사랑")
+                    .memberType(MemberType.NON_PET_OWNER)
+                    .build();
+            ReflectionTestUtils.setField(finder, "id", finderId);
+            given(memberRepository.findAllById(List.of(finderId)))
+                    .willReturn(List.of(finder));
+
+            LostPetAnalyzeRequest request = LostPetAnalyzeRequest.builder()
+                    .lostPetId(10L)
+                    .imageUrl("https://cdn/choco.jpg")
+                    .mode("LOST")
+                    .build();
+
+            // when
+            LostPetAnalyzeResponse response = lostPetAnalyzeService.analyze(1L, request);
+
+            // then
+            assertThat(response.candidates()).hasSize(1);
+            LostPetAnalyzeCandidateResponse candidate = response.candidates().get(0);
+            assertThat(candidate.sightingId()).isEqualTo(5L);
+            assertThat(candidate.photoUrl()).isEqualTo("https://cdn/found.jpg");
+            assertThat(candidate.foundLocation()).isEqualTo("서울시 서초구 반포동");
+            assertThat(candidate.foundAt()).isEqualTo(foundAt);
+            assertThat(candidate.memo()).isEqualTo("골목에서 발견");
+            assertThat(candidate.finderNickname()).isEqualTo("동물사랑");
+            assertThat(candidate.scoreTotal()).isEqualByComparingTo("9.75000");
         }
 
         @Test

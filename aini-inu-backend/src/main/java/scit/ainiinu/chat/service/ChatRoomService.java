@@ -114,15 +114,17 @@ public class ChatRoomService {
             throw new ChatException(ChatErrorCode.ROOM_ACCESS_DENIED);
         }
 
-        Optional<ChatRoom> existing = chatRoomRepository.findByTypeAndParticipants(
-                ChatRoomType.DIRECT,
-                ChatRoomStatus.ACTIVE,
-                memberId,
-                partnerId
-        );
+        List<ChatRoom> existingRooms = chatRoomRepository.findDirectRoomsByParticipants(
+                ChatRoomType.DIRECT, memberId, partnerId);
 
-        if (existing.isPresent()) {
-            return toDetailResponse(existing.get());
+        if (!existingRooms.isEmpty()) {
+            ChatRoom room = existingRooms.get(0);
+            if (room.isClosed()) {
+                room.reopen();
+            }
+            rejoinIfLeft(room.getId(), memberId);
+            rejoinIfLeft(room.getId(), partnerId);
+            return toDetailResponse(room);
         }
 
         ChatRoomOrigin requestOrigin = parseOrigin(request.getOrigin());
@@ -174,6 +176,11 @@ public class ChatRoomService {
                 .left(true)
                 .roomStatus(room.getStatus().name())
                 .build();
+    }
+
+    private void rejoinIfLeft(Long chatRoomId, Long memberId) {
+        chatParticipantRepository.findByChatRoomIdAndMemberId(chatRoomId, memberId)
+                .ifPresent(p -> { if (p.isLeft()) p.rejoin(); });
     }
 
     private void saveParticipantPets(ChatParticipant participant) {

@@ -96,7 +96,7 @@ export const ChatStartModal: React.FC<ChatStartModalProps> = ({
     if (startingChatId !== null) return;
     setStartingChatId(user.memberId);
     try {
-      const room = await createDirectRoom({ partnerId: user.memberId });
+      const room = await createDirectRoom({ partnerId: user.memberId }, { suppressToast: true });
       onRoomCreated();
       onClose();
       router.push(`/chat/${room.chatRoomId}`);

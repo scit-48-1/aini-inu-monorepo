@@ -81,6 +81,10 @@ public class ChatRoom extends BaseTimeEntity {
         this.status = ChatRoomStatus.CLOSED;
     }
 
+    public void reopen() {
+        this.status = ChatRoomStatus.ACTIVE;
+    }
+
     public void updateWalkConfirmed(boolean walkConfirmed) {
         this.walkConfirmed = walkConfirmed;
     }

@@ -14,6 +14,7 @@ import scit.ainiinu.chat.entity.ChatRoomStatus;
 import scit.ainiinu.chat.entity.ChatRoomType;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
@@ -52,6 +53,20 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             @Param("memberA") Long memberA,
             @Param("memberB") Long memberB
     );
+
+    @Query("""
+            select cr from ChatRoom cr
+            where cr.chatType = :chatType
+              and exists (select 1 from ChatParticipant cp1
+                          where cp1.chatRoomId = cr.id and cp1.memberId = :memberA)
+              and exists (select 1 from ChatParticipant cp2
+                          where cp2.chatRoomId = cr.id and cp2.memberId = :memberB)
+            order by case cr.status when 'ACTIVE' then 0 else 1 end, cr.id desc
+            """)
+    List<ChatRoom> findDirectRoomsByParticipants(
+            @Param("chatType") ChatRoomType chatType,
+            @Param("memberA") Long memberA,
+            @Param("memberB") Long memberB);
 
     Optional<ChatRoom> findFirstByThreadIdAndChatTypeAndStatusOrderByIdAsc(
             Long threadId,

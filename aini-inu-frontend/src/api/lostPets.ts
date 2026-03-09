@@ -55,6 +55,11 @@ export interface LostPetAnalyzeResponse {
 export interface LostPetAnalyzeCandidateResponse {
   sightingId: number;
   finderId: number;
+  photoUrl: string;
+  foundLocation: string;
+  foundAt: string;
+  memo: string | null;
+  finderNickname: string;
   scoreSimilarity: number;
   scoreDistance: number;
   scoreRecency: number;
@@ -72,6 +77,11 @@ export interface LostPetMatchCandidateResponse {
   sessionId: number;
   sightingId: number;
   finderId: number;
+  photoUrl: string;
+  foundLocation: string;
+  foundAt: string;
+  memo: string | null;
+  finderNickname: string;
   scoreSimilarity: number;
   scoreDistance: number;
   scoreRecency: number;
