@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { X, Clock, MapPin, Users, Loader2, Footprints, Pencil, Trash2, Flame, MessageCircle } from 'lucide-react';
@@ -130,43 +130,48 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
     setSelectedPetDetail(null);
   }, [selectedThread]);
 
-  // Convert ThreadMapResponse[] to MapMarker[] for DynamicMap
-  const threadMarkers: MapMarker[] = mapMarkers.map((m) => ({
-    id: String(m.threadId),
-    lat: m.latitude,
-    lng: m.longitude,
-    image: m.petImageUrl,
-  }));
+  // Convert ThreadMapResponse[] to MapMarker[] for DynamicMap (memoized to prevent marker flicker)
+  const allMarkers = useMemo(() => {
+    const threadMarkers: MapMarker[] = mapMarkers.map((m) => ({
+      id: String(m.threadId),
+      lat: m.latitude,
+      lng: m.longitude,
+      image: m.petImageUrl,
+    }));
 
-  // Always include my active thread marker on the map (even if outside search area)
-  if (myActiveThread && !threadMarkers.some((m) => m.id === String(myActiveThread.id))) {
-    threadMarkers.push({
-      id: String(myActiveThread.id),
-      lat: myActiveThread.latitude,
-      lng: myActiveThread.longitude,
-      image: myActiveThread.petImageUrl,
-    });
-  }
-
-  // Always include my joined thread markers on the map (even if outside search area)
-  for (const jt of (myJoinedThreads ?? [])) {
-    if (!threadMarkers.some((m) => m.id === String(jt.id))) {
-      threadMarkers.push({ id: String(jt.id), lat: jt.latitude, lng: jt.longitude, image: jt.petImageUrl });
+    // Always include my active thread marker on the map (even if outside search area)
+    if (myActiveThread && !threadMarkers.some((m) => m.id === String(myActiveThread.id))) {
+      threadMarkers.push({
+        id: String(myActiveThread.id),
+        lat: myActiveThread.latitude,
+        lng: myActiveThread.longitude,
+        image: myActiveThread.petImageUrl,
+      });
     }
-  }
 
-  // Convert hotspots to map markers using Seoul district coordinate lookup
-  const mappedHotspots = hotspots.filter((h) => SEOUL_DISTRICT_COORDS[h.region]);
-  const unmappedHotspots = hotspots.filter((h) => !SEOUL_DISTRICT_COORDS[h.region]);
+    // Always include my joined thread markers on the map (even if outside search area)
+    for (const jt of (myJoinedThreads ?? [])) {
+      if (!threadMarkers.some((m) => m.id === String(jt.id))) {
+        threadMarkers.push({ id: String(jt.id), lat: jt.latitude, lng: jt.longitude, image: jt.petImageUrl });
+      }
+    }
 
-  const hotspotMarkers: MapMarker[] = mappedHotspots.map((h) => ({
-    id: `hotspot-${h.region}`,
-    lat: SEOUL_DISTRICT_COORDS[h.region][0],
-    lng: SEOUL_DISTRICT_COORDS[h.region][1],
-    isEmergency: false,
-  }));
+    // Convert hotspots to map markers using Seoul district coordinate lookup
+    const mappedHotspots = hotspots.filter((h) => SEOUL_DISTRICT_COORDS[h.region]);
+    const hotspotMarkers: MapMarker[] = mappedHotspots.map((h) => ({
+      id: `hotspot-${h.region}`,
+      lat: SEOUL_DISTRICT_COORDS[h.region][0],
+      lng: SEOUL_DISTRICT_COORDS[h.region][1],
+      isEmergency: false,
+    }));
 
-  const allMarkers: MapMarker[] = [...threadMarkers, ...hotspotMarkers];
+    return [...threadMarkers, ...hotspotMarkers];
+  }, [mapMarkers, hotspots, myActiveThread, myJoinedThreads]);
+
+  const unmappedHotspots = useMemo(
+    () => hotspots.filter((h) => !SEOUL_DISTRICT_COORDS[h.region]),
+    [hotspots],
+  );
 
   const handleMapMarkerClick = (marker: MapMarker) => {
     if (marker.id.startsWith('hotspot-')) {
@@ -261,7 +266,7 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
   return (
     <div
       className={cn(
-        'flex-[1.8] relative bg-zinc-100 rounded-[48px] border border-card-border overflow-hidden min-h-[500px] flex flex-col shadow-2xl transition-all duration-700',
+        'flex-[1.8] relative bg-zinc-100 rounded-[48px] border border-card-border overflow-hidden min-h-[500px] flex flex-col shadow-2xl',
       )}
     >
       {/* Map */}
@@ -388,20 +393,20 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
                       key={pet.id}
                       onClick={() => setSelectedPetDetail((prev) => prev?.id === pet.id ? null : pet)}
                       className={cn(
-                        'flex flex-col items-center gap-1.5 shrink-0 transition-all',
+                        'flex flex-col items-center gap-1.5 shrink-0 transition-transform duration-200',
                         selectedPetDetail?.id === pet.id && 'scale-105',
                       )}
                     >
                       <div className={cn(
-                        'w-14 h-14 rounded-2xl overflow-hidden border-2 transition-colors relative',
+                        'w-14 h-14 rounded-2xl overflow-hidden border-2 transition-colors',
                         selectedPetDetail?.id === pet.id ? 'border-amber-500 shadow-lg shadow-amber-500/20' : 'border-zinc-100',
                       )}>
-                        <OptimizedImage
-                          src={pet.photoUrl}
+                        <img
+                          src={pet.photoUrl || '/AINIINU_ROGO_B.png'}
                           alt={pet.name}
-                          fill
-                          sizes="56px"
-                          className="object-cover"
+                          className="w-full h-full object-cover"
+                          loading="eager"
+                          onError={(e) => { (e.target as HTMLImageElement).src = '/AINIINU_ROGO_B.png'; }}
                         />
                       </div>
                       <span className={cn(
