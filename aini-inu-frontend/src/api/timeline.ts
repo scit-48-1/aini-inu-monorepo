@@ -9,7 +9,8 @@ export type TimelineEventType =
   | 'WALKING_SESSION_COMPLETED'
   | 'POST_CREATED'
   | 'LOST_PET_REPORT_CREATED'
-  | 'SIGHTING_CREATED';
+  | 'SIGHTING_CREATED'
+  | 'WALK_DIARY_CREATED';
 
 export interface TimelineEventResponse {
   id: number;

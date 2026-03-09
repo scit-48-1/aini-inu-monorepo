@@ -10,6 +10,7 @@ import {
   FileText,
   AlertTriangle,
   Eye,
+  BookOpen,
   LucideIcon,
 } from 'lucide-react';
 import { useTimeline } from '@/hooks/useTimeline';
@@ -30,6 +31,7 @@ const EVENT_CONFIG: Record<TimelineEventType, { icon: LucideIcon; color: string;
   POST_CREATED: { icon: FileText, color: 'bg-purple-500', label: '게시글' },
   LOST_PET_REPORT_CREATED: { icon: AlertTriangle, color: 'bg-red-500', label: '실종 신고' },
   SIGHTING_CREATED: { icon: Eye, color: 'bg-amber-500', label: '목격 제보' },
+  WALK_DIARY_CREATED: { icon: BookOpen, color: 'bg-teal-500', label: '산책 일기' },
 };
 
 function formatAbsoluteTime(dateString: string): string {
