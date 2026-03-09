@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 import type { WalkStatsResponse } from '@/api/members';
 import { pointsToGridCounts } from '@/utils/walkStatsGrid';
 
@@ -48,7 +49,9 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({ userProfile, mainD
         <div className="flex flex-col md:flex-row items-center gap-10 flex-1 w-full">
           <div className="relative shrink-0">
             <div className="absolute inset-0 bg-amber-500 rounded-[48px] blur-2xl opacity-20 animate-pulse"></div>
-            <img src={mainDog.image} alt={mainDog.name} className="w-32 h-32 md:w-40 md:h-40 rounded-[48px] object-cover shadow-2xl border-4 border-white relative z-10" />
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-[48px] overflow-hidden shadow-2xl border-4 border-white relative z-10">
+              <OptimizedImage src={mainDog.image} alt={mainDog.name} fill sizes="(min-width: 768px) 160px, 128px" priority className="object-cover" />
+            </div>
             <div className="absolute -bottom-2 -right-2 bg-navy-900 text-amber-500 px-4 py-2.5 rounded-[16px] font-black text-[10px] shadow-xl z-20 flex items-center gap-1.5">
               <Activity size={14} /> 산책 준비 완료
             </div>

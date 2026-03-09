@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import Link from 'next/link';
 import { MemberSearchModal } from '@/components/dashboard/MemberSearchModal';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 
 interface Friend {
   id: string;
@@ -54,7 +55,9 @@ export const RecentFriends: React.FC<RecentFriendsProps> = ({ friends }) => {
             <Link key={friend.id} href={`/profile/${friend.id}`}>
               <Card interactive className="min-w-[160px] max-w-[200px] flex-shrink-0 p-5">
                 <div className="relative mb-4">
-                  <img src={friend.img} alt={friend.name} className="w-full aspect-square rounded-[32px] object-cover shadow-lg transition-transform" />
+                  <div className="w-full aspect-square rounded-[32px] overflow-hidden shadow-lg relative">
+                    <OptimizedImage src={friend.img} alt={friend.name} fill sizes="200px" className="object-cover" />
+                  </div>
                   <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center text-red-500 shadow-md">
                     <Heart size={14} fill="currentColor" />
                   </div>

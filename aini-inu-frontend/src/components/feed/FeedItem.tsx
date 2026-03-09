@@ -18,6 +18,7 @@ import {
 import { useUserStore } from '@/store/useUserStore';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 
 /** Compute Korean relative time string from ISO date */
 function formatRelativeTime(isoDate: string): string {
@@ -190,7 +191,9 @@ export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost
 
   const renderComment = (cmt: CommentResponse) => (
     <div key={cmt.id} className="flex gap-3 text-sm group">
-      <img src={cmt.author?.profileImageUrl || '/AINIINU_ROGO_B.png'} className="w-8 h-8 rounded-full object-cover shrink-0" alt="User" />
+      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 relative">
+        <OptimizedImage src={cmt.author?.profileImageUrl} alt="User" fill sizes="32px" className="object-cover" />
+      </div>
       <div className="flex-1 space-y-1">
         <div className="flex items-baseline gap-2">
           <span className="font-bold text-navy-900 text-xs">{cmt.author?.nickname || '익명'}</span>
@@ -225,7 +228,7 @@ export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost
         "absolute inset-0 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]",
         isExpanded ? 'w-full lg:w-1/2' : 'w-full'
       )}>
-        <img src={image} className="w-full h-full object-cover" alt="Post content" />
+        <OptimizedImage src={image} alt="Post content" fill sizes="(max-width: 1024px) 100vw, 50vw" priority className="object-cover" />
       </div>
 
       {/* 2. COLLAPSED BAR (Mobile & Initial View) */}
@@ -235,8 +238,8 @@ export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost
       )}>
         <div className="flex items-center gap-4 w-full" onClick={(e) => !isExpanded && e.stopPropagation()}>
           <div className="shrink-0">
-            <Link href={profileLink} className="block w-12 h-12 rounded-[16px] border-2 border-white overflow-hidden shadow-md hover:scale-105 transition-transform" onClick={(e) => e.stopPropagation()}>
-              <img src={authorAvatar} className="w-full h-full object-cover" alt="Author" />
+            <Link href={profileLink} className="block w-12 h-12 rounded-[16px] border-2 border-white overflow-hidden shadow-md hover:scale-105 transition-transform relative" onClick={(e) => e.stopPropagation()}>
+              <OptimizedImage src={authorAvatar} alt="Author" fill sizes="48px" className="object-cover" />
             </Link>
           </div>
           <div className="flex-1 min-w-0 space-y-0.5">
@@ -355,8 +358,8 @@ export const FeedItem: React.FC<FeedItemProps> = React.memo(({ post: initialPost
           {/* Header */}
           <div className="flex items-center justify-between mb-6 shrink-0">
             <div className="flex items-center gap-4">
-              <Link href={profileLink} className="block w-12 h-12 rounded-[18px] border-2 border-white overflow-hidden shadow-md hover:scale-105 transition-transform">
-                <img src={authorAvatar} alt="Avatar" className="w-full h-full object-cover" />
+              <Link href={profileLink} className="block w-12 h-12 rounded-[18px] border-2 border-white overflow-hidden shadow-md hover:scale-105 transition-transform relative">
+                <OptimizedImage src={authorAvatar} alt="Avatar" fill sizes="48px" className="object-cover" />
               </Link>
               <div>
                 <Link href={profileLink} className="hover:underline">

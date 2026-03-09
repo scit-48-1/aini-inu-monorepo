@@ -21,6 +21,7 @@ import type { PetSummary } from '@/api/threads';
 import type { PetResponse } from '@/api/pets';
 import { applyToThread, cancelApplication } from '@/api/threads';
 import { PetDetailPanel } from '@/components/around-me/PetDetailPanel';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 
 const DynamicMap = dynamic(() => import('@/components/common/DynamicMap'), {
   ssr: false,
@@ -392,13 +393,15 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
                       )}
                     >
                       <div className={cn(
-                        'w-14 h-14 rounded-2xl overflow-hidden border-2 transition-colors',
+                        'w-14 h-14 rounded-2xl overflow-hidden border-2 transition-colors relative',
                         selectedPetDetail?.id === pet.id ? 'border-amber-500 shadow-lg shadow-amber-500/20' : 'border-zinc-100',
                       )}>
-                        <img
-                          src={pet.photoUrl || '/AINIINU_ROGO_B.png'}
+                        <OptimizedImage
+                          src={pet.photoUrl}
                           alt={pet.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          sizes="56px"
+                          className="object-cover"
                         />
                       </div>
                       <span className={cn(
@@ -507,11 +510,15 @@ export const RadarMapSection: React.FC<RadarMapSectionProps> = ({
                       >
                         <div className="flex items-center gap-2">
                           {pet.photoUrl && (
-                            <img
-                              src={pet.photoUrl}
-                              alt={pet.name}
-                              className="w-8 h-8 rounded-xl object-cover"
-                            />
+                            <div className="w-8 h-8 rounded-xl overflow-hidden relative shrink-0">
+                              <OptimizedImage
+                                src={pet.photoUrl}
+                                alt={pet.name}
+                                fill
+                                sizes="32px"
+                                className="object-cover"
+                              />
+                            </div>
                           )}
                           <span className="text-xs font-black text-zinc-700">{pet.name}</span>
                         </div>

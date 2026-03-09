@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { deletePet, setMainPet } from '@/api/pets';
 import type { PetResponse } from '@/api/pets';
 import { DeleteConfirmDialog } from '@/components/profile/DeleteConfirmDialog';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 
 interface DogDetailModalProps {
   isOpen: boolean;
@@ -82,10 +83,13 @@ export const DogDetailModal: React.FC<DogDetailModalProps> = ({
               className="h-80 relative shrink-0 group cursor-zoom-in"
               onClick={() => onZoom(photoUrl)}
             >
-              <img
+              <OptimizedImage
                 src={photoUrl}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 alt={pet.name}
+                fill
+                sizes="(max-width: 512px) 100vw, 512px"
+                priority
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <button
                 onClick={(e) => { e.stopPropagation(); onClose(); }}

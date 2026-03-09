@@ -10,10 +10,11 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '*.gstatic.com' },
       { protocol: 'https', hostname: 'clova-phinf.pstatic.net' },
       { protocol: 'https', hostname: 'developers.kakao.com' },
+      { protocol: 'http', hostname: 'localhost' },
     ],
   },
   async rewrites() {
-    const target = process.env.NEXT_PUBLIC_API_PROXY_TARGET || 'http://ainiinu.kr:8080';
+    const target = process.env.NEXT_PUBLIC_API_PROXY_TARGET || 'http://localhost:8080';
     return [
       {
         source: '/api/v1/:path*',

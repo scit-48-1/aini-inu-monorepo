@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-
-const FALLBACK = '/AINIINU_ROGO_B.png';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 
 interface GroupAvatarProps {
   images: (string | null)[];
@@ -18,11 +17,15 @@ const sizeMap = {
 
 function AvatarCell({ src, className }: { src: string | null; className?: string }) {
   return (
-    <img
-      src={src || FALLBACK}
-      alt="프로필"
-      className={cn('object-cover', className)}
-    />
+    <div className={cn('relative', className)}>
+      <OptimizedImage
+        src={src}
+        alt="프로필"
+        fill
+        sizes="48px"
+        className="object-cover"
+      />
+    </div>
   );
 }
 
