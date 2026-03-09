@@ -1,0 +1,80 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: aini-inu-postgres
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Seoul
+      POSTGRES_DB: ${POSTGRES_DB:-ainiinu}
+      POSTGRES_USER: ${POSTGRES_USER:-ainiinu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ainiinu}
+    volumes:
+      - aini_inu_postgres_data:/var/lib/postgresql/data
+      - ./aini-inu-backend/docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ainiinu} -d ${POSTGRES_DB:-ainiinu}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  backend:
+    build:
+      context: ./aini-inu-backend
+      dockerfile: Dockerfile
+    container_name: aini-inu-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env.docker
+    environment:
+      TZ: Asia/Seoul
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ainiinu}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-ainiinu}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-ainiinu}
+      COMMUNITY_STORAGE_LOCAL_BASE_DIR: /app/var/uploads
+      COMMUNITY_STORAGE_PUBLIC_BASE_URL: https://${DOMAIN}
+    volumes:
+      - aini_inu_backend_uploads:/app/var/uploads
+
+  frontend:
+    build:
+      context: ./aini-inu-frontend
+      dockerfile: Dockerfile
+    container_name: aini-inu-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: aini-inu-nginx
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/templates/default.conf.template:ro
+      - certbot_certs:/etc/letsencrypt:ro
+      - certbot_webroot:/var/www/certbot:ro
+    environment:
+      DOMAIN: ${DOMAIN}
+
+  # SSL 인증서 자동 갱신 (30일마다 체크)
+  certbot:
+    image: certbot/certbot
+    container_name: aini-inu-certbot
+    volumes:
+      - certbot_certs:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 30d & wait $${!}; done'"
+
+volumes:
+  aini_inu_postgres_data:
+  aini_inu_backend_uploads:
+  certbot_certs:
+  certbot_webroot:
