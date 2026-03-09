@@ -114,8 +114,10 @@ public class ChatRoomService {
             throw new ChatException(ChatErrorCode.ROOM_ACCESS_DENIED);
         }
 
+        ChatRoomOrigin requestOrigin = parseOrigin(request.getOrigin());
+
         List<ChatRoom> existingRooms = chatRoomRepository.findDirectRoomsByParticipants(
-                ChatRoomType.DIRECT, memberId, partnerId);
+                ChatRoomType.DIRECT, memberId, partnerId, requestOrigin);
 
         if (!existingRooms.isEmpty()) {
             ChatRoom room = existingRooms.get(0);
@@ -126,8 +128,6 @@ public class ChatRoomService {
             rejoinIfLeft(room.getId(), partnerId);
             return toDetailResponse(room);
         }
-
-        ChatRoomOrigin requestOrigin = parseOrigin(request.getOrigin());
         ChatRoom room = chatRoomRepository.save(
                 ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE,
                         requestOrigin != null ? requestOrigin : ChatRoomOrigin.DM, request.getRoomTitle()));

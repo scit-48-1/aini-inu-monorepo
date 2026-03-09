@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { UserType } from '@/types';
 import { getMe, updateMe } from '@/api/members';
 import type { MemberResponse, MemberProfilePatchRequest } from '@/api/members';
+import { useDashboardStore } from '@/store/useDashboardStore';
 
 // Map MemberResponse to UserType for store compatibility
 function mapMemberToUser(member: MemberResponse): UserType {
@@ -93,5 +94,6 @@ export const useUserStore = create<UserState>((set, get) => ({
 
   logout: () => {
     set({ profile: null, isAuthenticated: false, hasFetched: false });
+    useDashboardStore.getState().clear();
   },
 }));

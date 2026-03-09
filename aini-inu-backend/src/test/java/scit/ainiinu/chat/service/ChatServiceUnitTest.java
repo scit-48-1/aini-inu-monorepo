@@ -82,7 +82,7 @@ class ChatServiceUnitTest {
             setParticipantId(partner, 2L);
 
             given(memberRepository.existsById(2L)).willReturn(true);
-            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L))
+            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L, null))
                     .willReturn(List.of(room));
             given(chatParticipantRepository.findByChatRoomIdAndMemberId(10L, 1L))
                     .willReturn(Optional.of(me));
@@ -96,7 +96,7 @@ class ChatServiceUnitTest {
             // then
             assertThat(response.getChatRoomId()).isEqualTo(10L);
             assertThat(room.getStatus()).isEqualTo(ChatRoomStatus.ACTIVE);
-            then(chatRoomRepository).should().findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L);
+            then(chatRoomRepository).should().findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L, null);
         }
 
         @Test
@@ -116,7 +116,7 @@ class ChatServiceUnitTest {
             partner.leave(); // partner left
 
             given(memberRepository.existsById(2L)).willReturn(true);
-            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L))
+            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L, null))
                     .willReturn(List.of(room));
             given(chatParticipantRepository.findByChatRoomIdAndMemberId(10L, 1L))
                     .willReturn(Optional.of(me));
@@ -151,7 +151,7 @@ class ChatServiceUnitTest {
             partner.leave();
 
             given(memberRepository.existsById(2L)).willReturn(true);
-            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L))
+            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L, null))
                     .willReturn(List.of(room));
             given(chatParticipantRepository.findByChatRoomIdAndMemberId(10L, 1L))
                     .willReturn(Optional.of(me));
@@ -185,7 +185,7 @@ class ChatServiceUnitTest {
             setParticipantId(partner, 2L);
 
             given(memberRepository.existsById(2L)).willReturn(true);
-            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L))
+            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L, null))
                     .willReturn(Collections.emptyList());
             given(chatRoomRepository.save(any(ChatRoom.class))).willReturn(newRoom);
             given(chatParticipantRepository.save(any(ChatParticipant.class)))
@@ -200,6 +200,73 @@ class ChatServiceUnitTest {
             // then
             assertThat(response.getChatRoomId()).isEqualTo(20L);
             then(chatRoomRepository).should().save(any(ChatRoom.class));
+        }
+
+        @Test
+        @DisplayName("DM 방이 이미 있어도 LOST_PET 요청 시 새 방 생성")
+        void createsNewLostPetRoomEvenWhenDmExists() {
+            // given
+            ChatRoomDirectCreateRequest request = new ChatRoomDirectCreateRequest();
+            request.setPartnerId(2L);
+            request.setOrigin("LOST_PET");
+
+            ChatRoom newRoom = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.LOST_PET, null);
+            setRoomId(newRoom, 30L);
+
+            ChatParticipant me = ChatParticipant.create(30L, 1L);
+            setParticipantId(me, 1L);
+            ChatParticipant partner = ChatParticipant.create(30L, 2L);
+            setParticipantId(partner, 2L);
+
+            given(memberRepository.existsById(2L)).willReturn(true);
+            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L, ChatRoomOrigin.LOST_PET))
+                    .willReturn(Collections.emptyList());
+            given(chatRoomRepository.save(any(ChatRoom.class))).willReturn(newRoom);
+            given(chatParticipantRepository.save(any(ChatParticipant.class)))
+                    .willReturn(me, partner);
+            given(petRepository.findAllByMemberIdOrderByIsMainDesc(1L)).willReturn(List.of());
+            given(petRepository.findAllByMemberIdOrderByIsMainDesc(2L)).willReturn(List.of());
+            stubDetailResponse(30L, me, partner);
+
+            // when
+            ChatRoomDetailResponse response = chatRoomService.createDirectRoom(1L, request);
+
+            // then
+            assertThat(response.getChatRoomId()).isEqualTo(30L);
+            then(chatRoomRepository).should().save(any(ChatRoom.class));
+        }
+
+        @Test
+        @DisplayName("같은 origin(LOST_PET) 방이 이미 있으면 재사용")
+        void reusesExistingLostPetRoom() {
+            // given
+            ChatRoomDirectCreateRequest request = new ChatRoomDirectCreateRequest();
+            request.setPartnerId(2L);
+            request.setOrigin("LOST_PET");
+
+            ChatRoom room = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.LOST_PET, null);
+            setRoomId(room, 40L);
+
+            ChatParticipant me = ChatParticipant.create(40L, 1L);
+            setParticipantId(me, 1L);
+            ChatParticipant partner = ChatParticipant.create(40L, 2L);
+            setParticipantId(partner, 2L);
+
+            given(memberRepository.existsById(2L)).willReturn(true);
+            given(chatRoomRepository.findDirectRoomsByParticipants(ChatRoomType.DIRECT, 1L, 2L, ChatRoomOrigin.LOST_PET))
+                    .willReturn(List.of(room));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(40L, 1L))
+                    .willReturn(Optional.of(me));
+            given(chatParticipantRepository.findByChatRoomIdAndMemberId(40L, 2L))
+                    .willReturn(Optional.of(partner));
+            stubDetailResponse(40L, me, partner);
+
+            // when
+            ChatRoomDetailResponse response = chatRoomService.createDirectRoom(1L, request);
+
+            // then
+            assertThat(response.getChatRoomId()).isEqualTo(40L);
+            then(chatRoomRepository).shouldHaveNoMoreInteractions();
         }
     }
 

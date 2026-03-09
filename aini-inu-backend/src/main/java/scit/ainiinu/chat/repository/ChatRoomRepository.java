@@ -57,6 +57,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     @Query("""
             select cr from ChatRoom cr
             where cr.chatType = :chatType
+              and (:origin is null or cr.origin = :origin)
               and exists (select 1 from ChatParticipant cp1
                           where cp1.chatRoomId = cr.id and cp1.memberId = :memberA)
               and exists (select 1 from ChatParticipant cp2
@@ -66,7 +67,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     List<ChatRoom> findDirectRoomsByParticipants(
             @Param("chatType") ChatRoomType chatType,
             @Param("memberA") Long memberA,
-            @Param("memberB") Long memberB);
+            @Param("memberB") Long memberB,
+            @Param("origin") ChatRoomOrigin origin);
 
     Optional<ChatRoom> findFirstByThreadIdAndChatTypeAndStatusOrderByIdAsc(
             Long threadId,

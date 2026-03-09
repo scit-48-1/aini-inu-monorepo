@@ -6,8 +6,8 @@ import { getWalkStats } from '@/api/members';
 import { getHotspots, getThreads } from '@/api/threads';
 import { getRooms, getRoom, getMyReview } from '@/api/chat';
 import { getMyPets } from '@/api/pets';
-import type { PetResponse } from '@/api/pets';
 import { useUserStore } from '@/store/useUserStore';
+import { useDashboardStore, type SectionState } from '@/store/useDashboardStore';
 import { RefreshCw } from 'lucide-react';
 import { AIBanner } from '@/components/dashboard/AIBanner';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
@@ -17,16 +17,12 @@ import { PendingReviewCard } from '@/components/dashboard/PendingReviewCard';
 import { PendingReviewModal, type PendingReview } from '@/components/dashboard/PendingReviewModal';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
-import type { WalkStatsResponse } from '@/api/members';
-import type { ThreadHotspotResponse, ThreadSummaryResponse } from '@/api/threads';
 
-// --- Per-section state pattern ---
+// --- Helper: has data (success or refreshing) ---
 
-type SectionState<T> =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'empty' }
-  | { status: 'success'; data: T };
+function hasData<T>(state: SectionState<T>): state is { status: 'success'; data: T } | { status: 'refreshing'; data: T } {
+  return state.status === 'success' || state.status === 'refreshing';
+}
 
 // --- Section error fallback ---
 
@@ -51,35 +47,54 @@ function SectionSkeleton() {
 
 export default function DashboardPage() {
   const { profile: userProfile } = useProfile();
-  const [myPets, setMyPets] = useState<PetResponse[]>([]);
+
+  // Dashboard store selectors
+  const walkStats = useDashboardStore((s) => s.walkStats);
+  const hotspots = useDashboardStore((s) => s.hotspots);
+  const threads = useDashboardStore((s) => s.threads);
+  const myPets = useDashboardStore((s) => s.myPets);
+  const recentFriends = useDashboardStore((s) => s.recentFriends);
+  const setWalkStats = useDashboardStore((s) => s.setWalkStats);
+  const setHotspots = useDashboardStore((s) => s.setHotspots);
+  const setThreads = useDashboardStore((s) => s.setThreads);
+  const setMyPets = useDashboardStore((s) => s.setMyPets);
+  const setRecentFriends = useDashboardStore((s) => s.setRecentFriends);
+  const markFetched = useDashboardStore((s) => s.markFetched);
+  const shouldFetch = useDashboardStore((s) => s.shouldFetch);
 
   const mainPet = myPets.find(p => p.isMain) || myPets[0];
   const mainDog = mainPet
     ? { name: mainPet.name, image: mainPet.photoUrl || '/images/dog-portraits/Mixed Breed.png', breed: mainPet.breed?.name || '믹스견' }
     : { name: '댕댕이', image: '/images/dog-portraits/Mixed Breed.png', breed: '믹스견' };
 
-  // Per-section states
-  const [walkStats, setWalkStats] = useState<SectionState<WalkStatsResponse>>({ status: 'loading' });
-  const [hotspots, setHotspots] = useState<SectionState<ThreadHotspotResponse[]>>({ status: 'loading' });
-  const [threads, setThreads] = useState<SectionState<ThreadSummaryResponse[]>>({ status: 'loading' });
-  const [recentFriends, setRecentFriends] = useState<{ id: string; roomId: string; name: string; img: string; score: number }[]>([]);
+  // Pending reviews (local state — not cached)
   const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([]);
   const [pendingReviewModalOpen, setPendingReviewModalOpen] = useState(false);
 
-  // --- Retry functions (per-section) ---
+  // --- Fetch functions with stale-while-revalidate ---
 
-  const fetchWalkStats = useCallback(async () => {
-    setWalkStats({ status: 'loading' });
+  const fetchWalkStats = useCallback(async (isRefresh = false) => {
+    if (isRefresh && hasData(walkStats)) {
+      setWalkStats({ status: 'refreshing', data: walkStats.data });
+    } else if (!hasData(walkStats)) {
+      setWalkStats({ status: 'loading' });
+    }
     try {
       const data = await getWalkStats();
       setWalkStats({ status: 'success', data });
     } catch {
-      setWalkStats({ status: 'error', message: '산책 활동을 불러오지 못했습니다.' });
+      if (!hasData(walkStats)) {
+        setWalkStats({ status: 'error', message: '산책 활동을 불러오지 못했습니다.' });
+      }
     }
-  }, []);
+  }, [walkStats, setWalkStats]);
 
-  const fetchHotspots = useCallback(async () => {
-    setHotspots({ status: 'loading' });
+  const fetchHotspots = useCallback(async (isRefresh = false) => {
+    if (isRefresh && hasData(hotspots)) {
+      setHotspots({ status: 'refreshing', data: hotspots.data });
+    } else if (!hasData(hotspots)) {
+      setHotspots({ status: 'loading' });
+    }
     try {
       const data = await getHotspots();
       if (data.length === 0) {
@@ -88,14 +103,19 @@ export default function DashboardPage() {
         setHotspots({ status: 'success', data });
       }
     } catch {
-      setHotspots({ status: 'error', message: '추천 정보를 불러오지 못했습니다.' });
+      if (!hasData(hotspots)) {
+        setHotspots({ status: 'error', message: '추천 정보를 불러오지 못했습니다.' });
+      }
     }
-  }, []);
+  }, [hotspots, setHotspots]);
 
-  const fetchThreads = useCallback(async () => {
-    setThreads({ status: 'loading' });
+  const fetchThreads = useCallback(async (isRefresh = false) => {
+    if (isRefresh && hasData(threads)) {
+      setThreads({ status: 'refreshing', data: threads.data });
+    } else if (!hasData(threads)) {
+      setThreads({ status: 'loading' });
+    }
     try {
-      // Try to get user location, fallback to Seoul City Hall
       let lat = 37.5666;
       let lng = 126.9784;
       try {
@@ -114,9 +134,11 @@ export default function DashboardPage() {
         setThreads({ status: 'success', data: res.content });
       }
     } catch {
-      setThreads({ status: 'error', message: '동네 소식을 불러오지 못했습니다.' });
+      if (!hasData(threads)) {
+        setThreads({ status: 'error', message: '동네 소식을 불러오지 못했습니다.' });
+      }
     }
-  }, []);
+  }, [threads, setThreads]);
 
   // --- Pending review detection ---
 
@@ -129,7 +151,6 @@ export default function DashboardPage() {
         return;
       }
 
-      // Fetch room details and review status in parallel
       const [detailResults, reviewResults] = await Promise.all([
         Promise.allSettled(rooms.map((r) => getRoom(r.chatRoomId))),
         Promise.allSettled(rooms.map((r) => getMyReview(r.chatRoomId))),
@@ -139,11 +160,9 @@ export default function DashboardPage() {
       const pending: PendingReview[] = [];
 
       rooms.forEach((room, i) => {
-        // Skip if review already exists
         const reviewResult = reviewResults[i];
         if (reviewResult.status !== 'fulfilled' || reviewResult.value.exists) return;
 
-        // Skip if room detail fetch failed or walk not confirmed
         const detailResult = detailResults[i];
         if (detailResult.status !== 'fulfilled') return;
         const detail = detailResult.value;
@@ -163,7 +182,6 @@ export default function DashboardPage() {
 
       setPendingReviews(pending);
     } catch {
-      // Pending review detection failure is non-critical
       setPendingReviews([]);
     }
   }, []);
@@ -175,12 +193,11 @@ export default function DashboardPage() {
       const pets = await getMyPets();
       setMyPets(pets);
     } catch {
-      // Non-critical: fallback to empty (default mainDog used)
-      setMyPets([]);
+      if (myPets.length === 0) setMyPets([]);
     }
-  }, []);
+  }, [myPets.length, setMyPets]);
 
-  // --- Recent friends (keep existing pattern) ---
+  // --- Recent friends ---
 
   const fetchRecentFriends = useCallback(async () => {
     try {
@@ -209,28 +226,33 @@ export default function DashboardPage() {
       }
       setRecentFriends(friends);
     } catch {
-      setRecentFriends([]);
+      if (recentFriends.length === 0) setRecentFriends([]);
     }
-  }, []);
+  }, [recentFriends.length, setRecentFriends]);
 
-  // --- Main data fetch (parallel with Promise.allSettled) ---
+  // --- Main data fetch ---
 
   useEffect(() => {
     if (!userProfile) return;
+    if (!shouldFetch()) return;
+
+    const isRefresh = useDashboardStore.getState().lastFetchedAt !== null;
 
     const fetchAll = async () => {
       await Promise.allSettled([
-        fetchWalkStats(),
-        fetchHotspots(),
-        fetchThreads(),
+        fetchWalkStats(isRefresh),
+        fetchHotspots(isRefresh),
+        fetchThreads(isRefresh),
         fetchMyPets(),
         fetchRecentFriends(),
         detectPendingReviews(),
       ]);
+      markFetched();
     };
 
     fetchAll();
-  }, [userProfile, fetchWalkStats, fetchHotspots, fetchThreads, fetchMyPets, fetchRecentFriends, detectPendingReviews]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userProfile]);
 
   if (!userProfile) {
     return (
@@ -252,25 +274,25 @@ export default function DashboardPage() {
         {/* (2) AI Banner -- hotspots */}
         {hotspots.status === 'loading' && <SectionSkeleton />}
         {hotspots.status === 'error' && (
-          <SectionErrorFallback message={hotspots.message} onRetry={fetchHotspots} />
+          <SectionErrorFallback message={hotspots.message} onRetry={() => fetchHotspots()} />
         )}
         {hotspots.status === 'empty' && (
           <AIBanner hotspots={[]} dogName={mainDog.name} />
         )}
-        {hotspots.status === 'success' && (
+        {hasData(hotspots) && (
           <AIBanner hotspots={hotspots.data} dogName={mainDog.name} />
         )}
 
         {/* (3) Dashboard Hero -- userProfile from useProfile + walkStats */}
         {walkStats.status === 'loading' && <SectionSkeleton />}
         {walkStats.status === 'error' && (
-          <SectionErrorFallback message={walkStats.message} onRetry={fetchWalkStats} />
+          <SectionErrorFallback message={walkStats.message} onRetry={() => fetchWalkStats()} />
         )}
-        {(walkStats.status === 'success' || walkStats.status === 'empty') && (
+        {(hasData(walkStats) || walkStats.status === 'empty') && (
           <DashboardHero
             userProfile={userProfile}
             mainDog={mainDog}
-            walkStats={walkStats.status === 'success' ? walkStats.data : null}
+            walkStats={hasData(walkStats) ? walkStats.data : null}
           />
         )}
 
@@ -280,12 +302,12 @@ export default function DashboardPage() {
         {/* (5) Local Feed Preview -- threads */}
         {threads.status === 'loading' && <SectionSkeleton />}
         {threads.status === 'error' && (
-          <LocalFeedPreview threads={[]} error={threads.message} onRetry={fetchThreads} />
+          <LocalFeedPreview threads={[]} error={threads.message} onRetry={() => fetchThreads()} />
         )}
         {threads.status === 'empty' && (
           <LocalFeedPreview threads={[]} />
         )}
-        {threads.status === 'success' && (
+        {hasData(threads) && (
           <LocalFeedPreview threads={threads.data} />
         )}
 
