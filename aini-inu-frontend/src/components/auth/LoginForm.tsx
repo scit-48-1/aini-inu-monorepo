@@ -88,11 +88,16 @@ export function LoginForm() {
         </Button>
       </div>
 
-      <div className="mt-4 text-center">
+      <div className="mt-4 text-center space-y-2">
         <Typography variant="body" className="text-zinc-400 text-sm font-bold">
           아직 계정이 없으신가요?{' '}
           <Link href="/signup" className="text-amber-600 hover:underline decoration-2 underline-offset-4">
             회원가입하기
+          </Link>
+        </Typography>
+        <Typography variant="body" className="text-zinc-400 text-sm font-bold">
+          <Link href="/" className="text-zinc-500 hover:text-navy-900 hover:underline decoration-2 underline-offset-4 transition-colors">
+            홈으로 돌아가기
           </Link>
         </Typography>
       </div>
