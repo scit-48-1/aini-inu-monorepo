@@ -102,6 +102,12 @@ public class MessageService {
                 request.getClientMessageId()
         ));
 
+        // Auto-mark sender's own message as read so it's not counted as unread
+        ChatParticipant senderParticipant = chatParticipantRepository
+                .findByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, memberId)
+                .orElseThrow(() -> new ChatException(ChatErrorCode.ROOM_ACCESS_DENIED));
+        senderParticipant.markRead(saved.getId());
+
         chatRoomRepository.updateLastMessageAt(chatRoomId, saved.getSentAt());
 
         ChatMessageResponse response = toResponse(saved);

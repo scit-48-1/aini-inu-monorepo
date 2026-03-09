@@ -221,9 +221,13 @@ class ChatServiceCoverageTest {
             request.setMessageType("USER");
             request.setClientMessageId("cid-1");
 
+            ChatParticipant senderParticipant = ChatParticipant.create(10L, 1L);
+
             given(chatRoomRepository.findById(10L)).willReturn(Optional.of(room));
             given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(10L, 1L)).willReturn(true);
             given(messageRepository.save(any(Message.class))).willReturn(saved);
+            given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(10L, 1L))
+                    .willReturn(Optional.of(senderParticipant));
 
             ChatMessageResponse response = messageService.createMessage(1L, 10L, request);
 

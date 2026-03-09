@@ -91,9 +91,13 @@ class MessageServiceTest {
             Message saved = Message.create(chatRoomId, memberId, "안녕하세요", ChatMessageType.USER, "msg-001");
             ReflectionTestUtils.setField(saved, "id", 100L);
 
+            ChatParticipant senderParticipant = ChatParticipant.create(chatRoomId, memberId);
+
             given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(room));
             given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, memberId)).willReturn(true);
             given(messageRepository.save(any(Message.class))).willReturn(saved);
+            given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, memberId))
+                    .willReturn(Optional.of(senderParticipant));
 
             // when
             ChatMessageResponse response = messageService.createMessage(memberId, chatRoomId, request);
@@ -191,6 +195,8 @@ class MessageServiceTest {
             given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(room));
             given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, senderId)).willReturn(true);
             given(messageRepository.save(any(Message.class))).willReturn(saved);
+            given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, senderId))
+                    .willReturn(Optional.of(senderParticipant));
             given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(chatRoomId))
                     .willReturn(List.of(senderParticipant, recipientParticipant));
 
@@ -233,6 +239,8 @@ class MessageServiceTest {
             given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(room));
             given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, senderId)).willReturn(true);
             given(messageRepository.save(any(Message.class))).willReturn(saved);
+            given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, senderId))
+                    .willReturn(Optional.of(p1));
             given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(chatRoomId))
                     .willReturn(List.of(p1, p2, p3));
 
@@ -273,6 +281,8 @@ class MessageServiceTest {
             given(chatRoomRepository.findById(chatRoomId)).willReturn(Optional.of(room));
             given(chatParticipantRepository.existsByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, senderId)).willReturn(true);
             given(messageRepository.save(any(Message.class))).willReturn(saved);
+            given(chatParticipantRepository.findByChatRoomIdAndMemberIdAndLeftAtIsNull(chatRoomId, senderId))
+                    .willReturn(Optional.of(senderOnly));
             given(chatParticipantRepository.findAllByChatRoomIdAndLeftAtIsNull(chatRoomId))
                     .willReturn(List.of(senderOnly));
 

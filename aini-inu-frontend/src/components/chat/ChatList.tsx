@@ -61,8 +61,16 @@ export function ChatList() {
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const handleMessagesRead = () => {
+      if (fetchDebounceRef.current) clearTimeout(fetchDebounceRef.current);
+      fetchDebounceRef.current = setTimeout(() => fetchRooms(), 300);
+    };
+    window.addEventListener('chat:messages-read', handleMessagesRead);
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('chat:messages-read', handleMessagesRead);
       if (fetchDebounceRef.current) clearTimeout(fetchDebounceRef.current);
     };
   }, [fetchRooms]);
