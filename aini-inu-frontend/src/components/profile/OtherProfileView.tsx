@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { getMember, getMemberPets, getFollowStatus, getFollowers } from '@/api/members';
 import type { MemberResponse, PetResponse } from '@/api/members';
@@ -11,6 +12,7 @@ import { PetHighlights } from '@/components/profile/PetHighlights';
 import { ProfileReviews } from '@/components/profile/ProfileReviews';
 import { ProfileTimeline } from '@/components/profile/ProfileTimeline';
 import { NeighborsModal } from '@/components/profile/NeighborsModal';
+import { DogDetailModal } from '@/components/profile/DogDetailModal';
 import { useFollowToggle } from '@/hooks/useFollowToggle';
 import { useMemberReviews } from '@/hooks/useMemberReviews';
 import { Typography } from '@/components/ui/Typography';
@@ -34,6 +36,8 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
   const [activeTab, setActiveTab] = useState<ProfileTab>('TIMELINE');
   const [neighborsModalOpen, setNeighborsModalOpen] = useState(false);
   const [neighborsModalType, setNeighborsModalType] = useState<'FOLLOWERS' | 'FOLLOWING'>('FOLLOWERS');
+  const [selectedPet, setSelectedPet] = useState<PetResponse | null>(null);
+  const [zoomedPhoto, setZoomedPhoto] = useState<string | null>(null);
 
   const {
     reviews,
@@ -145,7 +149,7 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
 
       <PetHighlights
         pets={pets}
-        onPetClick={() => {}}
+        onPetClick={(pet) => setSelectedPet(pet)}
       />
 
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
@@ -183,6 +187,24 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
         initialType={neighborsModalType}
         memberId={memberId}
       />
+
+      <DogDetailModal
+        isOpen={!!selectedPet}
+        onClose={() => setSelectedPet(null)}
+        pet={selectedPet}
+        onZoom={setZoomedPhoto}
+        readOnly
+      />
+
+      {zoomedPhoto && createPortal(
+        <div
+          className="fixed inset-0 z-[5000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setZoomedPhoto(null)}
+        >
+          <img src={zoomedPhoto} className="max-w-full max-h-full object-contain shadow-2xl" alt="Enlarged" />
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

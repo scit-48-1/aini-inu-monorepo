@@ -16,10 +16,11 @@ interface DogDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   pet: PetResponse | null;
-  onEdit: () => void;
-  onDeleted: () => void;
-  onMainChanged: () => void;
+  onEdit?: () => void;
+  onDeleted?: () => void;
+  onMainChanged?: () => void;
   onZoom: (img: string) => void;
+  readOnly?: boolean;
 }
 
 export const DogDetailModal: React.FC<DogDetailModalProps> = ({
@@ -30,6 +31,7 @@ export const DogDetailModal: React.FC<DogDetailModalProps> = ({
   onDeleted,
   onMainChanged,
   onZoom,
+  readOnly = false,
 }) => {
   const [isSettingMain, setIsSettingMain] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -44,12 +46,12 @@ export const DogDetailModal: React.FC<DogDetailModalProps> = ({
     try {
       await setMainPet(pet.id);
       toast.success('대표 반려견이 변경되었습니다.');
-      onMainChanged();
+      onMainChanged?.();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '대표 반려견 변경에 실패했습니다.';
       toast.error(message);
       // Refetch to restore correct state on failure
-      onMainChanged();
+      onMainChanged?.();
     } finally {
       setIsSettingMain(false);
     }
@@ -61,7 +63,7 @@ export const DogDetailModal: React.FC<DogDetailModalProps> = ({
       await deletePet(pet.id);
       toast.success('반려견이 삭제되었습니다.');
       setIsDeleteDialogOpen(false);
-      onDeleted();
+      onDeleted?.();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '삭제 중 오류가 발생했습니다.';
       toast.error(message);
@@ -97,12 +99,14 @@ export const DogDetailModal: React.FC<DogDetailModalProps> = ({
               >
                 <X size={24} />
               </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                className="absolute top-6 left-6 w-8 h-8 bg-black/15 hover:bg-black/35 backdrop-blur-md text-white/60 hover:text-white rounded-full flex items-center justify-center transition-all active:scale-95"
-              >
-                <Edit2 size={14} />
-              </button>
+              {!readOnly && onEdit && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                  className="absolute top-6 left-6 w-8 h-8 bg-black/15 hover:bg-black/35 backdrop-blur-md text-white/60 hover:text-white rounded-full flex items-center justify-center transition-all active:scale-95"
+                >
+                  <Edit2 size={14} />
+                </button>
+              )}
               {pet.isMain && (
                 <div className="absolute top-[72px] left-6 w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center shadow-lg">
                   <Crown size={14} className="text-white" />
@@ -178,51 +182,55 @@ export const DogDetailModal: React.FC<DogDetailModalProps> = ({
               )}
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-2">
-                {!pet.isMain && (
+              {!readOnly && (
+                <div className="flex gap-3 pt-2">
+                  {!pet.isMain && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="lg"
+                      className="flex-1"
+                      onClick={handleSetMain}
+                      disabled={isSettingMain}
+                    >
+                      {isSettingMain ? (
+                        <Loader2 className="animate-spin" size={16} />
+                      ) : (
+                        <>
+                          <Crown size={14} className="mr-1" />
+                          대표 반려견 설정
+                        </>
+                      )}
+                    </Button>
+                  )}
                   <Button
                     type="button"
-                    variant="secondary"
+                    variant="danger"
                     size="lg"
-                    className="flex-1"
-                    onClick={handleSetMain}
+                    className={pet.isMain ? 'flex-1' : ''}
+                    onClick={() => setIsDeleteDialogOpen(true)}
                     disabled={isSettingMain}
                   >
-                    {isSettingMain ? (
-                      <Loader2 className="animate-spin" size={16} />
-                    ) : (
-                      <>
-                        <Crown size={14} className="mr-1" />
-                        대표 반려견 설정
-                      </>
-                    )}
+                    <Trash2 size={14} className="mr-1" />
+                    삭제
                   </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="danger"
-                  size="lg"
-                  className={pet.isMain ? 'flex-1' : ''}
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  disabled={isSettingMain}
-                >
-                  <Trash2 size={14} className="mr-1" />
-                  삭제
-                </Button>
-              </div>
+                </div>
+              )}
             </div>
           </Card>
         </div>,
         document.body
       )}
 
-      <DeleteConfirmDialog
-        isOpen={isDeleteDialogOpen}
-        petName={pet.name}
-        onConfirm={handleDeleteConfirm}
-        onCancel={() => setIsDeleteDialogOpen(false)}
-        isDeleting={isDeleting}
-      />
+      {!readOnly && (
+        <DeleteConfirmDialog
+          isOpen={isDeleteDialogOpen}
+          petName={pet.name}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setIsDeleteDialogOpen(false)}
+          isDeleting={isDeleting}
+        />
+      )}
     </>
   );
 };
