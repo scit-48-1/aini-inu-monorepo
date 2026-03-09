@@ -586,6 +586,110 @@ class PostServiceTest {
     }
 
     @Nested
+    @DisplayName("작성자별 게시글 목록 조회")
+    class GetPostsByAuthor {
+
+        @Test
+        @DisplayName("특정 작성자의 게시글만 SliceResponse로 반환한다")
+        void success() {
+            // given
+            Long memberId = 1L;
+            Long authorId = 2L;
+            Pageable pageable = PageRequest.of(0, 20);
+
+            Post post1 = Post.create(authorId, "Author's Post 1", List.of("img1.jpg"));
+            setId(post1, 100L);
+            Post post2 = Post.create(authorId, "Author's Post 2", List.of("img2.jpg"));
+            setId(post2, 101L);
+
+            Slice<Post> postSlice = new SliceImpl<>(List.of(post1, post2), pageable, false);
+
+            given(postRepository.findAllByAuthorId(authorId, pageable)).willReturn(postSlice);
+            given(postLikeRepository.existsByPostIdAndMemberId(100L, memberId)).willReturn(true);
+            given(postLikeRepository.existsByPostIdAndMemberId(101L, memberId)).willReturn(false);
+
+            // when
+            SliceResponse<PostResponse> response = postService.getPostsByAuthor(memberId, authorId, pageable);
+
+            // then
+            assertThat(response.getContent()).hasSize(2);
+            assertThat(response.getContent().get(0).isLiked()).isTrue();
+            assertThat(response.getContent().get(1).isLiked()).isFalse();
+            then(postRepository).should(times(1)).findAllByAuthorId(authorId, pageable);
+        }
+
+        @Test
+        @DisplayName("작성자의 게시글이 없으면 빈 SliceResponse를 반환한다")
+        void success_empty() {
+            // given
+            Long memberId = 1L;
+            Long authorId = 999L;
+            Pageable pageable = PageRequest.of(0, 20);
+
+            Slice<Post> emptySlice = new SliceImpl<>(List.of(), pageable, false);
+            given(postRepository.findAllByAuthorId(authorId, pageable)).willReturn(emptySlice);
+
+            // when
+            SliceResponse<PostResponse> response = postService.getPostsByAuthor(memberId, authorId, pageable);
+
+            // then
+            assertThat(response.getContent()).isEmpty();
+            assertThat(response.isHasNext()).isFalse();
+        }
+
+        @Test
+        @DisplayName("작성자 회원 정보가 있으면 author 닉네임/프로필이 채워진다")
+        void success_with_member_profile() {
+            // given
+            Long memberId = 1L;
+            Long authorId = 2L;
+            Pageable pageable = PageRequest.of(0, 20);
+
+            Post post = Post.create(authorId, "Post Content", List.of("img.jpg"));
+            setId(post, 100L);
+
+            Slice<Post> postSlice = new SliceImpl<>(List.of(post), pageable, false);
+            Member author = createMember(authorId, "몽이아빠", "https://cdn.example.com/profile.jpg");
+
+            given(postRepository.findAllByAuthorId(authorId, pageable)).willReturn(postSlice);
+            given(postLikeRepository.existsByPostIdAndMemberId(100L, memberId)).willReturn(false);
+            given(memberRepository.findAllById(anyIterable())).willReturn(List.of(author));
+
+            // when
+            SliceResponse<PostResponse> response = postService.getPostsByAuthor(memberId, authorId, pageable);
+
+            // then
+            PostResponse item = response.getContent().get(0);
+            assertThat(item.getAuthor().getNickname()).isEqualTo("몽이아빠");
+            assertThat(item.getAuthor().getProfileImageUrl()).isEqualTo("https://cdn.example.com/profile.jpg");
+        }
+
+        @Test
+        @DisplayName("다음 페이지가 있으면 hasNext가 true이다")
+        void success_has_next() {
+            // given
+            Long memberId = 1L;
+            Long authorId = 2L;
+            Pageable pageable = PageRequest.of(0, 1);
+
+            Post post = Post.create(authorId, "Post", List.of("img.jpg"));
+            setId(post, 100L);
+
+            Slice<Post> postSlice = new SliceImpl<>(List.of(post), pageable, true);
+
+            given(postRepository.findAllByAuthorId(authorId, pageable)).willReturn(postSlice);
+            given(postLikeRepository.existsByPostIdAndMemberId(100L, memberId)).willReturn(false);
+
+            // when
+            SliceResponse<PostResponse> response = postService.getPostsByAuthor(memberId, authorId, pageable);
+
+            // then
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.isHasNext()).isTrue();
+        }
+    }
+
+    @Nested
     @DisplayName("게시글 상세 조회")
     class GetPostDetail {
 

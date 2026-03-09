@@ -68,6 +68,25 @@ public class PostService {
     }
 
     /**
+     * 특정 작성자의 게시글 목록 조회 (무한 스크롤)
+     * @param memberId 현재 로그인 사용자 ID (좋아요 여부 확인용)
+     * @param authorId 조회 대상 작성자 ID
+     */
+    public SliceResponse<PostResponse> getPostsByAuthor(Long memberId, Long authorId, Pageable pageable) {
+        Slice<Post> posts = postRepository.findAllByAuthorId(authorId, pageable);
+        Map<Long, Member> memberMap = loadMemberMap(
+                posts.getContent().stream()
+                        .map(Post::getAuthorId)
+                        .toList()
+        );
+
+        return SliceResponse.of(posts.map(post -> {
+            boolean isLiked = postLikeRepository.existsByPostIdAndMemberId(post.getId(), memberId);
+            return PostResponse.from(post, resolveAuthor(post.getAuthorId(), memberMap), isLiked);
+        }));
+    }
+
+    /**
      * 게시글 상세 조회 (댓글 포함)
      * - 게시글 내용과 해당 게시글에 달린 댓글 목록을 반환합니다.
      * @param memberId 현재 로그인 사용자 ID (좋아요 여부 확인용)

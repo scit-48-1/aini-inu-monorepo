@@ -137,6 +137,99 @@ class PostControllerTest {
     }
 
     @Nested
+    @DisplayName("작성자별 게시글 목록 조회")
+    class GetPostsByAuthor {
+        @Test
+        @WithMockUser
+        @DisplayName("authorId 파라미터가 있으면 해당 작성자의 게시글만 반환한다")
+        void get_posts_by_author_success() throws Exception {
+            // given
+            Long authorId = 2L;
+            PostResponse postResponse = new PostResponse();
+            postResponse.setId(1L);
+            postResponse.setContent("작성자 게시글");
+
+            SliceResponse<PostResponse> sliceResponse = new SliceResponse<>(
+                    List.of(postResponse),
+                    0,
+                    20,
+                    true,
+                    true,
+                    false
+            );
+            given(postService.getPostsByAuthor(anyLong(), eq(authorId), any())).willReturn(sliceResponse);
+
+            // when & then
+            mockMvc.perform(get("/api/v1/posts")
+                            .param("authorId", String.valueOf(authorId))
+                            .param("page", "0")
+                            .param("size", "20")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.content[0].id").value(1))
+                    .andExpect(jsonPath("$.data.content[0].content").value("작성자 게시글"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("authorId 파라미터가 없으면 전체 게시글을 반환한다")
+        void get_posts_without_author_filter() throws Exception {
+            // given
+            PostResponse postResponse = new PostResponse();
+            postResponse.setId(1L);
+            postResponse.setContent("전체 게시글");
+
+            SliceResponse<PostResponse> sliceResponse = new SliceResponse<>(
+                    List.of(postResponse),
+                    0,
+                    20,
+                    true,
+                    true,
+                    false
+            );
+            given(postService.getPosts(anyLong(), any())).willReturn(sliceResponse);
+
+            // when & then
+            mockMvc.perform(get("/api/v1/posts")
+                            .param("page", "0")
+                            .param("size", "20")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.content[0].content").value("전체 게시글"));
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("작성자의 게시글이 없으면 빈 목록을 반환한다")
+        void get_posts_by_author_empty() throws Exception {
+            // given
+            Long authorId = 999L;
+            SliceResponse<PostResponse> emptyResponse = new SliceResponse<>(
+                    List.of(),
+                    0,
+                    20,
+                    true,
+                    true,
+                    false
+            );
+            given(postService.getPostsByAuthor(anyLong(), eq(authorId), any())).willReturn(emptyResponse);
+
+            // when & then
+            mockMvc.perform(get("/api/v1/posts")
+                            .param("authorId", String.valueOf(authorId))
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.content").isEmpty());
+        }
+    }
+
+    @Nested
     @DisplayName("게시글 상세 조회")
     class GetPostDetail {
         @Test

@@ -9,6 +9,7 @@ import { getMe, getWalkStats, getFollowers, getFollowing } from '@/api/members';
 import type { MemberResponse, WalkStatsResponse } from '@/api/members';
 import { getMyPets } from '@/api/pets';
 import type { PetResponse } from '@/api/pets';
+import { getPostsByAuthor } from '@/api/community';
 
 import { useUserStore } from '@/store/useUserStore';
 import { useWalkDiaries } from '@/hooks/useWalkDiaries';
@@ -158,6 +159,11 @@ export const MyProfileView: React.FC = () => {
   const [followingCount, setFollowingCount] = useState(0);
   const [walkStats, setWalkStats] = useState<WalkStatsResponse | null>(null);
 
+  // Posts pagination state
+  const [postsPage, setPostsPage] = useState(0);
+  const [postsHasNext, setPostsHasNext] = useState(false);
+  const [postsLoading, setPostsLoading] = useState(false);
+
   // UI state
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -229,6 +235,18 @@ export const MyProfileView: React.FC = () => {
       setFollowerCount(followersRes?.content?.length ?? 0);
       setFollowingCount(followingRes?.content?.length ?? 0);
       await Promise.all([fetchDiaries(0), fetchReviews(0)]);
+
+      // Fetch my posts
+      if (memberRes?.id) {
+        try {
+          const postsRes = await getPostsByAuthor(memberRes.id, { page: 0, size: 20 });
+          setPosts(postsRes.content || []);
+          setPostsHasNext(postsRes.hasNext ?? false);
+          setPostsPage(0);
+        } catch {
+          // Posts failure is non-fatal
+        }
+      }
     } catch (e) {
       console.error('MyProfileView fetchData error:', e);
       setHasError(true);
@@ -243,6 +261,22 @@ export const MyProfileView: React.FC = () => {
       // Walk stats failure is non-fatal
     }
   }, [fetchDiaries, fetchReviews]);
+
+  const loadMorePosts = useCallback(async () => {
+    if (!member || postsLoading || !postsHasNext) return;
+    setPostsLoading(true);
+    try {
+      const nextPage = postsPage + 1;
+      const res = await getPostsByAuthor(member.id, { page: nextPage, size: 20 });
+      setPosts(prev => [...prev, ...(res.content || [])]);
+      setPostsHasNext(res.hasNext ?? false);
+      setPostsPage(nextPage);
+    } catch {
+      // ignore
+    } finally {
+      setPostsLoading(false);
+    }
+  }, [member, postsLoading, postsHasNext, postsPage]);
 
   useEffect(() => {
     fetchData();
@@ -301,6 +335,9 @@ export const MyProfileView: React.FC = () => {
         {activeTab === 'FEED' && (
           <ProfileFeed
             posts={posts}
+            isLoading={postsLoading}
+            hasNext={postsHasNext}
+            onLoadMore={loadMorePosts}
             onPostClick={(p) => setSelectedPost(p)}
           />
         )}

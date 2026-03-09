@@ -59,14 +59,23 @@ public class PostController {
                             + "지원 예시: createdAt,desc / likeCount,desc / commentCount,desc / id,desc. "
                             + "반복 예시: sort=createdAt,desc&sort=id,desc (JSON 배열 형식 미지원)",
                     array = @ArraySchema(schema = @Schema(type = "string", example = "createdAt,desc"))
+            ),
+            @Parameter(
+                    name = "authorId",
+                    in = ParameterIn.QUERY,
+                    description = "특정 작성자의 게시글만 필터링합니다. 생략 시 전체 게시글을 조회합니다.",
+                    schema = @Schema(type = "integer")
             )
     })
     public ResponseEntity<ApiResponse<SliceResponse<PostResponse>>> getPosts(
             @CurrentMember Long memberId,
+            @RequestParam(required = false) Long authorId,
             @Parameter(hidden = true)
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        SliceResponse<PostResponse> response = postService.getPosts(memberId, pageable);
+        SliceResponse<PostResponse> response = (authorId != null)
+                ? postService.getPostsByAuthor(memberId, authorId, pageable)
+                : postService.getPosts(memberId, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

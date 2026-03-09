@@ -93,6 +93,18 @@ export async function getPosts(
   );
 }
 
+export async function getPostsByAuthor(
+  authorId: number,
+  params?: PaginationParams,
+): Promise<SliceResponse<PostResponse>> {
+  const query = new URLSearchParams();
+  query.set('authorId', String(authorId));
+  if (params?.page !== undefined) query.set('page', String(params.page));
+  if (params?.size !== undefined) query.set('size', String(params.size));
+  if (params?.sort) query.set('sort', params.sort);
+  return apiClient.get<SliceResponse<PostResponse>>(`/posts?${query.toString()}`);
+}
+
 export async function createPost(
   data: PostCreateRequest,
 ): Promise<PostResponse> {

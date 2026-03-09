@@ -11,6 +11,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // 페이지 조회
     Slice<Post> findAllBy(Pageable pageable);
 
+    // 특정 작성자의 게시글 페이지 조회
+    Slice<Post> findAllByAuthorId(Long authorId, Pageable pageable);
+
     //최신 글
     List<Post> findAllByOrderByCreatedAtDesc();
     //특정 아이디의 게시글
