@@ -271,6 +271,46 @@ class WalkThreadServiceCoverageTest {
         assertThat(responses.get(1).getCount()).isEqualTo(1L);
     }
 
+    @Test
+    @DisplayName("핫스팟 조회 시 placeName이 '현재위치'인 스레드는 제외된다")
+    void getHotspots_excludesCurrentLocation() {
+        // given
+        WalkThread seoul = recruitingThread(1L, 10L, "서울숲", 37.5459, 127.0405, LocalDateTime.now().plusHours(2));
+        WalkThread currentLocation = recruitingThread(2L, 11L, "현재위치", 37.5000, 127.0000, LocalDateTime.now().plusHours(2));
+
+        given(walkThreadRepository.findByStatusAndCreatedAfter(eq(WalkThreadStatus.RECRUITING), any(LocalDateTime.class)))
+                .willReturn(List.of(seoul, currentLocation));
+
+        // when
+        List<ThreadHotspotResponse> responses = walkThreadService.getHotspots(6);
+
+        // then
+        assertThat(responses).hasSize(1);
+        assertThat(responses.get(0).getRegion()).isEqualTo("서울숲");
+    }
+
+    @Test
+    @DisplayName("핫스팟 조회는 상위 5개만 반환한다")
+    void getHotspots_limitsToTop5() {
+        // given
+        WalkThread t1 = recruitingThread(1L, 10L, "서울숲", 37.5459, 127.0405, LocalDateTime.now().plusHours(2));
+        WalkThread t2 = recruitingThread(2L, 11L, "강남", 37.4979, 127.0276, LocalDateTime.now().plusHours(2));
+        WalkThread t3 = recruitingThread(3L, 12L, "홍대", 37.5563, 126.9220, LocalDateTime.now().plusHours(2));
+        WalkThread t4 = recruitingThread(4L, 13L, "잠실", 37.5133, 127.1001, LocalDateTime.now().plusHours(2));
+        WalkThread t5 = recruitingThread(5L, 14L, "여의도", 37.5219, 126.9245, LocalDateTime.now().plusHours(2));
+        WalkThread t6 = recruitingThread(6L, 15L, "이태원", 37.5340, 126.9948, LocalDateTime.now().plusHours(2));
+        WalkThread t7 = recruitingThread(7L, 16L, "명동", 37.5636, 126.9869, LocalDateTime.now().plusHours(2));
+
+        given(walkThreadRepository.findByStatusAndCreatedAfter(eq(WalkThreadStatus.RECRUITING), any(LocalDateTime.class)))
+                .willReturn(List.of(t1, t2, t3, t4, t5, t6, t7));
+
+        // when
+        List<ThreadHotspotResponse> responses = walkThreadService.getHotspots(6);
+
+        // then
+        assertThat(responses).hasSize(5);
+    }
+
     private WalkThread recruitingThread(
             Long id,
             Long authorId,

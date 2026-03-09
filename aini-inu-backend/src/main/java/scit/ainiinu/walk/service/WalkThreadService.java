@@ -352,6 +352,9 @@ public class WalkThreadService {
             if (thread.isExpired(now)) {
                 continue;
             }
+            if ("현재위치".equals(thread.getPlaceName())) {
+                continue;
+            }
             countByRegion.merge(thread.getPlaceName(), 1L, Long::sum);
         }
 
@@ -360,6 +363,9 @@ public class WalkThreadService {
             responses.add(new ThreadHotspotResponse(entry.getKey(), entry.getValue()));
         }
         responses.sort(Comparator.comparing(ThreadHotspotResponse::getCount).reversed());
+        if (responses.size() > 5) {
+            return responses.subList(0, 5);
+        }
         return responses;
     }
 
