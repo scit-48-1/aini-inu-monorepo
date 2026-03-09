@@ -48,6 +48,8 @@ services:
     build:
       context: ./aini-inu-frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_KAKAO_MAP_API_KEY: ${NEXT_PUBLIC_KAKAO_MAP_API_KEY}
     container_name: aini-inu-frontend
     restart: unless-stopped
     depends_on:
