@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import { ThemeProvider } from "@/components/common/ThemeProvider";
 import { Toaster } from 'sonner';
 import { AuthProvider } from "@/providers/AuthProvider";
+import { NotificationProvider } from "@/providers/NotificationProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,15 +27,17 @@ export default function RootLayout({
       <body className={cn(inter.className, "bg-background text-foreground transition-colors duration-300")}>
         <ThemeProvider attribute="data-theme" defaultTheme="light" enableSystem>
           <AuthProvider>
-            <div className="flex h-screen w-screen overflow-hidden bg-background">
-              {showSidebar && <Sidebar />}
-              <main className={cn(
-                "flex-1 h-full relative overflow-y-auto no-scrollbar",
-                !showSidebar && "w-full"
-              )}>
-                {children}
-              </main>
-            </div>
+            <NotificationProvider>
+              <div className="flex h-screen w-screen overflow-hidden bg-background">
+                {showSidebar && <Sidebar />}
+                <main className={cn(
+                  "flex-1 h-full relative overflow-y-auto no-scrollbar",
+                  !showSidebar && "w-full"
+                )}>
+                  {children}
+                </main>
+              </div>
+            </NotificationProvider>
             <Toaster
               position="top-center"
               richColors

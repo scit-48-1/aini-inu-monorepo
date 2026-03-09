@@ -4,6 +4,7 @@ import React from 'react';
 import { MapPin, Edit2, Footprints, PlusCircle, Siren, Activity, RefreshCw, CalendarDays, Radar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Typography } from '@/components/ui/Typography';
+import { NotificationBell } from '@/components/notification/NotificationBell';
 
 type SubView = 'FIND' | 'RECRUIT' | 'EMERGENCY' | 'WALKING';
 
@@ -95,7 +96,9 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
           )}
         </div>
       </div>
-      <nav className="flex bg-zinc-50/50 p-1 rounded-xl border border-zinc-100">
+      <div className="flex items-center gap-3">
+        <NotificationBell />
+        <nav className="flex bg-zinc-50/50 p-1 rounded-xl border border-zinc-100">
         {[
           { id: 'FIND', label: '산책', icon: Footprints },
           { id: 'RECRUIT', label: '모집', icon: PlusCircle },
@@ -114,6 +117,7 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
           </button>
         ))}
       </nav>
+      </div>
     </div>
   );
 };
