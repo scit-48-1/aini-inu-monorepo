@@ -12,7 +12,6 @@ export interface PetCreateRequest {
   isNeutered: boolean;
   photoUrl?: string;
   isMain?: boolean;
-  certificationNumber?: string;
   walkingStyles?: string[];
   personalityIds?: number[];
 }
@@ -39,7 +38,6 @@ export interface PetResponse {
   isNeutered: boolean;
   photoUrl: string;
   isMain: boolean;
-  isCertified: boolean;
   walkingStyles: string[];
   personalities: PersonalityResponse[];
   createdAt: string;

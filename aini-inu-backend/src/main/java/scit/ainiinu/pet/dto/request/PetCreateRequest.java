@@ -58,10 +58,6 @@ public class PetCreateRequest {
     @Schema(description = "대표 반려견 여부입니다.", example = "true")
     private Boolean isMain;
 
-    @Size(max = 15, message = "동물등록번호는 15자 이하여야 합니다")
-    @Schema(description = "동물등록번호입니다.", example = "410000123456789")
-    private String certificationNumber;
-
     @Schema(description = "산책 스타일 코드 목록입니다.", example = "[\"LEISURELY\", \"SOCIAL\"]")
     private List<String> walkingStyles; // List of Codes
     @Schema(description = "반려견 성향 ID 목록입니다.", example = "[101,102]")

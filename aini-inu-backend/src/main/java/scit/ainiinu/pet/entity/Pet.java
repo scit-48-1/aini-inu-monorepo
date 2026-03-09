@@ -104,19 +104,6 @@ public class Pet extends BaseTimeEntity {
 
 
 
-    @Column(length = 20)
-
-    private String certificationNumber;
-
-
-
-    @Column(nullable = false)
-
-    @Builder.Default
-
-    private Boolean isCertified = false;
-
-
 
     @OneToMany(mappedBy = "pet", cascade = CascadeType.ALL, orphanRemoval = true)
 

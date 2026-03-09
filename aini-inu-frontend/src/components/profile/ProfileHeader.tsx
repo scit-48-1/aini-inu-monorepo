@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ShieldCheck, Settings, UserPlus, UserCheck } from 'lucide-react';
+import { Settings, UserPlus, UserCheck } from 'lucide-react';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 
@@ -15,7 +15,6 @@ interface ProfileHeaderProps {
   postCount: number;
   followerCount: number;
   followingCount: number;
-  isAnyDogVerified: boolean;
   isMe: boolean;
   isFollowing?: boolean;
   hasRecentDiary?: boolean;
@@ -36,7 +35,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   postCount,
   followerCount,
   followingCount,
-  isAnyDogVerified,
   isMe,
   isFollowing = false,
   hasRecentDiary = false,
@@ -77,11 +75,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               )}>
                 {member.nickname}
               </Typography>
-              {isAnyDogVerified && (
-                <div className="bg-blue-500 text-white p-1 rounded-full shadow-sm">
-                  <ShieldCheck size={compact ? 10 : 14} fill="currentColor" strokeWidth={3} />
-                </div>
-              )}
             </div>
             <div className="flex gap-2 items-center">
               {isMe ? (

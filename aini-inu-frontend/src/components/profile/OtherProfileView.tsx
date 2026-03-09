@@ -160,7 +160,6 @@ export const OtherProfileView: React.FC<OtherProfileViewProps> = ({ memberId }) 
         postCount={0}
         followerCount={followerCount}
         followingCount={followingCount}
-        isAnyDogVerified={pets.some((p) => p.isMain)}
         isMe={false}
         isFollowing={followStateLoaded ? isFollowing : false}
         isFollowLoading={isFollowLoading || !followStateLoaded}

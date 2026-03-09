@@ -1,10 +1,8 @@
 'use client';
 
 import React, { Dispatch, SetStateAction } from 'react';
-import { Camera, Dog, ShieldCheck, Check, Loader2 } from 'lucide-react';
+import { Camera, Dog } from 'lucide-react';
 import { Typography } from '@/components/ui/Typography';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
 import { DOG_PERSONALITIES } from '@/constants/dogPersonalities';
 import { DogBreed } from '@/constants/dogBreeds';
@@ -21,17 +19,11 @@ interface DogFormState {
   tendencies: DogTendency[];
   walkStyle: WalkStyle;
   mbti: string;
-  registrationNumber: string;
 }
 
 interface DogFormFieldsProps {
   dogForm: DogFormState;
   setDogForm: Dispatch<SetStateAction<DogFormState>>;
-  isVerified: boolean;
-  onVerify: (ownerName: string) => Promise<boolean>;
-  isVerifying: boolean;
-  ownerName: string;
-  setOwnerName: (name: string) => void;
   onBreedChange: (val: string) => void;
   breedSuggestions: DogBreed[];
   showBreedSuggestions: boolean;
@@ -43,7 +35,7 @@ interface DogFormFieldsProps {
 }
 
 export const DogFormFields: React.FC<DogFormFieldsProps> = ({
-  dogForm, setDogForm, isVerified, onVerify, isVerifying, ownerName, setOwnerName,
+  dogForm, setDogForm,
   onBreedChange, breedSuggestions, showBreedSuggestions, setShowBreedSuggestions, onSelectBreed,
   onToggleTendency, onImageUpload, fileInputRef
 }) => {
@@ -175,28 +167,6 @@ export const DogFormFields: React.FC<DogFormFieldsProps> = ({
         </div>
       </div>
 
-      {/* 4. Verification (Moved to Bottom - Optional) */}
-      <div className="p-8 bg-indigo-50/30 rounded-[40px] border border-indigo-100/50 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ShieldCheck size={20} className="text-indigo-600" />
-            <Typography variant="label" className="text-indigo-950 font-black text-xs">National Verification System</Typography>
-          </div>
-          <span className="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Optional</span>
-        </div>
-        
-        <Typography variant="body" className="text-indigo-900/60 text-xs font-medium leading-relaxed px-1">
-          국가 동물등록 정보를 인증하면 프로필에 <span className="text-indigo-600 font-bold">공식 인증 마크</span>가 부여되며, 동네 이웃들에게 더 높은 신뢰를 줄 수 있습니다.
-        </Typography>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <input name="ownerName" type="text" placeholder="소유자 성명" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} disabled={isVerified} className="bg-white border-none rounded-2xl py-4 px-6 font-bold text-navy-900 focus:ring-4 ring-indigo-500/10 transition-all disabled:opacity-50" />
-          <input name="registrationNumber" type="text" placeholder="동물등록번호" value={dogForm.registrationNumber} onChange={(e) => setDogForm({...dogForm, registrationNumber: e.target.value})} disabled={isVerified} className="bg-white border-none rounded-2xl py-4 px-6 font-bold text-navy-900 focus:ring-4 ring-indigo-500/10 transition-all disabled:opacity-50" />
-        </div>
-        <Button type="button" variant={isVerified ? "secondary" : "primary"} onClick={() => onVerify(ownerName)} disabled={isVerifying || isVerified} className={cn("w-full rounded-2xl h-14 shadow-xl shadow-indigo-500/10 border-none transition-all", isVerified ? "bg-emerald-500" : "bg-indigo-600")}>
-          {isVerifying ? <Loader2 className="animate-spin" size={20} /> : (isVerified ? <div className="flex items-center gap-2"><Check size={20} /> 인증 완료</div> : '국가 정보 인증하기')}
-        </Button>
-      </div>
     </div>
   );
 };

@@ -218,7 +218,6 @@ export const MyProfileView: React.FC = () => {
         postCount={posts.length}
         followerCount={followerCount}
         followingCount={followingCount}
-        isAnyDogVerified={pets.some(p => p.isCertified)}
         isMe={true}
         hasRecentDiary={hasRecentDiary}
         onEditClick={() => setIsEditProfileOpen(true)}

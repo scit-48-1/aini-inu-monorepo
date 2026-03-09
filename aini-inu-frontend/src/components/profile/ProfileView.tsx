@@ -171,7 +171,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
         postCount={posts.length}
         followerCount={profile?.followerCount || 0}
         followingCount={profile?.followingCount || 0}
-        isAnyDogVerified={dogs.some(d => !!d.registrationNumber)}
         isMe={isMe}
         isFollowing={isFollowing}
         hasRecentDiary={hasRecentDiary}
@@ -241,7 +240,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ memberId, compact = fa
               createdAt: '',
               nicknameChangedAt: profile.nicknameChangedAt || '',
               verified: false,
-              isVerified: false,
             } as MemberResponse : ({} as MemberResponse)}
             onSaved={async () => {
               await fetchData();

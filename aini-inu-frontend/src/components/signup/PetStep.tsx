@@ -19,9 +19,6 @@ export const PetStep: React.FC<PetStepProps> = ({ dogData, setDogData, onNext, o
   // Local state for UI logic
   const [showBreedSuggestions, setShowBreedSuggestions] = useState(false);
   const [breedSuggestions, setBreedSuggestions] = useState<any[]>([]);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-  const [ownerName, setOwnerName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isFormValid = dogData.name && dogData.breed && dogData.birthDate;
@@ -54,16 +51,6 @@ export const PetStep: React.FC<PetStepProps> = ({ dogData, setDogData, onNext, o
     }
   };
 
-  const handleVerify = async (name: string) => {
-    setIsVerifying(true);
-    // Mock API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsVerified(true);
-    setIsVerifying(false);
-    setDogData({ ...dogData, isVerified: true });
-    return true;
-  };
-
   return (
     <form 
       onSubmit={(e) => { e.preventDefault(); if(isFormValid) onNext(); }}
@@ -77,11 +64,6 @@ export const PetStep: React.FC<PetStepProps> = ({ dogData, setDogData, onNext, o
       <DogFormFields 
         dogForm={dogData}
         setDogForm={setDogData}
-        isVerified={isVerified}
-        onVerify={handleVerify}
-        isVerifying={isVerifying}
-        ownerName={ownerName}
-        setOwnerName={setOwnerName}
         onBreedChange={handleBreedChange}
         breedSuggestions={breedSuggestions}
         showBreedSuggestions={showBreedSuggestions}

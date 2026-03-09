@@ -16,11 +16,9 @@ export function useDogForm(initialDog?: Partial<DogType>) {
     walkStyle: (initialDog?.walkStyle || '느긋함') as WalkStyle,
     image: initialDog?.image || '',
     mbti: initialDog?.mbti || '',
-    registrationNumber: initialDog?.registrationNumber || '',
     isNeutralized: initialDog?.isNeutralized ?? true,
   });
 
-  const [isVerified, setIsVerified] = useState(!!initialDog?.registrationNumber);
   const [breedSuggestions, setBreedSuggestions] = useState<DogBreed[]>([]);
   const [showBreedSuggestions, setShowBreedSuggestions] = useState(false);
 
@@ -35,10 +33,8 @@ export function useDogForm(initialDog?: Partial<DogType>) {
       walkStyle: (initialDog?.walkStyle || '느긋함') as WalkStyle,
       image: initialDog?.image || '',
       mbti: initialDog?.mbti || '',
-      registrationNumber: initialDog?.registrationNumber || '',
       isNeutralized: initialDog?.isNeutralized ?? true,
     });
-    setIsVerified(!!initialDog?.registrationNumber);
   }, [initialDog]);
 
   const handleBreedChange = useCallback((val: string) => {
@@ -72,49 +68,9 @@ export function useDogForm(initialDog?: Partial<DogType>) {
     });
   }, []);
 
-  const handleVerify = useCallback(async (ownerName: string) => {
-    if (!dogForm.registrationNumber || !ownerName) {
-      toast.warning('소유자 성명과 등록번호를 모두 입력해주세요.');
-      return false;
-    }
-
-    try {
-      const response = await fetch('/api/v1/pets/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          registrationNumber: dogForm.registrationNumber,
-          ownerName: ownerName
-        })
-      });
-
-      if (!response.ok) throw new Error('Verification failed');
-
-      const data = await response.json();
-      if (data.success) {
-        setIsVerified(true);
-        setDogForm(prev => ({
-          ...prev,
-          name: data.dogInfo?.dogNm || prev.name,
-          breed: data.dogInfo?.kindNm || prev.breed
-        }));
-        toast.success('반려견 인증에 성공했습니다!');
-        return true;
-      } else {
-        toast.error(data.message);
-        return false;
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error('인증 요청 중 오류가 발생했습니다.');
-      return false;
-    }
-  }, [dogForm.registrationNumber]);
-
   return {
     dogForm, setDogForm,
-    isVerified, setIsVerified,
     breedSuggestions, showBreedSuggestions, setShowBreedSuggestions,
-    handleBreedChange, selectBreed, toggleTendency, handleVerify
+    handleBreedChange, selectBreed, toggleTendency
   };
 }

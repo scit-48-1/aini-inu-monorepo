@@ -32,8 +32,6 @@ public class PetResponse {
     private String photoUrl;
     @Schema(description = "대표 반려견 여부입니다.", example = "true")
     private Boolean isMain;
-    @Schema(description = "반려견 인증 완료 여부입니다.", example = "true")
-    private Boolean isCertified;
     @Schema(description = "산책 스타일 코드 목록입니다.", example = "[\"LEISURELY\", \"SOCIAL\"]")
     private List<String> walkingStyles; // Codes
     @Schema(description = "반려견 성향 태그 목록입니다.", example = "[\"예시 항목\"]")
@@ -53,7 +51,6 @@ public class PetResponse {
                 .isNeutered(pet.getIsNeutered())
                 .photoUrl(pet.getPhotoUrl())
                 .isMain(pet.getIsMain())
-                .isCertified(pet.getIsCertified())
                 .walkingStyles(walkingStyleCodes)
                 .personalities(personalities)
                 .createdAt(pet.getCreatedAt())

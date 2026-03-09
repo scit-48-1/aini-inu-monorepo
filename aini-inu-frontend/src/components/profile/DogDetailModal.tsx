@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ShieldCheck, Edit2, Zap, Target, Check, Crown, Loader2, Trash2, Brain } from 'lucide-react';
+import { X, Edit2, Zap, Target, Check, Crown, Loader2, Trash2, Brain } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -117,11 +117,6 @@ export const DogDetailModal: React.FC<DogDetailModalProps> = ({
                   <Typography variant="h2" className="text-white text-4xl leading-none">
                     {pet.name}
                   </Typography>
-                  {pet.isCertified && (
-                    <div className="bg-blue-500 text-white p-1.5 rounded-full shadow-lg border-2 border-white/20">
-                      <ShieldCheck size={16} fill="currentColor" strokeWidth={3} />
-                    </div>
-                  )}
                 </div>
                 <Typography variant="body" className="text-white/80 font-black text-lg">
                   {pet.breed?.name} &bull; {pet.age != null ? `${pet.age}세` : ''} &bull; {pet.gender === 'MALE' ? '남아' : '여아'}

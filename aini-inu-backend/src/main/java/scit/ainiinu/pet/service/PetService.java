@@ -34,7 +34,6 @@ public class PetService {
     private final BreedRepository breedRepository;
     private final PersonalityRepository personalityRepository;
     private final WalkingStyleRepository walkingStyleRepository;
-    private final AnimalCertificationService animalCertificationService;
     private final MemberService memberService;
 
     /**
@@ -57,14 +56,7 @@ public class PetService {
         Breed breed = breedRepository.findById(request.getBreedId())
                 .orElseThrow(() -> new BusinessException(PetErrorCode.BREED_NOT_FOUND));
 
-        // 3. 동물등록번호 검증 (선택 사항) - 견종과 성별 일치 여부 확인
-        boolean isCertified = animalCertificationService.verify(
-                request.getCertificationNumber(),
-                breed.getName(),
-                request.getGender()
-        );
-
-        // 4. 메인 반려견 설정 로직
+        // 3. 메인 반려견 설정 로직
         boolean isMain = false;
         if (currentCount == 0) {
             isMain = true;
@@ -74,7 +66,7 @@ public class PetService {
             isMain = true;
         }
 
-        // 5. Pet 엔티티 생성
+        // 4. Pet 엔티티 생성
         Pet pet = Pet.builder()
                 .memberId(memberId)
                 .breed(breed)
@@ -86,11 +78,9 @@ public class PetService {
                 .isNeutered(request.getIsNeutered())
                 .photoUrl(request.getPhotoUrl())
                 .isMain(isMain)
-                .certificationNumber(request.getCertificationNumber())
-                .isCertified(isCertified)
                 .build();
 
-        // 6. 성향(Personality) 및 산책 스타일 관계 설정
+        // 5. 성향(Personality) 및 산책 스타일 관계 설정
         if (request.getPersonalityIds() != null) {
             for (Long pId : request.getPersonalityIds()) {
                 Personality personality = personalityRepository.findById(pId)
@@ -107,10 +97,10 @@ public class PetService {
             styles.forEach(pet::addWalkingStyle);
         }
 
-        // 7. 저장
+        // 6. 저장
         Pet savedPet = petRepository.save(pet);
 
-        // 8. 첫 반려견 등록 시 회원 타입 업그레이드
+        // 7. 첫 반려견 등록 시 회원 타입 업그레이드
         if (currentCount == 0) {
             memberService.upgradeToPetOwner(memberId);
         }

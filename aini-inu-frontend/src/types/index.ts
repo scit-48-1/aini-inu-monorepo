@@ -17,8 +17,6 @@ export type DogType = {
   mbti?: string;
   isNeutralized: boolean;
   isMain: boolean;
-  isVerified: boolean;
-  registrationNumber?: string;
 };
 
 export type UserType = {
@@ -156,7 +154,7 @@ export type WalkDiaryType = {
   location?: string;    // place alias
 };
 
-export type DogFormData = Omit<DogType, 'id' | 'age' | 'isMain' | 'isVerified'>;
+export type DogFormData = Omit<DogType, 'id' | 'age' | 'isMain'>;
 
 export type PostFormData = Pick<FeedPostType, 'images' | 'caption' | 'location'>;
 

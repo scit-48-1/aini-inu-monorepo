@@ -60,7 +60,6 @@ for(let i=0; i<50; i++) {
       walkStyle: WALK_STYLES[Math.floor(Math.random() * WALK_STYLES.length)],
       mbti: Math.random() > 0.3 ? MBTIS[Math.floor(Math.random() * MBTIS.length)] : undefined,
       isNeutralized: true,
-      isVerified: false,
       isMain: j === 1
     });
   }

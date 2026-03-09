@@ -58,49 +58,11 @@ class PetServiceTest {
     @Mock
     private WalkingStyleRepository walkingStyleRepository;
     @Mock
-    private AnimalCertificationService animalCertificationService;
-    @Mock
     private MemberService memberService;
 
     @Nested
     @DisplayName("반려견 등록")
     class CreatePet {
-
-        @Test
-        @DisplayName("성공: 동물등록번호 검증이 성공하면 isCertified=true로 저장된다")
-        void success_certification_verified() {
-            // given
-            Long memberId = 1L;
-            PetCreateRequest request = createRequest();
-            request.setCertificationNumber("123456789012345");
-
-            Breed breed = mock(Breed.class);
-            given(breed.getName()).willReturn("말티즈");
-
-            given(petRepository.countByMemberId(memberId)).willReturn(0);
-            given(breedRepository.findById(request.getBreedId())).willReturn(Optional.of(breed));
-            given(animalCertificationService.verify(
-                    eq(request.getCertificationNumber()),
-                    eq("말티즈"),
-                    eq(request.getGender())
-            )).willReturn(true);
-
-            given(petRepository.save(any(Pet.class))).willAnswer(invocation -> {
-                Pet p = invocation.getArgument(0);
-                return p;
-            });
-
-            // when
-            PetResponse response = petService.createPet(memberId, request);
-
-            // then
-            assertThat(response.getIsCertified()).isTrue();
-            then(animalCertificationService).should().verify(
-                    eq(request.getCertificationNumber()),
-                    eq("말티즈"),
-                    eq(request.getGender())
-            );
-        }
 
         @Test
         @DisplayName("성공: 첫 반려견 등록 시 자동으로 메인 반려견이 되고 memberType이 PET_OWNER로 변경된다")
@@ -110,7 +72,7 @@ class PetServiceTest {
             PetCreateRequest request = createRequest();
 
             Breed breed = mock(Breed.class);
-            given(breed.getName()).willReturn("말티즈");
+
 
             given(petRepository.countByMemberId(memberId)).willReturn(0); // 0마리
             given(breedRepository.findById(request.getBreedId())).willReturn(Optional.of(breed));
@@ -133,7 +95,7 @@ class PetServiceTest {
             PetCreateRequest request = createRequest();
 
             Breed breed = mock(Breed.class);
-            given(breed.getName()).willReturn("말티즈");
+
 
             given(petRepository.countByMemberId(memberId)).willReturn(1); // 이미 1마리 있음
             given(breedRepository.findById(request.getBreedId())).willReturn(Optional.of(breed));
@@ -156,7 +118,7 @@ class PetServiceTest {
 
             Pet existingMainPet = mock(Pet.class);
             Breed breed = mock(Breed.class);
-            given(breed.getName()).willReturn("말티즈");
+
 
             given(petRepository.countByMemberId(memberId)).willReturn(1);
             given(breedRepository.findById(request.getBreedId())).willReturn(Optional.of(breed));
@@ -183,7 +145,7 @@ class PetServiceTest {
             WalkingStyle style1 = mock(WalkingStyle.class);
             WalkingStyle style2 = mock(WalkingStyle.class);
             Breed breed = mock(Breed.class);
-            given(breed.getName()).willReturn("말티즈");
+
 
             given(petRepository.countByMemberId(memberId)).willReturn(0);
             given(breedRepository.findById(any())).willReturn(Optional.of(breed));
@@ -218,39 +180,14 @@ class PetServiceTest {
             PetCreateRequest request = createRequest();
             request.setWalkingStyles(List.of("INVALID", "VALID"));
 
-            Breed breed = mock(Breed.class);
-            given(breed.getName()).willReturn("말티즈");
-
             given(petRepository.countByMemberId(1L)).willReturn(0);
-            given(breedRepository.findById(any())).willReturn(Optional.of(breed));
+            given(breedRepository.findById(any())).willReturn(Optional.of(mock(Breed.class)));
             given(walkingStyleRepository.findByCodeIn(anyList())).willReturn(List.of(mock(WalkingStyle.class)));
 
             // when & then
             assertThatThrownBy(() -> petService.createPet(1L, request))
                     .isInstanceOf(BusinessException.class)
                     .hasFieldOrPropertyWithValue("errorCode", PetErrorCode.INVALID_PET_INFO);
-        }
-
-        @Test
-        @DisplayName("실패: 동물등록번호 검증 시 정보 불일치 (P011)")
-        void fail_certification_info_mismatch() {
-            // given
-            Long memberId = 1L;
-            PetCreateRequest request = createRequest();
-            request.setCertificationNumber("123456789012345");
-
-            Breed breed = mock(Breed.class);
-            given(breed.getName()).willReturn("말티즈");
-
-            given(petRepository.countByMemberId(memberId)).willReturn(0);
-            given(breedRepository.findById(request.getBreedId())).willReturn(Optional.of(breed));
-            given(animalCertificationService.verify(any(), any(), any()))
-                    .willThrow(new BusinessException(PetErrorCode.CERTIFICATION_INFO_MISMATCH));
-
-            // when & then
-            assertThatThrownBy(() -> petService.createPet(memberId, request))
-                    .isInstanceOf(BusinessException.class)
-                    .hasFieldOrPropertyWithValue("errorCode", PetErrorCode.CERTIFICATION_INFO_MISMATCH);
         }
 
         private PetCreateRequest createRequest() {

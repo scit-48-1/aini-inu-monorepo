@@ -59,7 +59,6 @@ export const PetForm: React.FC<PetFormProps> = ({
   const [isNeutered, setIsNeutered] = useState(initialData?.isNeutered ?? false);
   const [mbti, setMbti] = useState(initialData?.mbti || '');
   const [photoUrl, setPhotoUrl] = useState(initialData?.photoUrl || '');
-  const [certificationNumber, setCertificationNumber] = useState('');
   const [selectedWalkingStyles, setSelectedWalkingStyles] = useState<string[]>(
     initialData?.walkingStyles || []
   );
@@ -138,7 +137,6 @@ export const PetForm: React.FC<PetFormProps> = ({
 
     if (mbti.trim()) payload.mbti = mbti.trim();
     if (photoUrl) payload.photoUrl = photoUrl;
-    if (certificationNumber.trim()) payload.certificationNumber = certificationNumber.trim();
     if (selectedWalkingStyles.length > 0) payload.walkingStyles = selectedWalkingStyles;
     if (selectedPersonalityIds.length > 0) payload.personalityIds = selectedPersonalityIds;
 
@@ -332,19 +330,6 @@ export const PetForm: React.FC<PetFormProps> = ({
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Certification Number */}
-      <div className="space-y-3">
-        <Typography variant="label">등록번호 <span className="text-zinc-400 text-xs font-normal">(선택)</span></Typography>
-        <input
-          type="text"
-          placeholder="동물등록번호 (최대 15자)"
-          maxLength={15}
-          className="w-full bg-zinc-50 border border-zinc-100 rounded-[24px] py-5 px-8 font-bold text-navy-900 outline-none focus:ring-4 ring-amber-500/5 transition-all"
-          value={certificationNumber}
-          onChange={e => setCertificationNumber(e.target.value)}
-        />
       </div>
 
       {/* Walking Styles */}
