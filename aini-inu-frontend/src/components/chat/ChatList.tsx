@@ -25,17 +25,19 @@ export function ChatList() {
   const params = useParams();
   const currentId = params?.id ? Number(params.id) : null;
   const fetchDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const hasLoadedRef = useRef(false);
 
   const fetchRooms = useCallback(async (pageNum = 0, append = false) => {
     try {
       setHasError(false);
-      if (!append) setIsLoading(true);
+      if (!append && !hasLoadedRef.current) setIsLoading(true);
       const result = await getRooms({ page: pageNum, size: 20, status: 'ACTIVE', origin: activeTab });
       if (append) {
         setRooms((prev) => [...prev, ...result.content]);
       } else {
         setRooms(result.content);
       }
+      hasLoadedRef.current = true;
       setHasNext(result.hasNext);
       setPage(pageNum);
     } catch {
@@ -53,6 +55,7 @@ export function ChatList() {
   });
 
   useEffect(() => {
+    hasLoadedRef.current = false;
     fetchRooms();
 
     const handleVisibilityChange = () => {
@@ -62,9 +65,15 @@ export function ChatList() {
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    const handleMessagesRead = () => {
-      if (fetchDebounceRef.current) clearTimeout(fetchDebounceRef.current);
-      fetchDebounceRef.current = setTimeout(() => fetchRooms(), 300);
+    const handleMessagesRead = (e: Event) => {
+      const roomId = (e as CustomEvent).detail?.roomId;
+      if (roomId) {
+        setRooms((prev) =>
+          prev.map((room) =>
+            room.chatRoomId === roomId ? { ...room, unreadCount: 0 } : room
+          )
+        );
+      }
     };
     window.addEventListener('chat:messages-read', handleMessagesRead);
 

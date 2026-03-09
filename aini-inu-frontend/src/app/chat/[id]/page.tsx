@@ -139,7 +139,7 @@ export default function ChatRoomPage() {
         messageId: latestMessageId,
         readAt: new Date().toISOString(),
       }).then(() => {
-        window.dispatchEvent(new CustomEvent('chat:messages-read'));
+        window.dispatchEvent(new CustomEvent('chat:messages-read', { detail: { roomId } }));
       }).catch(() => {
         // Silent -- mark-read failure is non-critical
       });
