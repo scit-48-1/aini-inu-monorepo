@@ -10,7 +10,6 @@ COPY . .
 
 ENV NEXT_PUBLIC_ENABLE_MSW=false
 ENV NEXT_PUBLIC_API_PROXY_TARGET=http://backend:8080
-ENV NEXT_PUBLIC_WS_URL=ws://backend:8080
 
 RUN npm run build
 

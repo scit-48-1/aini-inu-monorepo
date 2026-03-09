@@ -83,7 +83,7 @@ export function useChatWebSocket(roomId: number, enabled: boolean) {
     }
 
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = (process.env.NEXT_PUBLIC_WS_URL || `${wsProtocol}//${window.location.hostname}:8080`).replace(/\/ws\/?$/, '');
+    const wsUrl = `${wsProtocol}//${window.location.host}`;
     const brokerURL = `${wsUrl}/ws/chat-rooms/${roomId}`;
 
     console.log('[ChatWS] Connecting to:', brokerURL);

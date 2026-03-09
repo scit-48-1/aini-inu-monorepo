@@ -165,7 +165,7 @@ export const NeighborsModal: React.FC<NeighborsModalProps> = ({
                     <div className="relative shrink-0">
                       <div className="w-12 h-12 rounded-full overflow-hidden shadow-sm border border-zinc-100">
                         <img
-                          src={user.profileImageUrl || '/default-avatar.png'}
+                          src={user.profileImageUrl || '/AINIINU_ROGO_B.png'}
                           className="w-full h-full object-cover"
                           alt={user.nickname}
                         />

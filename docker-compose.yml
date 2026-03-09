@@ -37,6 +37,12 @@ services:
       COMMUNITY_STORAGE_PUBLIC_BASE_URL: https://${DOMAIN}
     volumes:
       - aini_inu_backend_uploads:/app/var/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   frontend:
     build:
@@ -52,8 +58,10 @@ services:
     container_name: aini-inu-nginx
     restart: unless-stopped
     depends_on:
-      - frontend
-      - backend
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_healthy
     ports:
       - "80:80"
       - "443:443"
