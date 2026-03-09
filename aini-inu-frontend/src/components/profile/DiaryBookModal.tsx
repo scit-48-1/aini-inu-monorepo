@@ -43,7 +43,7 @@ function adaptStoryDiary(diary: StoryDiaryItemResponse, group: StoryGroupRespons
   return {
     id: diary.diaryId,
     memberId: group.memberId,
-    threadId: 0,
+    threadId: diary.threadId ?? 0,
     title: diary.title,
     content: diary.content,
     photoUrls: diary.photoUrls,
@@ -53,6 +53,7 @@ function adaptStoryDiary(diary: StoryDiaryItemResponse, group: StoryGroupRespons
     updatedAt: diary.createdAt,
     public: true,
     isPublic: true,
+    thread: diary.thread,
   };
 }
 

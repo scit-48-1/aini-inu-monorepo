@@ -3,6 +3,7 @@ package scit.ainiinu.community.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
+import scit.ainiinu.walk.dto.response.DiaryThreadSummary;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -14,6 +15,9 @@ import java.util.List;
 public class StoryDiaryItemResponse {
     @Schema(description = "산책일기 ID", example = "101")
     private Long diaryId;
+
+    @Schema(description = "산책 모집글 ID", example = "100")
+    private Long threadId;
 
     @Schema(description = "산책일기 제목", example = "아침 산책")
     private String title;
@@ -29,4 +33,7 @@ public class StoryDiaryItemResponse {
 
     @Schema(description = "산책일기 작성 시각(UTC)", example = "2026-03-04T01:20:00Z")
     private OffsetDateTime createdAt;
+
+    @Schema(description = "연결된 산책 스레드 요약 정보 (삭제/미연결 시 null)")
+    private DiaryThreadSummary thread;
 }

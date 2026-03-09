@@ -12,7 +12,9 @@ import scit.ainiinu.community.dto.StoryGroupResponse;
 import scit.ainiinu.community.repository.StoryReadRepository;
 import scit.ainiinu.member.entity.Member;
 import scit.ainiinu.member.repository.MemberRepository;
+import scit.ainiinu.walk.dto.response.DiaryThreadSummary;
 import scit.ainiinu.walk.entity.WalkDiary;
+import scit.ainiinu.walk.service.WalkDiaryService;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -35,6 +37,7 @@ public class StoryService {
 
     private final StoryReadRepository storyReadRepository;
     private final MemberRepository memberRepository;
+    private final WalkDiaryService walkDiaryService;
 
     public SliceResponse<StoryGroupResponse> getStories(Long memberId, Pageable pageable) {
         LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
@@ -47,6 +50,9 @@ public class StoryService {
         }
 
         List<WalkDiary> diaries = storyReadRepository.findVisibleDiariesByAuthorIds(authorIds, cutoff);
+
+        Map<Long, DiaryThreadSummary> threadSummaryMap = walkDiaryService.buildThreadSummaryMap(diaries);
+
         Map<Long, List<WalkDiary>> diariesByAuthorId = diaries.stream()
                 .collect(Collectors.groupingBy(WalkDiary::getMemberId, LinkedHashMap::new, Collectors.toList()));
 
@@ -67,7 +73,7 @@ public class StoryService {
             Member author = memberMap.get(authorId);
             WalkDiary latestDiary = authorDiaries.get(0);
             List<StoryDiaryItemResponse> diaryItems = authorDiaries.stream()
-                    .map(this::toDiaryItemResponse)
+                    .map(d -> toDiaryItemResponse(d, threadSummaryMap))
                     .toList();
 
             groups.add(StoryGroupResponse.builder()
@@ -84,14 +90,20 @@ public class StoryService {
         return SliceResponse.of(mappedSlice);
     }
 
-    private StoryDiaryItemResponse toDiaryItemResponse(WalkDiary walkDiary) {
+    private StoryDiaryItemResponse toDiaryItemResponse(WalkDiary walkDiary, Map<Long, DiaryThreadSummary> threadSummaryMap) {
+        DiaryThreadSummary threadSummary = walkDiary.getThreadId() != null
+                ? threadSummaryMap.get(walkDiary.getThreadId())
+                : null;
+
         return StoryDiaryItemResponse.builder()
                 .diaryId(walkDiary.getId())
+                .threadId(walkDiary.getThreadId())
                 .title(walkDiary.getTitle())
                 .content(walkDiary.getContent())
                 .photoUrls(new ArrayList<>(walkDiary.getPhotoUrls()))
                 .walkDate(walkDiary.getWalkDate())
                 .createdAt(toOffsetDateTime(safeCreatedAt(walkDiary)))
+                .thread(threadSummary)
                 .build();
     }
 

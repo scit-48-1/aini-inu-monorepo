@@ -16,10 +16,16 @@ import scit.ainiinu.member.entity.enums.MemberType;
 import scit.ainiinu.member.repository.MemberFollowRepository;
 import scit.ainiinu.member.repository.MemberRepository;
 import scit.ainiinu.testsupport.IntegrationTestProfile;
+import scit.ainiinu.pet.entity.Pet;
+import scit.ainiinu.pet.entity.enums.PetGender;
+import scit.ainiinu.pet.entity.enums.PetSize;
+import scit.ainiinu.pet.repository.PetRepository;
 import scit.ainiinu.walk.dto.request.WalkDiaryCreateRequest;
 import scit.ainiinu.walk.entity.WalkChatType;
 import scit.ainiinu.walk.entity.WalkThread;
+import scit.ainiinu.walk.entity.WalkThreadPet;
 import scit.ainiinu.walk.entity.WalkThreadStatus;
+import scit.ainiinu.walk.repository.WalkThreadPetRepository;
 import scit.ainiinu.walk.repository.WalkThreadRepository;
 
 import java.math.BigDecimal;
@@ -57,6 +63,12 @@ class WalkDiaryIntegrationTest {
 
     @Autowired
     private WalkThreadRepository walkThreadRepository;
+
+    @Autowired
+    private WalkThreadPetRepository walkThreadPetRepository;
+
+    @Autowired
+    private PetRepository petRepository;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -182,6 +194,136 @@ class WalkDiaryIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content.length()").value(1))
                 .andExpect(jsonPath("$.data.content[0].title").value("공개 일기"));
+    }
+
+    @Test
+    @DisplayName("일기 상세 조회 시 스레드 정보가 포함된다")
+    void getDiary_withThreadInfo_success() throws Exception {
+        // given
+        Member member = memberRepository.save(Member.builder()
+                .email("thread-diary@test.com")
+                .nickname("thrdowner")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+        String token = jwtTokenProvider.generateAccessToken(member.getId());
+
+        Pet pet = petRepository.save(Pet.builder()
+                .memberId(member.getId())
+                .name("몽이")
+                .age(3)
+                .gender(PetGender.MALE)
+                .size(PetSize.MEDIUM)
+                .isNeutered(true)
+                .isMain(true)
+                .photoUrl("https://cdn/pet.jpg")
+                .build());
+
+        WalkThread thread = createCompletedThread(member.getId());
+        walkThreadPetRepository.save(WalkThreadPet.of(thread.getId(), pet.getId()));
+
+        WalkDiaryCreateRequest createRequest = new WalkDiaryCreateRequest();
+        createRequest.setThreadId(thread.getId());
+        createRequest.setTitle("스레드 정보 테스트");
+        createRequest.setContent("스레드 정보 확인");
+        createRequest.setWalkDate(LocalDate.now());
+        createRequest.setPhotoUrls(List.of("https://cdn/1.jpg"));
+
+        String responseBody = mockMvc.perform(post("/api/v1/walk-diaries")
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        Long diaryId = objectMapper.readTree(responseBody).path("data").path("id").asLong();
+
+        // when & then
+        mockMvc.perform(get("/api/v1/walk-diaries/{diaryId}", diaryId)
+                        .header("Authorization", "Bearer " + token))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.thread.placeName").value("서울숲"))
+                .andExpect(jsonPath("$.data.thread.pets[0].name").value("몽이"));
+    }
+
+    @Test
+    @DisplayName("일기 목록 조회 시 스레드 정보가 포함된다")
+    void getDiaries_withThreadInfo_success() throws Exception {
+        // given
+        Member member = memberRepository.save(Member.builder()
+                .email("thread-list@test.com")
+                .nickname("listowner")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+        String token = jwtTokenProvider.generateAccessToken(member.getId());
+
+        WalkThread thread = createCompletedThread(member.getId());
+
+        WalkDiaryCreateRequest createRequest = new WalkDiaryCreateRequest();
+        createRequest.setThreadId(thread.getId());
+        createRequest.setTitle("목록 조회 테스트");
+        createRequest.setContent("목록 확인");
+        createRequest.setWalkDate(LocalDate.now());
+        createRequest.setPhotoUrls(List.of());
+
+        mockMvc.perform(post("/api/v1/walk-diaries")
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk());
+
+        // when & then
+        mockMvc.perform(get("/api/v1/walk-diaries")
+                        .header("Authorization", "Bearer " + token)
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].thread.placeName").value("서울숲"));
+    }
+
+    @Test
+    @DisplayName("삭제된 스레드의 일기 상세 조회 시 thread는 null이다")
+    void getDiary_deletedThread_threadNull() throws Exception {
+        // given
+        Member member = memberRepository.save(Member.builder()
+                .email("deleted-thread@test.com")
+                .nickname("delowner")
+                .memberType(MemberType.PET_OWNER)
+                .build());
+        String token = jwtTokenProvider.generateAccessToken(member.getId());
+
+        WalkThread thread = createCompletedThread(member.getId());
+
+        WalkDiaryCreateRequest createRequest = new WalkDiaryCreateRequest();
+        createRequest.setThreadId(thread.getId());
+        createRequest.setTitle("삭제 스레드 테스트");
+        createRequest.setContent("삭제 확인");
+        createRequest.setWalkDate(LocalDate.now());
+        createRequest.setPhotoUrls(List.of());
+
+        String responseBody = mockMvc.perform(post("/api/v1/walk-diaries")
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        Long diaryId = objectMapper.readTree(responseBody).path("data").path("id").asLong();
+
+        // Delete the thread
+        thread.markDeleted();
+        walkThreadRepository.save(thread);
+
+        // when & then
+        mockMvc.perform(get("/api/v1/walk-diaries/{diaryId}", diaryId)
+                        .header("Authorization", "Bearer " + token))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.thread").doesNotExist());
     }
 
     private WalkThread createCompletedThread(Long authorId) {

@@ -29,6 +29,25 @@ export interface WalkDiaryPatchRequest {
   isPublic?: boolean;
 }
 
+export interface DiaryPetCard {
+  id: number;
+  name: string;
+  photoUrl: string | null;
+  breedName: string | null;
+}
+
+export interface DiaryThreadSummary {
+  threadId: number;
+  walkDate: string;
+  startTime: string;
+  endTime: string | null;
+  placeName: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+  pets: DiaryPetCard[];
+}
+
 export interface WalkDiaryResponse {
   id: number;
   memberId: number;
@@ -42,6 +61,7 @@ export interface WalkDiaryResponse {
   updatedAt: string;
   public: boolean;
   isPublic: boolean;
+  thread?: DiaryThreadSummary;
 }
 
 // --- Helpers ---

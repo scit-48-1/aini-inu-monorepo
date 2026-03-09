@@ -29,15 +29,24 @@ import scit.ainiinu.walk.entity.WalkThreadApplication;
 import scit.ainiinu.walk.entity.WalkThreadApplicationStatus;
 import scit.ainiinu.walk.entity.WalkThreadStatus;
 import scit.ainiinu.walk.exception.WalkDiaryErrorCode;
+import scit.ainiinu.walk.dto.response.DiaryThreadSummary;
+import scit.ainiinu.walk.entity.WalkThreadPet;
 import scit.ainiinu.walk.repository.WalkDiaryRepository;
 import scit.ainiinu.walk.repository.WalkThreadApplicationRepository;
+import scit.ainiinu.walk.repository.WalkThreadPetRepository;
 import scit.ainiinu.walk.repository.WalkThreadRepository;
+import scit.ainiinu.pet.entity.Breed;
+import scit.ainiinu.pet.entity.Pet;
+import scit.ainiinu.pet.entity.enums.PetGender;
+import scit.ainiinu.pet.entity.enums.PetSize;
+import scit.ainiinu.pet.repository.PetRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,6 +56,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class WalkDiaryServiceTest {
@@ -59,6 +69,12 @@ class WalkDiaryServiceTest {
 
     @Mock
     private WalkThreadApplicationRepository walkThreadApplicationRepository;
+
+    @Mock
+    private WalkThreadPetRepository walkThreadPetRepository;
+
+    @Mock
+    private PetRepository petRepository;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -424,8 +440,203 @@ class WalkDiaryServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("스레드 정보 조회")
+    class DiaryThreadSummaryTests {
+
+        @Test
+        @DisplayName("단건 조회 시 thread 필드에 위치/반려견 정보가 포함된다")
+        void getDiary_스레드정보포함_반환() {
+            // given
+            Long memberId = 1L;
+            Long threadId = 100L;
+            WalkDiary diary = WalkDiary.create(memberId, threadId, "일기", "내용", List.of(), LocalDate.now(), true);
+            ReflectionTestUtils.setField(diary, "id", 1L);
+
+            WalkThread thread = createCompletedThread(memberId, threadId);
+
+            given(walkDiaryRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(diary));
+            given(walkThreadRepository.findById(threadId)).willReturn(Optional.of(thread));
+            given(walkThreadRepository.findAllById(List.of(threadId))).willReturn(List.of(thread));
+
+            WalkThreadPet threadPet = WalkThreadPet.of(threadId, 10L);
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(threadId))).willReturn(List.of(threadPet));
+
+            Pet pet = Pet.builder()
+                    .memberId(memberId).name("몽이").age(3).gender(PetGender.MALE)
+                    .size(PetSize.MEDIUM).isNeutered(true).isMain(true).photoUrl("https://cdn/pet.jpg")
+                    .build();
+            ReflectionTestUtils.setField(pet, "id", 10L);
+            given(petRepository.findAllById(List.of(10L))).willReturn(List.of(pet));
+
+            // when
+            WalkDiaryResponse response = walkDiaryService.getDiary(memberId, 1L);
+
+            // then
+            assertThat(response.getThread()).isNotNull();
+            assertThat(response.getThread().getPlaceName()).isEqualTo("서울숲");
+            assertThat(response.getThread().getLatitude()).isEqualByComparingTo(BigDecimal.valueOf(37.54));
+            assertThat(response.getThread().getLongitude()).isEqualByComparingTo(BigDecimal.valueOf(127.04));
+            assertThat(response.getThread().getAddress()).isEqualTo("성동구");
+            assertThat(response.getThread().getPets()).hasSize(1);
+            assertThat(response.getThread().getPets().get(0).getName()).isEqualTo("몽이");
+        }
+
+        @Test
+        @DisplayName("스레드가 DELETED 상태이면 thread는 null이고 linkedThreadStatus는 DELETED다")
+        void getDiary_스레드삭제됨_thread는null() {
+            // given
+            Long memberId = 1L;
+            Long threadId = 100L;
+            WalkDiary diary = WalkDiary.create(memberId, threadId, "일기", "내용", List.of(), LocalDate.now(), true);
+            ReflectionTestUtils.setField(diary, "id", 1L);
+
+            WalkThread deletedThread = createThreadWithStatus(memberId, threadId, WalkThreadStatus.DELETED);
+
+            given(walkDiaryRepository.findByIdAndDeletedAtIsNull(1L)).willReturn(Optional.of(diary));
+            given(walkThreadRepository.findById(threadId)).willReturn(Optional.of(deletedThread));
+            given(walkThreadRepository.findAllById(List.of(threadId))).willReturn(List.of(deletedThread));
+
+            // when
+            WalkDiaryResponse response = walkDiaryService.getDiary(memberId, 1L);
+
+            // then
+            assertThat(response.getThread()).isNull();
+            assertThat(response.getLinkedThreadStatus()).isEqualTo("DELETED");
+        }
+
+        @Test
+        @DisplayName("여러 diary 조회 시 findAllById, findAllByThreadIdIn 각 1회만 호출된다")
+        void getWalkDiaries_배치조회_N1방지() {
+            // given
+            Long memberId = 1L;
+            WalkDiary diary1 = WalkDiary.create(memberId, 100L, "일기1", "내용", List.of(), LocalDate.now(), true);
+            ReflectionTestUtils.setField(diary1, "id", 1L);
+            WalkDiary diary2 = WalkDiary.create(memberId, 101L, "일기2", "내용", List.of(), LocalDate.now(), true);
+            ReflectionTestUtils.setField(diary2, "id", 2L);
+
+            PageRequest pageable = PageRequest.of(0, 20);
+            Slice<WalkDiary> slice = new SliceImpl<>(List.of(diary1, diary2), pageable, false);
+            given(walkDiaryRepository.findByMemberIdAndDeletedAtIsNull(memberId, pageable)).willReturn(slice);
+
+            WalkThread thread1 = createCompletedThread(memberId, 100L);
+            WalkThread thread2 = createCompletedThread(memberId, 101L);
+            given(walkThreadRepository.findAllById(any())).willReturn(List.of(thread1, thread2));
+            given(walkThreadPetRepository.findAllByThreadIdIn(any())).willReturn(List.of());
+
+            // when
+            walkDiaryService.getWalkDiaries(memberId, null, pageable);
+
+            // then
+            then(walkThreadRepository).should(times(1)).findAllById(any());
+            then(walkThreadPetRepository).should(times(1)).findAllByThreadIdIn(any());
+        }
+
+        @Test
+        @DisplayName("2개 diary가 다른 threadId를 가질 때 각각 올바른 thread summary가 매핑된다")
+        void getWalkDiaries_서로다른스레드_각각매핑() {
+            // given
+            Long memberId = 1L;
+            WalkDiary diary1 = WalkDiary.create(memberId, 100L, "일기1", "내용", List.of(), LocalDate.now(), true);
+            ReflectionTestUtils.setField(diary1, "id", 1L);
+            WalkDiary diary2 = WalkDiary.create(memberId, 101L, "일기2", "내용", List.of(), LocalDate.now(), true);
+            ReflectionTestUtils.setField(diary2, "id", 2L);
+
+            PageRequest pageable = PageRequest.of(0, 20);
+            Slice<WalkDiary> slice = new SliceImpl<>(List.of(diary1, diary2), pageable, false);
+            given(walkDiaryRepository.findByMemberIdAndDeletedAtIsNull(memberId, pageable)).willReturn(slice);
+
+            WalkThread thread1 = createCompletedThread(memberId, 100L);
+            ReflectionTestUtils.setField(thread1, "placeName", "서울숲");
+            WalkThread thread2 = createCompletedThread(memberId, 101L);
+            ReflectionTestUtils.setField(thread2, "placeName", "한강공원");
+            given(walkThreadRepository.findAllById(any())).willReturn(List.of(thread1, thread2));
+            given(walkThreadPetRepository.findAllByThreadIdIn(any())).willReturn(List.of());
+
+            // when
+            SliceResponse<WalkDiaryResponse> response = walkDiaryService.getWalkDiaries(memberId, null, pageable);
+
+            // then
+            assertThat(response.getContent()).hasSize(2);
+            assertThat(response.getContent().get(0).getThread().getPlaceName()).isEqualTo("서울숲");
+            assertThat(response.getContent().get(1).getThread().getPlaceName()).isEqualTo("한강공원");
+        }
+
+        @Test
+        @DisplayName("팔로잉 다이어리에도 thread 정보가 정상 포함된다")
+        void getFollowingDiaries_스레드정보포함() {
+            // given
+            WalkDiary diary = WalkDiary.create(2L, 100L, "공개", "내용", List.of(), LocalDate.now(), true);
+            ReflectionTestUtils.setField(diary, "id", 10L);
+
+            Slice<WalkDiary> slice = new SliceImpl<>(List.of(diary), PageRequest.of(0, 20), false);
+            given(walkDiaryRepository.findFollowingPublicSlice(anyLong(), any())).willReturn(slice);
+
+            WalkThread thread = createCompletedThread(2L, 100L);
+            given(walkThreadRepository.findAllById(List.of(100L))).willReturn(List.of(thread));
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(100L))).willReturn(List.of());
+
+            // when
+            SliceResponse<WalkDiaryResponse> response = walkDiaryService.getFollowingDiaries(1L, PageRequest.of(0, 20));
+
+            // then
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.getContent().get(0).getThread()).isNotNull();
+            assertThat(response.getContent().get(0).getThread().getPlaceName()).isEqualTo("서울숲");
+        }
+
+        @Test
+        @DisplayName("PetCard에는 name, photoUrl, breedName만 포함된다")
+        void buildThreadSummary_반려견정보_이름견종사진만() {
+            // given
+            Long threadId = 100L;
+            WalkDiary diary = WalkDiary.create(1L, threadId, "일기", "내용", List.of(), LocalDate.now(), true);
+            ReflectionTestUtils.setField(diary, "id", 1L);
+
+            WalkThread thread = createCompletedThread(1L, threadId);
+            given(walkThreadRepository.findAllById(List.of(threadId))).willReturn(List.of(thread));
+
+            WalkThreadPet threadPet = WalkThreadPet.of(threadId, 10L);
+            given(walkThreadPetRepository.findAllByThreadIdIn(List.of(threadId))).willReturn(List.of(threadPet));
+
+            Pet pet = Pet.builder()
+                    .memberId(1L).name("몽이").age(3).gender(PetGender.MALE)
+                    .size(PetSize.LARGE).mbti("ENFP").isNeutered(true).isMain(true)
+                    .photoUrl("https://cdn/pet.jpg")
+                    .build();
+            ReflectionTestUtils.setField(pet, "id", 10L);
+            Breed breed = createBreed(1L, "골든 리트리버");
+            ReflectionTestUtils.setField(pet, "breed", breed);
+            given(petRepository.findAllById(List.of(10L))).willReturn(List.of(pet));
+
+            // when
+            Map<Long, DiaryThreadSummary> result = walkDiaryService.buildThreadSummaryMap(List.of(diary));
+
+            // then
+            DiaryThreadSummary summary = result.get(threadId);
+            assertThat(summary.getPets()).hasSize(1);
+            DiaryThreadSummary.PetCard petCard = summary.getPets().get(0);
+            assertThat(petCard.getName()).isEqualTo("몽이");
+            assertThat(petCard.getPhotoUrl()).isEqualTo("https://cdn/pet.jpg");
+            assertThat(petCard.getBreedName()).isEqualTo("골든 리트리버");
+        }
+    }
+
     private WalkThread createCompletedThread(Long authorId, Long threadId) {
         return createThreadWithStatus(authorId, threadId, WalkThreadStatus.COMPLETED);
+    }
+
+    private Breed createBreed(Long id, String name) {
+        try {
+            java.lang.reflect.Constructor<Breed> ctor = Breed.class.getDeclaredConstructor();
+            ctor.setAccessible(true);
+            Breed breed = ctor.newInstance();
+            ReflectionTestUtils.setField(breed, "id", id);
+            ReflectionTestUtils.setField(breed, "name", name);
+            return breed;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private WalkThread createThreadWithStatus(Long authorId, Long threadId, WalkThreadStatus status) {

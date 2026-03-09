@@ -14,20 +14,29 @@ import scit.ainiinu.common.response.SliceResponse;
 import scit.ainiinu.walk.dto.request.WalkDiaryCreateRequest;
 import scit.ainiinu.walk.dto.request.WalkDiaryPatchRequest;
 import scit.ainiinu.walk.dto.response.AvailableThreadResponse;
+import scit.ainiinu.walk.dto.response.DiaryThreadSummary;
 import scit.ainiinu.walk.dto.response.WalkDiaryResponse;
 import scit.ainiinu.walk.entity.WalkDiary;
 import scit.ainiinu.walk.entity.WalkThread;
 import scit.ainiinu.walk.entity.WalkThreadApplicationStatus;
+import scit.ainiinu.walk.entity.WalkThreadPet;
 import scit.ainiinu.walk.entity.WalkThreadStatus;
 import scit.ainiinu.walk.exception.WalkDiaryErrorCode;
 import scit.ainiinu.walk.repository.WalkDiaryRepository;
 import scit.ainiinu.walk.repository.WalkThreadApplicationRepository;
+import scit.ainiinu.walk.repository.WalkThreadPetRepository;
 import scit.ainiinu.walk.repository.WalkThreadRepository;
+import scit.ainiinu.pet.entity.Pet;
+import scit.ainiinu.pet.repository.PetRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +46,8 @@ public class WalkDiaryService {
     private final WalkDiaryRepository walkDiaryRepository;
     private final WalkThreadRepository walkThreadRepository;
     private final WalkThreadApplicationRepository walkThreadApplicationRepository;
+    private final WalkThreadPetRepository walkThreadPetRepository;
+    private final PetRepository petRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -75,7 +86,8 @@ public class WalkDiaryService {
             diaries = walkDiaryRepository.findByMemberIdAndIsPublicTrueAndDeletedAtIsNull(resolvedTargetMemberId, pageable);
         }
 
-        Slice<WalkDiaryResponse> mapped = diaries.map(this::toResponse);
+        Map<Long, DiaryThreadSummary> summaryMap = buildThreadSummaryMap(diaries.getContent());
+        Slice<WalkDiaryResponse> mapped = diaries.map(d -> toResponse(d, summaryMap));
         return SliceResponse.of(mapped);
     }
 
@@ -131,13 +143,21 @@ public class WalkDiaryService {
 
     public SliceResponse<WalkDiaryResponse> getFollowingDiaries(Long memberId, Pageable pageable) {
         Slice<WalkDiary> slice = walkDiaryRepository.findFollowingPublicSlice(memberId, pageable);
-        Slice<WalkDiaryResponse> mapped = slice.map(this::toResponse);
+        Map<Long, DiaryThreadSummary> summaryMap = buildThreadSummaryMap(slice.getContent());
+        Slice<WalkDiaryResponse> mapped = slice.map(d -> toResponse(d, summaryMap));
         return SliceResponse.of(mapped);
     }
 
     private WalkDiaryResponse toResponse(WalkDiary walkDiary) {
         String linkedThreadStatus = resolveLinkedThreadStatus(walkDiary.getThreadId());
-        return WalkDiaryResponse.from(walkDiary, linkedThreadStatus);
+        DiaryThreadSummary summary = buildSingleThreadSummary(walkDiary.getThreadId());
+        return WalkDiaryResponse.from(walkDiary, linkedThreadStatus, summary);
+    }
+
+    private WalkDiaryResponse toResponse(WalkDiary walkDiary, Map<Long, DiaryThreadSummary> summaryMap) {
+        String linkedThreadStatus = resolveLinkedThreadStatus(walkDiary.getThreadId());
+        DiaryThreadSummary summary = walkDiary.getThreadId() != null ? summaryMap.get(walkDiary.getThreadId()) : null;
+        return WalkDiaryResponse.from(walkDiary, linkedThreadStatus, summary);
     }
 
     private String resolveLinkedThreadStatus(Long threadId) {
@@ -155,6 +175,81 @@ public class WalkDiaryService {
         }
 
         return "ACTIVE";
+    }
+
+    private DiaryThreadSummary buildSingleThreadSummary(Long threadId) {
+        if (threadId == null) {
+            return null;
+        }
+        Map<Long, DiaryThreadSummary> map = buildThreadSummaryMapForIds(List.of(threadId));
+        return map.get(threadId);
+    }
+
+    public Map<Long, DiaryThreadSummary> buildThreadSummaryMap(List<WalkDiary> diaries) {
+        List<Long> threadIds = diaries.stream()
+                .map(WalkDiary::getThreadId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        if (threadIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        return buildThreadSummaryMapForIds(threadIds);
+    }
+
+    private Map<Long, DiaryThreadSummary> buildThreadSummaryMapForIds(List<Long> threadIds) {
+        Map<Long, WalkThread> threadMap = walkThreadRepository.findAllById(threadIds).stream()
+                .filter(t -> t.getStatus() != WalkThreadStatus.DELETED)
+                .collect(Collectors.toMap(WalkThread::getId, Function.identity()));
+
+        if (threadMap.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<WalkThreadPet> threadPets = walkThreadPetRepository.findAllByThreadIdIn(threadMap.keySet().stream().toList());
+
+        List<Long> petIds = threadPets.stream()
+                .map(WalkThreadPet::getPetId)
+                .distinct()
+                .toList();
+
+        Map<Long, Pet> petMap = petIds.isEmpty()
+                ? Collections.emptyMap()
+                : petRepository.findAllById(petIds).stream()
+                        .collect(Collectors.toMap(Pet::getId, Function.identity()));
+
+        Map<Long, List<WalkThreadPet>> petsByThread = threadPets.stream()
+                .collect(Collectors.groupingBy(WalkThreadPet::getThreadId));
+
+        return threadMap.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+                    WalkThread thread = entry.getValue();
+                    List<DiaryThreadSummary.PetCard> petCards = petsByThread
+                            .getOrDefault(thread.getId(), List.of()).stream()
+                            .map(tp -> petMap.get(tp.getPetId()))
+                            .filter(Objects::nonNull)
+                            .map(pet -> DiaryThreadSummary.PetCard.builder()
+                                    .id(pet.getId())
+                                    .name(pet.getName())
+                                    .photoUrl(pet.getPhotoUrl())
+                                    .breedName(pet.getBreed() != null ? pet.getBreed().getName() : null)
+                                    .build())
+                            .toList();
+
+                    return DiaryThreadSummary.builder()
+                            .threadId(thread.getId())
+                            .walkDate(thread.getWalkDate())
+                            .startTime(thread.getStartTime())
+                            .endTime(thread.getEndTime())
+                            .placeName(thread.getPlaceName())
+                            .latitude(thread.getLatitude())
+                            .longitude(thread.getLongitude())
+                            .address(thread.getAddress())
+                            .pets(petCards)
+                            .build();
+                }));
     }
 
     public List<AvailableThreadResponse> getAvailableThreads(Long memberId) {

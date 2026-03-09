@@ -39,7 +39,14 @@ public class WalkDiaryResponse {
     @Schema(description = "수정 시각(UTC)입니다.", example = "2026-03-05T01:20:00Z")
     private LocalDateTime updatedAt;
 
+    @Schema(description = "연결된 산책 스레드 요약 정보 (삭제/미연결 시 null)")
+    private DiaryThreadSummary thread;
+
     public static WalkDiaryResponse from(WalkDiary walkDiary, String linkedThreadStatus) {
+        return from(walkDiary, linkedThreadStatus, null);
+    }
+
+    public static WalkDiaryResponse from(WalkDiary walkDiary, String linkedThreadStatus, DiaryThreadSummary thread) {
         return WalkDiaryResponse.builder()
                 .id(walkDiary.getId())
                 .memberId(walkDiary.getMemberId())
@@ -52,6 +59,7 @@ public class WalkDiaryResponse {
                 .linkedThreadStatus(linkedThreadStatus)
                 .createdAt(walkDiary.getCreatedAt())
                 .updatedAt(walkDiary.getUpdatedAt())
+                .thread(thread)
                 .build();
     }
 }

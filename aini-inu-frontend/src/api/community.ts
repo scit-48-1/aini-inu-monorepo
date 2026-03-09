@@ -62,11 +62,13 @@ export interface CommentResponse {
 
 export interface StoryDiaryItemResponse {
   diaryId: number;
+  threadId: number;
   title: string;
   content: string;
   photoUrls: string[];
   walkDate: string;
   createdAt: string;
+  thread?: import('./diaries').DiaryThreadSummary;
 }
 
 export interface StoryGroupResponse {

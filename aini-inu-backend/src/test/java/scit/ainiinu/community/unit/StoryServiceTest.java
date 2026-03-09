@@ -19,16 +19,24 @@ import scit.ainiinu.community.service.StoryService;
 import scit.ainiinu.member.entity.Member;
 import scit.ainiinu.member.entity.enums.MemberType;
 import scit.ainiinu.member.repository.MemberRepository;
+import scit.ainiinu.walk.dto.response.DiaryThreadSummary;
 import scit.ainiinu.walk.entity.WalkDiary;
+import scit.ainiinu.walk.service.WalkDiaryService;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class StoryServiceTest {
@@ -38,6 +46,9 @@ class StoryServiceTest {
 
     @Mock
     private MemberRepository memberRepository;
+
+    @Mock
+    private WalkDiaryService walkDiaryService;
 
     @InjectMocks
     private StoryService storyService;
@@ -80,6 +91,7 @@ class StoryServiceTest {
                     .willReturn(authorIdSlice);
             given(storyReadRepository.findVisibleDiariesByAuthorIds(eq(List.of(authorAId, authorBId)), any(LocalDateTime.class)))
                     .willReturn(List.of(authorAOlderDiary, authorBDiary, authorANewDiary));
+            given(walkDiaryService.buildThreadSummaryMap(anyList())).willReturn(Collections.emptyMap());
 
             Member authorA = Member.builder()
                     .email("walker@example.com")
@@ -148,6 +160,7 @@ class StoryServiceTest {
                     .willReturn(new SliceImpl<>(List.of(authorId), PageRequest.of(0, 20), false));
             given(storyReadRepository.findVisibleDiariesByAuthorIds(eq(List.of(authorId)), any(LocalDateTime.class)))
                     .willReturn(List.of(diary));
+            given(walkDiaryService.buildThreadSummaryMap(anyList())).willReturn(Collections.emptyMap());
             given(memberRepository.findAllById(List.of(authorId))).willReturn(List.of());
 
             SliceResponse<StoryGroupResponse> response = storyService.getStories(memberId, PageRequest.of(0, 20));
@@ -155,6 +168,136 @@ class StoryServiceTest {
             assertThat(response.getContent()).hasSize(1);
             assertThat(response.getContent().get(0).getNickname()).isEqualTo("이웃");
         }
+    }
+
+    @Nested
+    @DisplayName("스토리 스레드 정보")
+    class StoryThreadInfo {
+
+        @Test
+        @DisplayName("StoryDiaryItemResponse에 threadId가 정상 포함된다")
+        void getStories_threadId포함_반환() {
+            Long memberId = 1L;
+            Long authorId = 10L;
+            Long threadId = 200L;
+
+            WalkDiary diary = createDiaryWithThread(100L, authorId, "산책 일기", List.of("https://cdn/1.jpg"), LocalDateTime.now().minusMinutes(10), threadId);
+
+            Slice<Long> authorIdSlice = new SliceImpl<>(List.of(authorId), PageRequest.of(0, 20), false);
+            given(storyReadRepository.findVisibleAuthorIdsForFollower(eq(memberId), any(LocalDateTime.class), any()))
+                    .willReturn(authorIdSlice);
+            given(storyReadRepository.findVisibleDiariesByAuthorIds(eq(List.of(authorId)), any(LocalDateTime.class)))
+                    .willReturn(List.of(diary));
+            given(walkDiaryService.buildThreadSummaryMap(anyList())).willReturn(Collections.emptyMap());
+
+            Member author = Member.builder()
+                    .email("author@example.com").nickname("작성자").memberType(MemberType.PET_OWNER).build();
+            ReflectionTestUtils.setField(author, "id", authorId);
+            given(memberRepository.findAllById(List.of(authorId))).willReturn(List.of(author));
+
+            SliceResponse<StoryGroupResponse> response = storyService.getStories(memberId, PageRequest.of(0, 20));
+
+            assertThat(response.getContent().get(0).getDiaries().get(0).getThreadId()).isEqualTo(threadId);
+        }
+
+        @Test
+        @DisplayName("StoryDiaryItemResponse.thread에 위치/반려견 정보가 포함된다")
+        void getStories_스레드정보포함_반환() {
+            Long memberId = 1L;
+            Long authorId = 10L;
+            Long threadId = 200L;
+
+            WalkDiary diary = createDiaryWithThread(100L, authorId, "산책 일기", List.of("https://cdn/1.jpg"), LocalDateTime.now().minusMinutes(10), threadId);
+
+            DiaryThreadSummary summary = DiaryThreadSummary.builder()
+                    .threadId(threadId)
+                    .placeName("서울숲")
+                    .latitude(BigDecimal.valueOf(37.54))
+                    .longitude(BigDecimal.valueOf(127.04))
+                    .address("성동구")
+                    .pets(List.of(DiaryThreadSummary.PetCard.builder()
+                            .id(1L).name("몽이").photoUrl("https://cdn/pet.jpg").breedName("골든 리트리버").build()))
+                    .build();
+
+            Slice<Long> authorIdSlice = new SliceImpl<>(List.of(authorId), PageRequest.of(0, 20), false);
+            given(storyReadRepository.findVisibleAuthorIdsForFollower(eq(memberId), any(LocalDateTime.class), any()))
+                    .willReturn(authorIdSlice);
+            given(storyReadRepository.findVisibleDiariesByAuthorIds(eq(List.of(authorId)), any(LocalDateTime.class)))
+                    .willReturn(List.of(diary));
+            given(walkDiaryService.buildThreadSummaryMap(anyList())).willReturn(Map.of(threadId, summary));
+
+            Member author = Member.builder()
+                    .email("author@example.com").nickname("작성자").memberType(MemberType.PET_OWNER).build();
+            ReflectionTestUtils.setField(author, "id", authorId);
+            given(memberRepository.findAllById(List.of(authorId))).willReturn(List.of(author));
+
+            SliceResponse<StoryGroupResponse> response = storyService.getStories(memberId, PageRequest.of(0, 20));
+
+            StoryDiaryItemResponse diaryItem = response.getContent().get(0).getDiaries().get(0);
+            assertThat(diaryItem.getThread()).isNotNull();
+            assertThat(diaryItem.getThread().getPlaceName()).isEqualTo("서울숲");
+            assertThat(diaryItem.getThread().getPets()).hasSize(1);
+            assertThat(diaryItem.getThread().getPets().get(0).getName()).isEqualTo("몽이");
+        }
+
+        @Test
+        @DisplayName("여러 작성자의 diary에 대해 buildThreadSummaryMap이 1회만 호출된다")
+        void getStories_여러작성자_배치조회() {
+            Long memberId = 1L;
+            Long authorAId = 10L;
+            Long authorBId = 20L;
+
+            WalkDiary diaryA = createDiaryWithThread(100L, authorAId, "A 일기", List.of("https://cdn/1.jpg"), LocalDateTime.now().minusMinutes(10), 200L);
+            WalkDiary diaryB = createDiaryWithThread(101L, authorBId, "B 일기", List.of("https://cdn/2.jpg"), LocalDateTime.now().minusMinutes(5), 201L);
+
+            Slice<Long> authorIdSlice = new SliceImpl<>(List.of(authorAId, authorBId), PageRequest.of(0, 20), false);
+            given(storyReadRepository.findVisibleAuthorIdsForFollower(eq(memberId), any(LocalDateTime.class), any()))
+                    .willReturn(authorIdSlice);
+            given(storyReadRepository.findVisibleDiariesByAuthorIds(eq(List.of(authorAId, authorBId)), any(LocalDateTime.class)))
+                    .willReturn(List.of(diaryA, diaryB));
+            given(walkDiaryService.buildThreadSummaryMap(anyList())).willReturn(Collections.emptyMap());
+
+            Member authorA = Member.builder().email("a@test.com").nickname("A").memberType(MemberType.PET_OWNER).build();
+            ReflectionTestUtils.setField(authorA, "id", authorAId);
+            Member authorB = Member.builder().email("b@test.com").nickname("B").memberType(MemberType.PET_OWNER).build();
+            ReflectionTestUtils.setField(authorB, "id", authorBId);
+            given(memberRepository.findAllById(List.of(authorAId, authorBId))).willReturn(List.of(authorA, authorB));
+
+            storyService.getStories(memberId, PageRequest.of(0, 20));
+
+            then(walkDiaryService).should(times(1)).buildThreadSummaryMap(anyList());
+        }
+
+        @Test
+        @DisplayName("threadId가 null이면 thread도 null이다")
+        void getStories_스레드없는경우_threadNull() {
+            Long memberId = 1L;
+            Long authorId = 10L;
+
+            WalkDiary diary = createDiary(100L, authorId, "일기", List.of("https://cdn/1.jpg"), LocalDateTime.now().minusMinutes(10));
+
+            Slice<Long> authorIdSlice = new SliceImpl<>(List.of(authorId), PageRequest.of(0, 20), false);
+            given(storyReadRepository.findVisibleAuthorIdsForFollower(eq(memberId), any(LocalDateTime.class), any()))
+                    .willReturn(authorIdSlice);
+            given(storyReadRepository.findVisibleDiariesByAuthorIds(eq(List.of(authorId)), any(LocalDateTime.class)))
+                    .willReturn(List.of(diary));
+            given(walkDiaryService.buildThreadSummaryMap(anyList())).willReturn(Collections.emptyMap());
+
+            Member author = Member.builder().email("a@test.com").nickname("작성자").memberType(MemberType.PET_OWNER).build();
+            ReflectionTestUtils.setField(author, "id", authorId);
+            given(memberRepository.findAllById(List.of(authorId))).willReturn(List.of(author));
+
+            SliceResponse<StoryGroupResponse> response = storyService.getStories(memberId, PageRequest.of(0, 20));
+
+            assertThat(response.getContent().get(0).getDiaries().get(0).getThread()).isNull();
+        }
+    }
+
+    private WalkDiary createDiaryWithThread(Long diaryId, Long authorId, String title, List<String> photos, LocalDateTime createdAt, Long threadId) {
+        WalkDiary diary = WalkDiary.create(authorId, threadId, title, "내용", photos, LocalDate.now(), true);
+        ReflectionTestUtils.setField(diary, "id", diaryId);
+        ReflectionTestUtils.setField(diary, "createdAt", createdAt);
+        return diary;
     }
 
     private WalkDiary createDiary(Long diaryId, Long authorId, String title, List<String> photos, LocalDateTime createdAt) {

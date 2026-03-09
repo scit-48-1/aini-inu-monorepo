@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { X, Image as ImageIcon, AlignLeft, Plus, Trash2 } from 'lucide-react';
+import { X, Image as ImageIcon, AlignLeft, Plus, Trash2, MapPin, Calendar, Clock, PawPrint } from 'lucide-react';
 import { Typography } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { UserAvatar } from '@/components/common/UserAvatar';
+import { KakaoStaticMap } from '@/components/common/KakaoStaticMap';
 import type { WalkDiaryResponse } from '@/api/diaries';
 import { uploadImageFlow } from '@/api/upload';
 
@@ -81,7 +82,7 @@ export const DiaryPageRenderer: React.FC<DiaryPageRendererProps> = ({
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleFileUpload} />
 
       {side === 'LEFT' ? (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Story header (when viewing from feed story mode) */}
           {storyHeader ? (
             <div className="flex items-center gap-3 pb-2">
@@ -107,54 +108,82 @@ export const DiaryPageRenderer: React.FC<DiaryPageRendererProps> = ({
                 </button>
               ) : null}
             </div>
-            {isCurrent && !isReadOnly && editMode === 'CONTENT' ? (
-              <input
-                type="text"
-                value={localTitle}
-                onChange={(e) => setLocalTitle(e.target.value)}
-                className="w-full bg-white border-2 border-amber-100 rounded-2xl px-4 py-2 text-lg text-navy-900 font-serif italic focus:outline-none"
-              />
-            ) : (
-              <Typography variant="h2" className="text-navy-900 font-serif lowercase italic leading-tight text-2xl md:text-3xl">
-                {isCurrent && editMode !== 'NONE' ? localTitle : (data.title || '즐거운 산책')}
-              </Typography>
-            )}
+            <Typography variant="h2" className="text-navy-900 font-serif lowercase italic leading-tight text-2xl md:text-3xl">
+              {data.title || '즐거운 산책'}
+            </Typography>
             <div className="h-1 w-16 bg-amber-500 rounded-full" />
           </header>
 
-          {/* Walk date */}
+          {/* Walk date & time */}
           <div className="space-y-2">
             <Typography variant="label" className="text-zinc-400 font-black uppercase tracking-widest text-[9px]">Walk Date</Typography>
-            <Typography variant="body" className="text-sm text-zinc-600 font-serif">{data.walkDate}</Typography>
+            <div className="flex items-center gap-2 text-sm text-zinc-600 font-serif">
+              <Calendar size={14} className="text-amber-500" />
+              <span>{data.thread?.walkDate || data.walkDate}</span>
+            </div>
+            {data.thread?.startTime ? (
+              <div className="flex items-center gap-2 text-xs text-zinc-500 font-serif">
+                <Clock size={12} className="text-amber-400" />
+                <span>
+                  {data.thread.startTime.slice(11, 16)}
+                  {data.thread.endTime ? ` ~ ${data.thread.endTime.slice(11, 16)}` : ''}
+                </span>
+              </div>
+            ) : null}
           </div>
 
-          {/* Content preview */}
-          <div className="space-y-2">
-            <Typography variant="label" className="text-zinc-400 font-black uppercase tracking-widest text-[9px]">Story</Typography>
-            <Typography variant="body" className="text-zinc-700 font-serif text-sm leading-relaxed italic line-clamp-4">
-              {data.content || '아직 작성된 이야기가 없습니다.'}
-            </Typography>
-          </div>
-
-          {/* Photo gallery */}
-          {data.photoUrls && data.photoUrls.length > 0 ? (
-            <div className="space-y-3">
-              <Typography variant="label" className="text-zinc-400 font-black uppercase tracking-widest text-[9px]">Photos</Typography>
-              <div className="flex flex-wrap gap-3">
-                {data.photoUrls.map((photo: string, i: number) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "w-20 h-20 md:w-24 md:h-24 bg-white p-0.5 shadow-md border border-zinc-200/50 cursor-zoom-in transition-all hover:scale-105",
-                      i % 2 === 0 ? "rotate-[-1deg]" : "rotate-[1deg]"
-                    )}
-                    onClick={() => onZoom(photo)}
-                  >
-                    <img src={photo} className="w-full h-full object-cover" alt="Photo" />
+          {/* Walking Buddies */}
+          {data.thread?.pets && data.thread.pets.length > 0 ? (
+            <div className="space-y-2">
+              <Typography variant="label" className="text-zinc-400 font-black uppercase tracking-widest text-[9px]">
+                <span className="flex items-center gap-1"><PawPrint size={10} /> Walking Buddies</span>
+              </Typography>
+              <div className="flex gap-3 overflow-x-auto no-scrollbar py-1">
+                {data.thread.pets.map((pet) => (
+                  <div key={pet.id} className="flex flex-col items-center gap-1 shrink-0">
+                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-200 shadow-sm bg-zinc-100">
+                      {pet.photoUrl ? (
+                        <img src={pet.photoUrl} alt={pet.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-300">
+                          <PawPrint size={20} />
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-bold text-navy-900 text-center leading-tight">{pet.name}</span>
+                    {pet.breedName ? (
+                      <span className="text-[8px] text-zinc-400 text-center leading-tight">{pet.breedName}</span>
+                    ) : null}
                   </div>
                 ))}
               </div>
             </div>
+          ) : null}
+
+          {/* Location */}
+          {data.thread?.placeName ? (
+            <div className="space-y-2">
+              <Typography variant="label" className="text-zinc-400 font-black uppercase tracking-widest text-[9px]">
+                <span className="flex items-center gap-1"><MapPin size={10} /> Location</span>
+              </Typography>
+              <Typography variant="body" className="text-sm text-navy-900 font-serif font-semibold">
+                {data.thread.placeName}
+              </Typography>
+              {data.thread.address ? (
+                <Typography variant="body" className="text-xs text-zinc-400 font-serif">
+                  {data.thread.address}
+                </Typography>
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* Kakao Static Map */}
+          {data.thread?.latitude && data.thread?.longitude ? (
+            <KakaoStaticMap
+              latitude={data.thread.latitude}
+              longitude={data.thread.longitude}
+              height={180}
+            />
           ) : null}
         </div>
       ) : (
@@ -232,6 +261,15 @@ export const DiaryPageRenderer: React.FC<DiaryPageRendererProps> = ({
             </div>
             {isCurrent && !isReadOnly && editMode === 'CONTENT' ? (
               <div className="space-y-4 animate-in slide-in-from-top-2">
+                <div>
+                  <Typography variant="label" className="text-zinc-400 font-black uppercase tracking-widest text-[9px] mb-1">Title</Typography>
+                  <input
+                    type="text"
+                    value={localTitle}
+                    onChange={(e) => setLocalTitle(e.target.value)}
+                    className="w-full bg-white/80 border-2 border-amber-100 rounded-2xl px-4 py-2 text-sm text-navy-900 font-serif italic focus:outline-none"
+                  />
+                </div>
                 <div className="relative">
                   <textarea className="w-full bg-white/80 border-2 border-amber-100 rounded-[32px] p-6 text-sm font-serif min-h-[200px]" value={localContent} maxLength={300} onChange={(e) => setLocalContent(e.target.value)} />
                   <span className="absolute bottom-3 right-6 text-[10px] text-zinc-400">{localContent.length}/300</span>
