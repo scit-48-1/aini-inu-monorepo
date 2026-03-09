@@ -5,7 +5,7 @@ import { ChevronLeft, Zap, UserCircle, MoreVertical, CheckCircle, LogOut, Extern
 import { Typography } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
-import { NotificationBell } from '@/components/notification/NotificationBell';
+
 import type { ChatRoomDetailResponse, WalkConfirmResponse } from '@/api/chat';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import { GroupAvatar } from '@/components/common/GroupAvatar';
@@ -186,7 +186,6 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <NotificationBell />
         {/* Walk confirm button -- only for WALK origin rooms */}
         {room.origin === 'WALK' && (
           <button

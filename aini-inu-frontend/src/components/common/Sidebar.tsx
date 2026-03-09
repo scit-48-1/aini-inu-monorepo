@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Rss, LogOut, MessageSquare, User, Search } from 'lucide-react';
+import { MapPin, Rss, LogOut, MessageSquare, User, Search, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -9,11 +9,14 @@ import { Typography } from '@/components/ui/Typography';
 import { useTheme } from 'next-themes';
 import { MemberSearchModal } from '@/components/search/MemberSearchModal';
 import { useAuth } from '@/providers/AuthProvider';
+import { useNotificationStore } from '@/store/useNotificationStore';
+import { NotificationPanel } from '@/components/notification/NotificationPanel';
 
 const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const { theme } = useTheme();
   const { logout } = useAuth();
+  const { unreadCount, toggleOpen } = useNotificationStore();
   const [mounted, setMounted] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
@@ -88,7 +91,30 @@ const Sidebar: React.FC = () => {
           })}
         </nav>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative">
+            <button
+              onClick={toggleOpen}
+              className={cn(
+                "p-4 transition-all duration-300 group relative",
+                pathname === '/notifications'
+                  ? "bg-amber-50 text-amber-600 rounded-2xl scale-110 shadow-sm"
+                  : "text-zinc-300 hover:text-navy-900"
+              )}
+              title="알림"
+            >
+              <Bell size={24} strokeWidth={2} />
+              {unreadCount > 0 && (
+                <span className="absolute top-2 right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-black px-1">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+              <span className="absolute left-full ml-6 px-3 py-1.5 bg-navy-900 text-white text-[10px] font-black rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 uppercase tracking-widest">
+                알림
+              </span>
+            </button>
+            <NotificationPanel />
+          </div>
           <button
             onClick={() => logout()}
             className="p-4 text-zinc-300 hover:text-error transition-colors"

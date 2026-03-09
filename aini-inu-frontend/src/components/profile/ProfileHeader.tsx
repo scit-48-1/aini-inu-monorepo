@@ -4,7 +4,7 @@ import React from 'react';
 import { ShieldCheck, Settings, UserPlus, UserCheck } from 'lucide-react';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
-import { NotificationBell } from '@/components/notification/NotificationBell';
+
 import { MannerScoreGauge } from '@/components/common/MannerScoreGauge';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import { cn } from '@/lib/utils';
@@ -86,7 +86,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <div className="flex gap-2 items-center">
               {isMe ? (
                 <>
-                  <NotificationBell />
                   <Button variant="outline" size="sm" className="h-9 px-6 rounded-lg font-bold text-xs border-zinc-200" onClick={onEditClick}>
                     프로필 편집
                   </Button>

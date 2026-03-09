@@ -3,7 +3,6 @@
 import React from 'react';
 import { PenLine } from 'lucide-react';
 import { Typography } from '@/components/ui/Typography';
-import { NotificationBell } from '@/components/notification/NotificationBell';
 
 interface FeedHeaderProps {
   onAddClick: () => void;
@@ -19,7 +18,6 @@ export const FeedHeader: React.FC<FeedHeaderProps> = ({ onAddClick }) => {
           Inu <span className="text-amber-500 italic">Feed</span>
         </Typography>
         <div className="flex items-center gap-2">
-          <NotificationBell />
           <button
             onClick={onAddClick}
             className="group flex items-center gap-0 h-10 pl-3 pr-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-white shadow-md shadow-amber-200/50 hover:shadow-lg hover:shadow-amber-300/50 hover:pl-4 hover:pr-5 hover:gap-2 transition-all duration-300 ease-out cursor-pointer"

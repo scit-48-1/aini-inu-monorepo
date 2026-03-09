@@ -67,7 +67,7 @@ export const NotificationPanel: React.FC = () => {
   return (
     <div
       ref={panelRef}
-      className="absolute right-0 top-full mt-2 w-80 max-h-96 bg-white rounded-2xl shadow-2xl border border-zinc-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+      className="fixed left-28 bottom-16 w-80 max-h-96 bg-white rounded-2xl shadow-2xl border border-zinc-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 lg:left-28 lg:bottom-16 max-lg:left-1/2 max-lg:-translate-x-1/2 max-lg:bottom-24"
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100">
         <span className="text-sm font-black text-zinc-900">알림</span>

@@ -10,7 +10,7 @@ export interface NotificationEvent {
   occurredAt: string;
 }
 
-const RECONNECT_DELAY = 5000;
+const RECONNECT_DELAY = 10000;
 const HEARTBEAT_INCOMING = 10000;
 const HEARTBEAT_OUTGOING = 10000;
 
