@@ -406,7 +406,13 @@ public class WalkThreadService {
         List<WalkThread> activeThreads = threads.stream()
                 .filter(thread -> !thread.isExpired(now))
                 .toList();
-        return toBatchSummaryResponses(activeThreads, memberId);
+        if (activeThreads.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> threadIds = activeThreads.stream().map(WalkThread::getId).toList();
+        Map<Long, Long> chatRoomMap = buildChatRoomMap(threadIds);
+        return toBatchSummaryResponses(activeThreads, memberId, chatRoomMap);
     }
 
     public List<ThreadSummaryResponse> getMyJoinedThreads(Long memberId) {
@@ -417,6 +423,12 @@ public class WalkThreadService {
             return List.of();
         }
 
+        // Build threadId → chatRoomId map from the user's own applications
+        Map<Long, Long> chatRoomMap = new HashMap<>();
+        for (WalkThreadApplication app : applications) {
+            chatRoomMap.put(app.getThreadId(), app.getChatRoomId());
+        }
+
         LocalDateTime now = LocalDateTime.now();
         List<WalkThread> threads = walkThreadRepository.findAllById(threadIds).stream()
                 .filter(thread -> thread.getStatus() == WalkThreadStatus.RECRUITING)
@@ -424,10 +436,14 @@ public class WalkThreadService {
                 .filter(thread -> !thread.isAuthor(memberId))
                 .toList();
 
-        return toBatchSummaryResponses(threads, memberId);
+        return toBatchSummaryResponses(threads, memberId, chatRoomMap);
     }
 
     private List<ThreadSummaryResponse> toBatchSummaryResponses(List<WalkThread> threads, Long memberId) {
+        return toBatchSummaryResponses(threads, memberId, Map.of());
+    }
+
+    private List<ThreadSummaryResponse> toBatchSummaryResponses(List<WalkThread> threads, Long memberId, Map<Long, Long> chatRoomMap) {
         if (threads.isEmpty()) {
             return List.of();
         }
@@ -455,12 +471,12 @@ public class WalkThreadService {
                 .map(thread -> {
                     Long firstPetId = threadFirstPetMap.get(thread.getId());
                     String petImageUrl = firstPetId != null ? petPhotoMap.get(firstPetId) : null;
-                    return toSummaryResponse(thread, countMap.getOrDefault(thread.getId(), 0L) + 1, appliedSet.contains(thread.getId()), petImageUrl);
+                    return toSummaryResponse(thread, countMap.getOrDefault(thread.getId(), 0L) + 1, appliedSet.contains(thread.getId()), petImageUrl, chatRoomMap.get(thread.getId()));
                 })
                 .toList();
     }
 
-    private ThreadSummaryResponse toSummaryResponse(WalkThread thread, long currentParticipants, boolean isApplied, String petImageUrl) {
+    private ThreadSummaryResponse toSummaryResponse(WalkThread thread, long currentParticipants, boolean isApplied, String petImageUrl, Long chatRoomId) {
         return ThreadSummaryResponse.builder()
                 .id(thread.getId())
                 .title(thread.getTitle())
@@ -475,8 +491,19 @@ public class WalkThreadService {
                 .endTime(thread.getEndTime())
                 .status(thread.getStatus().name())
                 .petImageUrl(petImageUrl)
+                .chatRoomId(chatRoomId)
                 .isApplied(isApplied)
                 .build();
+    }
+
+    private Map<Long, Long> buildChatRoomMap(List<Long> threadIds) {
+        List<WalkThreadApplication> apps = walkThreadApplicationRepository.findByThreadIdInAndStatus(
+                threadIds, WalkThreadApplicationStatus.JOINED);
+        Map<Long, Long> map = new HashMap<>();
+        for (WalkThreadApplication app : apps) {
+            map.putIfAbsent(app.getThreadId(), app.getChatRoomId());
+        }
+        return map;
     }
 
     private Map<Long, Long> batchCountByStatus(List<Long> threadIds, WalkThreadApplicationStatus status) {

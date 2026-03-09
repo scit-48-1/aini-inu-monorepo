@@ -41,6 +41,9 @@ public class ThreadSummaryResponse {
     @Schema(description = "첫 번째 참여 강아지의 프로필 이미지 URL입니다.", example = "https://example.com/pet.jpg")
     private String petImageUrl;
 
+    @Schema(description = "연결된 채팅방 ID입니다.", example = "42")
+    private Long chatRoomId;
+
     @JsonProperty("isApplied")
     @Schema(description = "isApplied 값입니다.", example = "true")
     private boolean isApplied;

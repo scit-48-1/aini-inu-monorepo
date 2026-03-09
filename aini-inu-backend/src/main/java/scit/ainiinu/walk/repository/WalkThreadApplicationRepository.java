@@ -39,4 +39,6 @@ public interface WalkThreadApplicationRepository extends JpaRepository<WalkThrea
     );
 
     List<WalkThreadApplication> findAllByMemberIdAndStatus(Long memberId, WalkThreadApplicationStatus status);
+
+    List<WalkThreadApplication> findByThreadIdInAndStatus(List<Long> threadIds, WalkThreadApplicationStatus status);
 }

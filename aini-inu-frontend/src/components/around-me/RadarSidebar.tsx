@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MapPin, Zap, Footprints, ArrowRight, Users, Loader2, Crown } from 'lucide-react';
+import { MapPin, Zap, Footprints, ArrowRight, Users, Loader2, Crown, MessageCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { cn, calculateDistance, formatRemainingTime } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
@@ -56,6 +57,7 @@ export const RadarSidebar: React.FC<RadarSidebarProps> = ({
   myActiveThread,
   myJoinedThreads,
 }) => {
+  const router = useRouter();
   const [sortBy, setSortBy] = useState<'DISTANCE' | 'TIME'>('DISTANCE');
   const [loadingMore, setLoadingMore] = useState(false);
 
@@ -158,6 +160,17 @@ export const RadarSidebar: React.FC<RadarSidebarProps> = ({
                     {myActiveThread.chatType === 'INDIVIDUAL' ? '1:1' : '그룹'}
                   </Badge>
                 </div>
+                {myActiveThread.chatRoomId && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/chat/${myActiveThread.chatRoomId}`);
+                    }}
+                    className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black rounded-full transition-colors shadow-md"
+                  >
+                    <MessageCircle size={12} /> 채팅방 가기
+                  </button>
+                )}
               </div>
             </div>
           </Card>
@@ -204,6 +217,17 @@ export const RadarSidebar: React.FC<RadarSidebarProps> = ({
                       {jt.chatType === 'INDIVIDUAL' ? '1:1' : '그룹'}
                     </Badge>
                   </div>
+                  {jt.chatRoomId && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/chat/${jt.chatRoomId}`);
+                      }}
+                      className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-black rounded-full transition-colors shadow-md"
+                    >
+                      <MessageCircle size={12} /> 채팅방 가기
+                    </button>
+                  )}
                 </div>
               </div>
             </Card>

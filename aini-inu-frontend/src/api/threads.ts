@@ -102,6 +102,7 @@ export interface ThreadSummaryResponse {
   endTime: string;
   status: string;
   petImageUrl?: string;
+  chatRoomId?: number;
   applied: boolean;
   isApplied: boolean;
 }
