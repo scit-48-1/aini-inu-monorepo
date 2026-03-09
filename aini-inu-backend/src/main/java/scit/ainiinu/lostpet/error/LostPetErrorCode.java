@@ -15,6 +15,7 @@ public enum LostPetErrorCode implements ErrorCode {
     L404_SEARCH_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "L404_SEARCH_SESSION_NOT_FOUND", "탐색 세션을 찾을 수 없습니다."),
     L403_FORBIDDEN(HttpStatus.FORBIDDEN, "L403", "권한이 없습니다."),
     L409_DUPLICATE_ACTIVE_REPORT(HttpStatus.CONFLICT, "L409_DUPLICATE_ACTIVE_REPORT", "미해결 중복 실종 신고가 존재합니다."),
+    L409_SELF_MATCH(HttpStatus.CONFLICT, "L409_SELF_MATCH", "본인의 제보는 승인할 수 없습니다."),
     L409_MATCH_CONFLICT(HttpStatus.CONFLICT, "L409_MATCH_CONFLICT", "현재 매치 상태에서는 승인할 수 없습니다."),
     L409_SEARCH_CANDIDATE_INVALID(HttpStatus.CONFLICT, "L409_SEARCH_CANDIDATE_INVALID", "탐색 세션에 없는 후보입니다."),
     L410_REPORT_RESOLVED(HttpStatus.GONE, "L410_REPORT_RESOLVED", "해결된 실종 신고입니다."),

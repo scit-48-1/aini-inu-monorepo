@@ -225,6 +225,142 @@ class LostPetAnalyzeServiceUnitTest {
     }
 
     @Nested
+    @DisplayName("본인 제보 필터링")
+    class SelfSightingFilter {
+
+        @Test
+        @DisplayName("신고자와 제보자가 동일하면 후보에서 제외된다")
+        void excludesSelfSighting() {
+            // given
+            ReflectionTestUtils.setField(lostPetAnalyzeService, "topN", 20);
+            ReflectionTestUtils.setField(lostPetAnalyzeService, "sessionTtlHours", 24L);
+
+            Long ownerId = 1L;
+            LostPetReport report = LostPetReport.create(
+                    ownerId, "Momo", "Poodle", "https://cdn/momo.jpg", "desc",
+                    LocalDateTime.now(), "Gangnam"
+            );
+            report.assignIdForTest(10L);
+
+            // 제보자(finderId) == 신고자(ownerId)인 제보
+            Sighting selfSighting = Sighting.create(
+                    ownerId, "https://cdn/self.jpg", LocalDateTime.now(), "Gangnam", "내가 발견"
+            );
+            selfSighting.assignIdForTest(5L);
+
+            LostPetSearchSession session = LostPetSearchSession.create(
+                    ownerId, report, "LOST", "https://cdn/momo.jpg", null,
+                    LocalDateTime.now().plusHours(24)
+            );
+            ReflectionTestUtils.setField(session, "id", 101L);
+
+            LostPetAiCandidate aiCandidate = new LostPetAiCandidate(5L, ownerId, new BigDecimal("0.95"));
+
+            given(lostPetReportRepository.findById(anyLong())).willReturn(Optional.of(report));
+            given(lostPetSearchSessionRepository.save(any(LostPetSearchSession.class))).willReturn(session);
+            given(lostPetAiClient.analyze(any()))
+                    .willReturn(new LostPetAiResult("결과", List.of(aiCandidate)));
+            given(sightingRepository.findById(5L)).willReturn(Optional.of(selfSighting));
+
+            LostPetAnalyzeRequest request = LostPetAnalyzeRequest.builder()
+                    .lostPetId(10L)
+                    .imageUrl("https://cdn/momo.jpg")
+                    .mode("LOST")
+                    .build();
+
+            // when
+            LostPetAnalyzeResponse response = lostPetAnalyzeService.analyze(ownerId, request);
+
+            // then - 본인 제보는 필터링되어 후보가 비어있어야 함
+            assertThat(response.candidates()).isEmpty();
+            then(lostPetSearchCandidateRepository).should(never()).saveAll(any());
+        }
+
+        @Test
+        @DisplayName("본인 제보가 섞여 있으면 타인의 제보만 후보로 남는다")
+        void keepOnlyOtherSightings() {
+            // given
+            ReflectionTestUtils.setField(lostPetAnalyzeService, "topN", 20);
+            ReflectionTestUtils.setField(lostPetAnalyzeService, "sessionTtlHours", 24L);
+
+            Long ownerId = 1L;
+            Long otherFinderId = 33L;
+            LostPetReport report = LostPetReport.create(
+                    ownerId, "초코", "말티즈", "https://cdn/choco.jpg", "갈색 소형견",
+                    LocalDateTime.now(), "서울시 강남구"
+            );
+            report.assignIdForTest(10L);
+
+            // 본인 제보 (필터링 대상)
+            Sighting selfSighting = Sighting.create(
+                    ownerId, "https://cdn/self.jpg", LocalDateTime.now(), "Gangnam", "내가 발견"
+            );
+            selfSighting.assignIdForTest(5L);
+
+            // 타인 제보 (유지 대상)
+            Sighting otherSighting = Sighting.create(
+                    otherFinderId, "https://cdn/other.jpg", LocalDateTime.now(), "Yeoksam", "다른사람 발견"
+            );
+            otherSighting.assignIdForTest(6L);
+
+            LostPetSearchSession session = LostPetSearchSession.create(
+                    ownerId, report, "LOST", "https://cdn/choco.jpg", null,
+                    LocalDateTime.now().plusHours(24)
+            );
+            ReflectionTestUtils.setField(session, "id", 101L);
+
+            LostPetAiCandidate selfAiCandidate = new LostPetAiCandidate(5L, ownerId, new BigDecimal("0.95"));
+            LostPetAiCandidate otherAiCandidate = new LostPetAiCandidate(6L, otherFinderId, new BigDecimal("0.80"));
+
+            given(lostPetReportRepository.findById(anyLong())).willReturn(Optional.of(report));
+            given(lostPetSearchSessionRepository.save(any(LostPetSearchSession.class))).willReturn(session);
+            given(lostPetAiClient.analyze(any()))
+                    .willReturn(new LostPetAiResult("결과", List.of(selfAiCandidate, otherAiCandidate)));
+            given(sightingRepository.findById(5L)).willReturn(Optional.of(selfSighting));
+            given(sightingRepository.findById(6L)).willReturn(Optional.of(otherSighting));
+            given(lostPetCandidateScoringService.normalizeSimilarity(any()))
+                    .willReturn(new BigDecimal("4.00000"));
+            given(lostPetCandidateScoringService.computeDistanceScore(any(), any()))
+                    .willReturn(new BigDecimal("3.00000"));
+            given(lostPetCandidateScoringService.computeRecencyScore(any(), any()))
+                    .willReturn(new BigDecimal("2.50000"));
+            given(lostPetCandidateScoringService.computeTotalScore(any(), any(), any()))
+                    .willReturn(new BigDecimal("9.50000"));
+
+            LostPetSearchCandidate savedCandidate = LostPetSearchCandidate.create(
+                    session, otherSighting,
+                    new BigDecimal("4.00000"), new BigDecimal("3.00000"),
+                    new BigDecimal("2.50000"), new BigDecimal("9.50000"), 1
+            );
+            given(lostPetSearchCandidateRepository.saveAll(any()))
+                    .willReturn(List.of(savedCandidate));
+
+            Member finder = Member.builder()
+                    .email("finder@test.com")
+                    .nickname("제보자")
+                    .memberType(MemberType.NON_PET_OWNER)
+                    .build();
+            ReflectionTestUtils.setField(finder, "id", otherFinderId);
+            given(memberRepository.findAllById(List.of(otherFinderId)))
+                    .willReturn(List.of(finder));
+
+            LostPetAnalyzeRequest request = LostPetAnalyzeRequest.builder()
+                    .lostPetId(10L)
+                    .imageUrl("https://cdn/choco.jpg")
+                    .mode("LOST")
+                    .build();
+
+            // when
+            LostPetAnalyzeResponse response = lostPetAnalyzeService.analyze(ownerId, request);
+
+            // then - 본인 제보(sightingId=5)는 제외, 타인 제보(sightingId=6)만 포함
+            assertThat(response.candidates()).hasSize(1);
+            assertThat(response.candidates().get(0).sightingId()).isEqualTo(6L);
+            assertThat(response.candidates().get(0).finderNickname()).isEqualTo("제보자");
+        }
+    }
+
+    @Nested
     @DisplayName("쿼리 텍스트 보강")
     class EnrichQueryText {
 

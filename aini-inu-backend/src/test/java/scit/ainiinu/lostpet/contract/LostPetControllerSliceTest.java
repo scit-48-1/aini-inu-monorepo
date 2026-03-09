@@ -225,7 +225,7 @@ class LostPetControllerSliceTest {
                     .status("CHAT_LINKED")
                     .chatRoomId(101L)
                     .build();
-            given(lostPetMatchApprovalService.approve(anyLong(), anyLong(), any(LostPetMatchApproveRequest.class), any()))
+            given(lostPetMatchApprovalService.approve(anyLong(), anyLong(), any(LostPetMatchApproveRequest.class)))
                     .willReturn(response);
 
             String request = """

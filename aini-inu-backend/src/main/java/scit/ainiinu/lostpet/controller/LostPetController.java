@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -166,11 +165,10 @@ public class LostPetController {
     public ResponseEntity<ApiResponse<LostPetMatchResponse>> approveMatch(
             @CurrentMember Long memberId,
             @PathVariable("lostPetId") Long lostPetId,
-            @RequestHeader(name = "Authorization", required = false) String authorizationHeader,
             @Valid @RequestBody LostPetMatchApproveRequest request
     ) {
         return ResponseEntity.ok(ApiResponse.success(
-                lostPetMatchApprovalService.approve(lostPetId, memberId, request, authorizationHeader)
+                lostPetMatchApprovalService.approve(lostPetId, memberId, request)
         ));
     }
 }

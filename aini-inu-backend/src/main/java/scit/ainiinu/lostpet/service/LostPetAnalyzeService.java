@@ -188,6 +188,7 @@ public class LostPetAnalyzeService {
             return List.of();
         }
         return sightingRepository.findById(aiCandidate.sightingId())
+                .filter(sighting -> !sighting.getFinderId().equals(report.getOwnerId()))
                 .map(sighting -> {
                     BigDecimal scoreSimilarity = lostPetCandidateScoringService.normalizeSimilarity(
                             aiCandidate.similarityTotal()

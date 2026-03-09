@@ -17,8 +17,6 @@ import scit.ainiinu.lostpet.dto.LostPetMatchApproveRequest;
 import scit.ainiinu.lostpet.dto.LostPetMatchResponse;
 import scit.ainiinu.lostpet.error.LostPetErrorCode;
 import scit.ainiinu.lostpet.error.LostPetException;
-import scit.ainiinu.lostpet.integration.chat.ChatDirectClientException;
-import scit.ainiinu.lostpet.integration.chat.ChatDirectFailureType;
 import scit.ainiinu.lostpet.integration.chat.ChatRoomDirectClient;
 import scit.ainiinu.lostpet.repository.LostPetMatchRepository;
 import scit.ainiinu.lostpet.repository.LostPetReportRepository;
@@ -42,8 +40,7 @@ public class LostPetMatchApprovalService {
     public LostPetMatchResponse approve(
             Long lostPetId,
             Long memberId,
-            LostPetMatchApproveRequest request,
-            String authorizationHeader
+            LostPetMatchApproveRequest request
     ) {
         long startedAt = System.currentTimeMillis();
         LostPetReport report = lostPetReportRepository.findById(lostPetId)
@@ -77,6 +74,9 @@ public class LostPetMatchApprovalService {
         if (sighting.getStatus() == SightingStatus.CLOSED) {
             throw new LostPetException(LostPetErrorCode.L409_MATCH_CONFLICT);
         }
+        if (sighting.getFinderId().equals(memberId)) {
+            throw new LostPetException(LostPetErrorCode.L409_SELF_MATCH);
+        }
 
         LostPetMatch match = lostPetMatchRepository.findByLostPetReportIdAndSightingId(lostPetId, sightingId)
                 .orElseGet(() -> LostPetMatch.create(report, sighting, candidate.getScoreTotal()));
@@ -96,12 +96,9 @@ public class LostPetMatchApprovalService {
 
         try {
             String roomTitle = (report.getBreed() != null ? report.getBreed() + " " : "") + report.getPetName() + "를 찾습니다";
-            Long chatRoomId = chatRoomDirectClient.createDirectRoom(sighting.getFinderId(), "LOST_PET", roomTitle, authorizationHeader);
+            Long chatRoomId = chatRoomDirectClient.createDirectRoom(memberId, sighting.getFinderId(), "LOST_PET", roomTitle);
             if (chatRoomId == null) {
-                throw new ChatDirectClientException(
-                        ChatDirectFailureType.RESPONSE_SCHEMA,
-                        "chatRoomId is null"
-                );
+                throw new IllegalStateException("chatRoomId is null");
             }
             match.linkChatRoom(chatRoomId);
             log.info(
@@ -113,25 +110,17 @@ public class LostPetMatchApprovalService {
                     chatRoomId,
                     System.currentTimeMillis() - startedAt
             );
-        } catch (ChatDirectClientException exception) {
+        } catch (Exception exception) {
             match.markPendingChatLink();
             log.warn(
-                    "lostpet.match.approve chat-create-failed lostPetId={} sightingId={} sessionId={} memberId={} elapsedMs={} reason={} failureType={}",
+                    "lostpet.match.approve chat-create-failed lostPetId={} sightingId={} sessionId={} memberId={} elapsedMs={} reason={}",
                     lostPetId,
                     sightingId,
                     session.getId(),
                     memberId,
                     System.currentTimeMillis() - startedAt,
-                    exception.getClass().getSimpleName(),
-                    exception.getFailureType()
+                    exception.getMessage()
             );
-            if (exception.getFailureType() == ChatDirectFailureType.AUTH) {
-                log.warn("lostpet.match.approve chat-auth-failed lostPetId={} sessionId={}", lostPetId, session.getId());
-            } else if (exception.getFailureType() == ChatDirectFailureType.CONNECT) {
-                log.warn("lostpet.match.approve chat-connect-failed lostPetId={} sessionId={}", lostPetId, session.getId());
-            } else if (exception.getFailureType() == ChatDirectFailureType.RESPONSE_SCHEMA) {
-                log.warn("lostpet.match.approve chat-schema-failed lostPetId={} sessionId={}", lostPetId, session.getId());
-            }
         }
 
         LostPetMatch saved = lostPetMatchRepository.save(match);
