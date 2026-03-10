@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { RefreshCw, Footprints, Clock, ThermometerSun, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -18,6 +19,7 @@ function formatElapsed(startedAt: string): string {
 }
 
 export const WalkingStatusSection: React.FC = () => {
+  const router = useRouter();
   const [walkers, setWalkers] = useState<WalkingUserResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -84,7 +86,10 @@ export const WalkingStatusSection: React.FC = () => {
       </div>
 
       {mySession && (
-        <div className="mb-6 bg-green-50 border border-green-200 rounded-[24px] p-5">
+        <div
+          onClick={() => router.push(`/profile/${mySession.memberId}`)}
+          className="mb-6 bg-green-50 border border-green-200 rounded-[24px] p-5 cursor-pointer hover:shadow-md transition-all"
+        >
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             <span className="text-xs font-black text-green-700">나의 산책</span>
@@ -123,7 +128,8 @@ export const WalkingStatusSection: React.FC = () => {
         {otherWalkers.map((walker) => (
           <div
             key={walker.memberId}
-            className="bg-white border border-zinc-100 rounded-[20px] p-4 hover:border-green-200 hover:shadow-sm transition-all"
+            onClick={() => router.push(`/profile/${walker.memberId}`)}
+            className="bg-white border border-zinc-100 rounded-[20px] p-4 hover:border-green-200 hover:shadow-sm transition-all cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-zinc-50 rounded-full flex items-center justify-center overflow-hidden">

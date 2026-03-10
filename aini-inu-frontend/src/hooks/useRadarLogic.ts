@@ -21,7 +21,7 @@ import { getMyPets } from '@/api/pets';
 import type { PetResponse } from '@/api/pets';
 import { useConfigStore } from '@/store/useConfigStore';
 
-type SubView = 'FIND' | 'RECRUIT' | 'EMERGENCY' | 'WALKING';
+type SubView = 'FIND' | 'RECRUIT' | 'EMERGENCY';
 
 const SEOUL_CITY_HALL: [number, number] = [37.566295, 126.977945];
 

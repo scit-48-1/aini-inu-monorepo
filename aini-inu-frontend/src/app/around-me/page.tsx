@@ -31,6 +31,9 @@ const DISTRICT_COORDS: Record<string, [number, number]> = {
 export default function AroundMePage() {
   const [mounted, setMounted] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [isWalkingOpen, setIsWalkingOpen] = useState(false);
+  const walkingPanelRef = useRef<HTMLDivElement>(null);
+  const walkingButtonRef = useRef<HTMLDivElement>(null);
 
   const { currentLocation, setLocation } = useConfigStore();
   const profile = useUserStore((s) => s.profile);
@@ -79,6 +82,21 @@ export default function AroundMePage() {
     selectThread(Number(threadIdParam));
   }, [searchParams, selectThread]);
 
+  // Close walking dropdown on outside click
+  useEffect(() => {
+    if (!isWalkingOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        walkingPanelRef.current && !walkingPanelRef.current.contains(e.target as Node) &&
+        walkingButtonRef.current && !walkingButtonRef.current.contains(e.target as Node)
+      ) {
+        setIsWalkingOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isWalkingOpen]);
+
   // Refresh using map's current visual center
   const handleRefreshFromMap = useCallback(() => {
     const coords: [number, number] = [mapCenterRef.current[0], mapCenterRef.current[1]];
@@ -93,20 +111,32 @@ export default function AroundMePage() {
 
   return (
     <div className="h-full flex flex-col animate-in slide-in-from-right duration-500 bg-background text-black relative">
-      <AroundMeHeader
-        currentLocation={currentLocation}
-        onLocationClick={() => setIsLocationModalOpen(true)}
-        activeTab={activeTab}
-        onTabChange={(tab) => { setActiveTab(tab); clearSelection(); }}
-        onRefresh={handleRefreshFromMap}
-        isRefreshing={isRefreshing}
-        dateFrom={dateFrom}
-        dateTo={dateTo}
-        onDateFromChange={setDateFrom}
-        onDateToChange={setDateTo}
-        radius={radius}
-        onRadiusChange={setRadius}
-      />
+      <div className="relative" ref={walkingButtonRef}>
+        <AroundMeHeader
+          currentLocation={currentLocation}
+          onLocationClick={() => setIsLocationModalOpen(true)}
+          activeTab={activeTab}
+          onTabChange={(tab) => { setActiveTab(tab); clearSelection(); setIsWalkingOpen(false); }}
+          onRefresh={handleRefreshFromMap}
+          isRefreshing={isRefreshing}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          onDateFromChange={setDateFrom}
+          onDateToChange={setDateTo}
+          radius={radius}
+          onRadiusChange={setRadius}
+          isWalkingOpen={isWalkingOpen}
+          onWalkingToggle={() => setIsWalkingOpen((prev) => !prev)}
+        />
+        {isWalkingOpen && (
+          <div
+            ref={walkingPanelRef}
+            className="absolute top-full right-4 mt-2 z-30 w-[380px] max-h-[480px] overflow-y-auto bg-white rounded-[24px] border border-zinc-200 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200"
+          >
+            <WalkingStatusSection />
+          </div>
+        )}
+      </div>
 
       <div className="flex-1 flex flex-col lg:flex-row px-4 md:px-8 py-6 gap-8 overflow-hidden">
         {activeTab === 'FIND' && (
@@ -192,9 +222,6 @@ export default function AroundMePage() {
           <EmergencySubTabs />
         )}
 
-        {activeTab === 'WALKING' && (
-          <WalkingStatusSection />
-        )}
       </div>
 
       {isLocationModalOpen && (

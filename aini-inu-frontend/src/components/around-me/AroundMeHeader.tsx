@@ -5,7 +5,7 @@ import { MapPin, Edit2, Footprints, PlusCircle, Siren, Activity, RefreshCw, Cale
 import { cn } from '@/lib/utils';
 import { Typography } from '@/components/ui/Typography';
 
-type SubView = 'FIND' | 'RECRUIT' | 'EMERGENCY' | 'WALKING';
+type SubView = 'FIND' | 'RECRUIT' | 'EMERGENCY';
 
 interface AroundMeHeaderProps {
   currentLocation: string;
@@ -20,6 +20,8 @@ interface AroundMeHeaderProps {
   onDateToChange?: (val: string) => void;
   radius?: number;
   onRadiusChange?: (val: number) => void;
+  isWalkingOpen?: boolean;
+  onWalkingToggle?: () => void;
 }
 
 export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
@@ -35,6 +37,8 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
   onDateToChange,
   radius = 5,
   onRadiusChange,
+  isWalkingOpen = false,
+  onWalkingToggle,
 }) => {
   return (
     <div className="p-6 md:px-10 md:py-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 border-b border-card-border bg-white sticky top-0 z-20 shadow-sm transition-all">
@@ -101,7 +105,6 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
           { id: 'FIND', label: '산책', icon: Footprints },
           { id: 'RECRUIT', label: '모집', icon: PlusCircle },
           { id: 'EMERGENCY', label: '제보', icon: Siren },
-          { id: 'WALKING', label: '산책중', icon: Activity },
         ].map(tab => (
           <button
             key={tab.id}
@@ -115,6 +118,24 @@ export const AroundMeHeader: React.FC<AroundMeHeaderProps> = ({
           </button>
         ))}
       </nav>
+        {onWalkingToggle && (
+          <button
+            onClick={onWalkingToggle}
+            className={cn(
+              'relative p-2.5 rounded-xl border transition-all flex items-center gap-2 text-xs font-black',
+              isWalkingOpen
+                ? 'bg-green-50 border-green-300 text-green-700 shadow-sm'
+                : 'bg-zinc-50/50 border-zinc-100 text-black hover:bg-white hover:border-green-400 hover:shadow-sm',
+            )}
+          >
+            <Activity size={16} />
+            <span>산책중</span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );
