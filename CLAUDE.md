@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Monorepo for **aini-inu**, a pet community platform (lost-pet search, walk diary, chat, community feed). Three modules:
 - `aini-inu-backend` — Spring Boot 3.5 / Java 21 / Gradle API server
 - `aini-inu-frontend` — Next.js 16 / React 19 / TypeScript / Tailwind CSS 4 client
-- `common-docs` — Shared contract artifacts (PRD, OpenAPI snapshot, images)
+- `common-docs` — Shared contract artifacts (PRD, OpenAPI snapshot)
 
 ## Build & Run Commands
 
@@ -29,7 +29,7 @@ cd aini-inu-frontend
 npm run dev                       # Start dev server (localhost:3000)
 npm run build                     # Production build
 npm run lint                      # ESLint
-npm run check:assets              # Validate image links against common-docs/images
+npm run check:assets              # Validate required runtime image assets in public
 ```
 
 ## Architecture
@@ -89,4 +89,4 @@ When code, docs, or contracts conflict, resolve in this order:
 - Seed data is in `src/main/resources/db/seed/` — loaded automatically on startup (disabled in test profile)
 - Backend secrets go in `.env` (local) or `.env.docker` (Docker) — never commit these
 - Frontend is in pre-refactor state; prefer isolated changes that reduce coupling over large feature additions
-- Image assets live in `common-docs/images` (source of truth) and are symlinked into `aini-inu-frontend/public`
+- Frontend image assets live directly in `aini-inu-frontend/public`

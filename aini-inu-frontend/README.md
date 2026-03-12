@@ -37,8 +37,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Image Asset Management
 
-- Source of truth: `../common-docs/images`
-- Frontend runtime paths are preserved through symlinks in `public`.
+- Frontend image assets live directly in `public`.
 - Validate links and required files with:
 
 ```bash
