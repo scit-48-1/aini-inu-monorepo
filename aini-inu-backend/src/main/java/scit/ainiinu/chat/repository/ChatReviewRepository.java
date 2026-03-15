@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import scit.ainiinu.chat.entity.ChatReview;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +16,8 @@ public interface ChatReviewRepository extends JpaRepository<ChatReview, Long> {
     boolean existsByChatRoomIdAndReviewerIdAndRevieweeId(Long chatRoomId, Long reviewerId, Long revieweeId);
 
     Optional<ChatReview> findTopByChatRoomIdAndReviewerIdOrderByCreatedAtDesc(Long chatRoomId, Long reviewerId);
+
+    List<ChatReview> findByReviewerIdAndChatRoomIdIn(Long reviewerId, Collection<Long> chatRoomIds);
 
     Slice<ChatReview> findByChatRoomIdOrderByCreatedAtDescIdDesc(Long chatRoomId, Pageable pageable);
 

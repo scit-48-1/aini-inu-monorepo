@@ -86,30 +86,7 @@ cd aini-inu-backend
 
 - Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
-
-### 5.1) OpenAPI 스냅샷 파일로 보기
-
-서버를 매번 직접 확인하지 않도록 OpenAPI를 파일로 내보낼 수 있습니다.
-
-```bash
-cd aini-inu-backend
-./scripts/export-openapi.sh
-```
-
-기본 출력 파일:
-- `../common-docs/openapi/openapi.v1.json`
-
-자주 쓰는 옵션:
-
-```bash
-./scripts/export-openapi.sh --port 18083
-./scripts/export-openapi.sh --out ../common-docs/openapi/openapi.v1.json
-./scripts/export-openapi.sh --wait-seconds 180
-```
-
-포트 충돌/기동 실패 시:
-- `--port`로 빈 포트를 지정
-- 부팅 로그 확인: `/tmp/aini_openapi_boot.log`
+- OpenAPI는 별도 스냅샷 파일 없이 런타임 `/v3/api-docs`를 단일 기준으로 사용합니다.
 
 ## 6) 프론트 로컬 연동 설정
 

@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Monorepo for **aini-inu**, a pet community platform (lost-pet search, walk diary, chat, community feed). Three modules:
 - `aini-inu-backend` — Spring Boot 3.5 / Java 21 / Gradle API server
 - `aini-inu-frontend` — Next.js 16 / React 19 / TypeScript / Tailwind CSS 4 client
-- `common-docs` — Shared contract artifacts (PRD, OpenAPI snapshot)
+- `common-docs` — Shared product/docs artifacts
 
 ## Build & Run Commands
 
@@ -20,7 +20,6 @@ cd aini-inu-backend
 ./scripts/docker-up.sh            # Start PostgreSQL + backend via Docker Compose
 ./scripts/docker-down.sh          # Stop Docker containers
 ./scripts/docker-logs.sh          # View backend logs
-./scripts/export-openapi.sh       # Export OpenAPI JSON to common-docs/openapi/
 ```
 
 ### Frontend
@@ -78,13 +77,12 @@ Test categories follow a naming convention:
 
 When code, docs, or contracts conflict, resolve in this order:
 1. `common-docs/PROJECT_PRD.md` (product requirements)
-2. `common-docs/openapi/openapi.v1.json` (API contract snapshot)
-3. Backend implementation
-4. Frontend adaptation
+2. Backend implementation and runtime OpenAPI (`/v3/api-docs`)
+3. Frontend adaptation
 
 ## Working Rules
 
-- API changes must update all layers: controller, service, DTO/schema, tests, and OpenAPI snapshot
+- API changes must update all layers: controller, service, DTO/schema, tests, and runtime OpenAPI/Swagger contracts
 - Entity changes must stay consistent with DDL scripts in `src/main/resources/db/ddl/`
 - Seed data is in `src/main/resources/db/seed/` — loaded automatically on startup (disabled in test profile)
 - Backend secrets go in `.env` (local) or `.env.docker` (Docker) — never commit these

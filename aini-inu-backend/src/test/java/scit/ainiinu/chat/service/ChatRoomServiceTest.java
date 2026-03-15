@@ -16,6 +16,7 @@ import scit.ainiinu.chat.dto.response.ChatRoomDetailResponse;
 import scit.ainiinu.chat.dto.response.ChatRoomSummaryResponse;
 import scit.ainiinu.chat.entity.ChatParticipant;
 import scit.ainiinu.chat.entity.ChatParticipantPet;
+import scit.ainiinu.chat.entity.ChatReview;
 import scit.ainiinu.chat.entity.ChatRoom;
 import scit.ainiinu.chat.entity.ChatRoomOrigin;
 import scit.ainiinu.chat.entity.ChatRoomStatus;
@@ -23,12 +24,16 @@ import scit.ainiinu.chat.entity.ChatRoomType;
 import scit.ainiinu.chat.exception.ChatException;
 import scit.ainiinu.chat.repository.ChatParticipantPetRepository;
 import scit.ainiinu.chat.repository.ChatParticipantRepository;
+import scit.ainiinu.chat.repository.ChatReviewRepository;
 import scit.ainiinu.chat.repository.ChatRoomRepository;
 import scit.ainiinu.chat.repository.MessageRepository;
 import scit.ainiinu.common.response.SliceResponse;
 import scit.ainiinu.member.entity.Member;
 import scit.ainiinu.member.entity.enums.MemberType;
 import scit.ainiinu.member.repository.MemberRepository;
+import scit.ainiinu.pet.entity.Pet;
+import scit.ainiinu.pet.entity.enums.PetGender;
+import scit.ainiinu.pet.entity.enums.PetSize;
 import scit.ainiinu.pet.repository.PetRepository;
 
 import java.util.Collections;
@@ -55,6 +60,9 @@ class ChatRoomServiceTest {
 
     @Mock
     private ChatParticipantPetRepository chatParticipantPetRepository;
+
+    @Mock
+    private ChatReviewRepository chatReviewRepository;
 
     @Mock
     private MessageRepository messageRepository;
@@ -604,6 +612,101 @@ class ChatRoomServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("대시보드용 배치 조회")
+    class DashboardBatchQueries {
+
+        @Test
+        @DisplayName("최근 친구와 리뷰 대기 목록을 배치 조회 결과로 조합한다")
+        void returnsRecentFriendsAndPendingReviews() {
+            Long memberId = 1L;
+
+            ChatRoom recentRoom = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.DM, null);
+            setRoomId(recentRoom, 10L);
+
+            ChatRoom walkRoom = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.WALK, null);
+            setRoomId(walkRoom, 20L);
+            ReflectionTestUtils.setField(walkRoom, "walkConfirmed", true);
+
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), eq(null), eq(null), eq(PageRequest.of(0, 5))))
+                    .willReturn(new SliceImpl<>(List.of(recentRoom), PageRequest.of(0, 5), false));
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), eq(null), eq(ChatRoomOrigin.WALK), eq(PageRequest.of(0, 20))))
+                    .willReturn(new SliceImpl<>(List.of(walkRoom), PageRequest.of(0, 20), false));
+
+            ChatParticipant meRecent = createParticipant(1L, 10L, memberId);
+            ChatParticipant partnerRecent = createParticipant(2L, 10L, 2L);
+            ChatParticipant meWalk = createParticipant(3L, 20L, memberId);
+            ChatParticipant partnerWalk = createParticipant(4L, 20L, 3L);
+
+            given(chatParticipantRepository.findAllByChatRoomIdIn(List.of(10L)))
+                    .willReturn(List.of(meRecent, partnerRecent));
+            given(chatParticipantRepository.findAllByChatRoomIdIn(List.of(20L)))
+                    .willReturn(List.of(meWalk, partnerWalk));
+
+            Member me = createMember(1L, "나");
+            Member recentPartnerMember = createMember(2L, "친구1");
+            ReflectionTestUtils.setField(recentPartnerMember, "profileImageUrl", "https://example.com/recent.jpg");
+            Member walkPartnerMember = createMember(3L, "친구2");
+            ReflectionTestUtils.setField(walkPartnerMember, "profileImageUrl", "https://example.com/walk.jpg");
+            given(memberRepository.findAllById(any()))
+                    .willReturn(List.of(me, recentPartnerMember))
+                    .willReturn(List.of(me, walkPartnerMember));
+
+            ChatParticipantPet recentPartnerPet = ChatParticipantPet.of(partnerRecent.getId(), 100L);
+            given(chatParticipantPetRepository.findAllByChatParticipantIdIn(List.of(1L, 2L)))
+                    .willReturn(List.of(recentPartnerPet));
+            given(chatParticipantPetRepository.findAllByChatParticipantIdIn(List.of(3L, 4L)))
+                    .willReturn(List.of());
+
+            Pet recentPet = createPet(100L, "몽이");
+            given(petRepository.findAllById(List.of(100L))).willReturn(List.of(recentPet));
+
+            given(chatReviewRepository.findByReviewerIdAndChatRoomIdIn(memberId, List.of(20L)))
+                    .willReturn(List.of());
+
+            var recentFriends = chatRoomService.getDashboardRecentFriends(memberId, 5);
+            var pendingReviews = chatRoomService.getDashboardPendingReviews(memberId, 20);
+
+            assertThat(recentFriends).hasSize(1);
+            assertThat(recentFriends.get(0).getMemberId()).isEqualTo(2L);
+            assertThat(recentFriends.get(0).getDisplayName()).isEqualTo("몽이");
+            assertThat(recentFriends.get(0).getRoomId()).isEqualTo(10L);
+
+            assertThat(pendingReviews).hasSize(1);
+            assertThat(pendingReviews.get(0).getChatRoomId()).isEqualTo(20L);
+            assertThat(pendingReviews.get(0).getPartnerId()).isEqualTo(3L);
+            assertThat(pendingReviews.get(0).getPartnerNickname()).isEqualTo("친구2");
+        }
+
+        @Test
+        @DisplayName("이미 리뷰한 WALK 방은 리뷰 대기 목록에서 제외한다")
+        void excludesReviewedRoomsFromPendingReviews() {
+            Long memberId = 1L;
+
+            ChatRoom walkRoom = ChatRoom.create(null, ChatRoomType.DIRECT, ChatRoomStatus.ACTIVE, ChatRoomOrigin.WALK, null);
+            setRoomId(walkRoom, 20L);
+            ReflectionTestUtils.setField(walkRoom, "walkConfirmed", true);
+
+            given(chatRoomRepository.findAccessibleRoomsByMemberId(eq(memberId), eq(null), eq(ChatRoomOrigin.WALK), eq(PageRequest.of(0, 20))))
+                    .willReturn(new SliceImpl<>(List.of(walkRoom), PageRequest.of(0, 20), false));
+
+            ChatParticipant meWalk = createParticipant(3L, 20L, memberId);
+            ChatParticipant partnerWalk = createParticipant(4L, 20L, 3L);
+            given(chatParticipantRepository.findAllByChatRoomIdIn(List.of(20L)))
+                    .willReturn(List.of(meWalk, partnerWalk));
+            given(memberRepository.findAllById(any()))
+                    .willReturn(List.of(createMember(1L, "나"), createMember(3L, "친구2")));
+            given(chatParticipantPetRepository.findAllByChatParticipantIdIn(List.of(3L, 4L)))
+                    .willReturn(List.of());
+            given(chatReviewRepository.findByReviewerIdAndChatRoomIdIn(memberId, List.of(20L)))
+                    .willReturn(List.of(ChatReview.create(20L, memberId, 3L, 5, "good")));
+
+            var result = chatRoomService.getDashboardPendingReviews(memberId, 20);
+
+            assertThat(result).isEmpty();
+        }
+    }
+
     // --- 헬퍼 메서드 ---
 
     private void setRoomId(ChatRoom room, Long id) {
@@ -624,5 +727,19 @@ class ChatRoomServiceTest {
                 .build();
         ReflectionTestUtils.setField(member, "id", id);
         return member;
+    }
+
+    private Pet createPet(Long id, String name) {
+        Pet pet = Pet.builder()
+                .memberId(1L)
+                .name(name)
+                .age(2)
+                .gender(PetGender.MALE)
+                .size(PetSize.MEDIUM)
+                .isNeutered(true)
+                .isMain(true)
+                .build();
+        ReflectionTestUtils.setField(pet, "id", id);
+        return pet;
     }
 }

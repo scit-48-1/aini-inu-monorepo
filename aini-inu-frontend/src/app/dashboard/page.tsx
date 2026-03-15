@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { startTransition, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { getActivityStats } from '@/api/members';
 import { getHotspots, getThreads } from '@/api/threads';
+import { getDashboardSummary } from '@/api/dashboard';
 import { getRooms, getRoom, getMyReview } from '@/api/chat';
 import { getMyPets } from '@/api/pets';
 import { useUserStore } from '@/store/useUserStore';
@@ -48,6 +49,27 @@ function SectionSkeleton() {
   );
 }
 
+const DEFAULT_LATITUDE = 37.5666;
+const DEFAULT_LONGITUDE = 126.9784;
+const DEFAULT_RADIUS_KM = 5;
+
+async function getDashboardCoordinates() {
+  let latitude = DEFAULT_LATITUDE;
+  let longitude = DEFAULT_LONGITUDE;
+
+  try {
+    const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 }),
+    );
+    latitude = pos.coords.latitude;
+    longitude = pos.coords.longitude;
+  } catch {
+    // Use default Seoul coordinates
+  }
+
+  return { latitude, longitude };
+}
+
 export default function DashboardPage() {
   // Subscribe to profile with a stable selector (not entire store)
   const userProfile = useUserStore((s) => s.profile);
@@ -66,6 +88,7 @@ export default function DashboardPage() {
   const myPetsLoaded = useDashboardStore((s) => s.myPetsLoaded);
   const recentFriends = useDashboardStore((s) => s.recentFriends);
   const recentFriendsLoaded = useDashboardStore((s) => s.recentFriendsLoaded);
+  const hasUserProfile = userProfile != null;
 
   // Stable mainDog — only recompute when myPets actually changes
   const mainDog = useMemo(() => {
@@ -90,6 +113,133 @@ export default function DashboardPage() {
 
   const fetchingRef = useRef(false);
 
+  const fetchAllDataLegacy = useCallback(async () => {
+    await Promise.allSettled([
+      // activityStats
+      (async () => {
+        try {
+          const data = await getActivityStats();
+          useDashboardStore.setState({ activityStats: { status: 'success', data } });
+        } catch {
+          const s = useDashboardStore.getState();
+          if (!hasData(s.activityStats)) {
+            useDashboardStore.setState({ activityStats: { status: 'error', message: '활동 통계를 불러오지 못했습니다.' } });
+          }
+        }
+      })(),
+      // hotspots
+      (async () => {
+        try {
+          const data = await getHotspots();
+          useDashboardStore.setState({
+            hotspots: data.length === 0 ? { status: 'empty' } : { status: 'success', data },
+          });
+        } catch {
+          const s = useDashboardStore.getState();
+          if (!hasData(s.hotspots)) {
+            useDashboardStore.setState({ hotspots: { status: 'error', message: '추천 정보를 불러오지 못했습니다.' } });
+          }
+        }
+      })(),
+      // threads
+      (async () => {
+        try {
+          const { latitude, longitude } = await getDashboardCoordinates();
+          const res = await getThreads({ page: 0, size: 3, latitude, longitude, radius: DEFAULT_RADIUS_KM });
+          useDashboardStore.setState({
+            threads: res.content.length === 0 ? { status: 'empty' } : { status: 'success', data: res.content },
+          });
+        } catch {
+          const s = useDashboardStore.getState();
+          if (!hasData(s.threads)) {
+            useDashboardStore.setState({ threads: { status: 'error', message: '동네 소식을 불러오지 못했습니다.' } });
+          }
+        }
+      })(),
+      // myPets
+      (async () => {
+        try {
+          const pets = await getMyPets();
+          useDashboardStore.getState().setMyPets(pets);
+        } catch {
+          const s = useDashboardStore.getState();
+          if (s.myPets.length === 0) s.setMyPets([]);
+        }
+      })(),
+      // recentFriends
+      (async () => {
+        try {
+          const roomsRes = await getRooms({ page: 0, size: 5 });
+          const roomSummaries = roomsRes.content.slice(0, 5);
+          const detailResults = await Promise.allSettled(
+            roomSummaries.map((r) => getRoom(r.chatRoomId)),
+          );
+          const currentId = Number(useUserStore.getState().profile?.id) || 0;
+          const seenMembers = new Set<number>();
+          const friends: { id: string; roomId: string; name: string; img: string; score: number }[] = [];
+          for (const res of detailResults) {
+            if (res.status !== 'fulfilled') continue;
+            const detail = res.value;
+            const partner = detail.participants.find((p) => p.memberId !== currentId && !p.left);
+            if (!partner || seenMembers.has(partner.memberId)) continue;
+            seenMembers.add(partner.memberId);
+            const petNames = partner.pets?.map((p) => p.name).join(', ');
+            friends.push({
+              id: String(partner.memberId),
+              roomId: String(detail.chatRoomId),
+              name: petNames || partner.nickname || '산책 친구',
+              img: partner.profileImageUrl || '/AINIINU_ROGO_B.png',
+              score: 7.0,
+            });
+          }
+          useDashboardStore.getState().setRecentFriends(friends);
+        } catch {
+          const s = useDashboardStore.getState();
+          if (s.recentFriends.length === 0) s.setRecentFriends([]);
+        }
+      })(),
+      // pendingReviews
+      (async () => {
+        try {
+          const roomsRes = await getRooms({ page: 0, size: 20, origin: 'WALK' });
+          const rooms = roomsRes.content;
+          if (rooms.length === 0) {
+            setPendingReviews([]);
+            return;
+          }
+          const [detailResults, reviewResults] = await Promise.all([
+            Promise.allSettled(rooms.map((r) => getRoom(r.chatRoomId))),
+            Promise.allSettled(rooms.map((r) => getMyReview(r.chatRoomId))),
+          ]);
+          const currentId = Number(useUserStore.getState().profile?.id) || 0;
+          const pending: PendingReview[] = [];
+          rooms.forEach((room, i) => {
+            const reviewResult = reviewResults[i];
+            if (reviewResult.status !== 'fulfilled' || reviewResult.value.exists) return;
+            const detailResult = detailResults[i];
+            if (detailResult.status !== 'fulfilled') return;
+            const detail = detailResult.value;
+            if (!detail.walkConfirmed) return;
+            const partner = detail.participants.find((p) => p.memberId !== currentId && !p.left);
+            if (!partner) return;
+            pending.push({
+              chatRoomId: detail.chatRoomId,
+              displayName: room.displayName,
+              partnerId: partner.memberId,
+              partnerNickname: partner.nickname || `Member ${partner.memberId}`,
+              profileImageUrl: partner.profileImageUrl,
+            });
+          });
+          setPendingReviews(pending);
+        } catch {
+          setPendingReviews([]);
+        }
+      })(),
+    ]);
+
+    useDashboardStore.getState().markFetched();
+  }, []);
+
   const fetchAllData = useCallback(async () => {
     if (fetchingRef.current) return;
     fetchingRef.current = true;
@@ -97,7 +247,6 @@ export default function DashboardPage() {
     const store = useDashboardStore.getState();
     const isRefresh = store.lastFetchedAt !== null;
 
-    // Set loading states upfront (single batch via direct store access)
     if (!isRefresh) {
       useDashboardStore.setState({
         activityStats: { status: 'loading' },
@@ -107,144 +256,31 @@ export default function DashboardPage() {
     }
 
     try {
-      await Promise.allSettled([
-        // activityStats
-        (async () => {
-          try {
-            const data = await getActivityStats();
-            useDashboardStore.setState({ activityStats: { status: 'success', data } });
-          } catch {
-            const s = useDashboardStore.getState();
-            if (!hasData(s.activityStats)) {
-              useDashboardStore.setState({ activityStats: { status: 'error', message: '활동 통계를 불러오지 못했습니다.' } });
-            }
-          }
-        })(),
-        // hotspots
-        (async () => {
-          try {
-            const data = await getHotspots();
-            useDashboardStore.setState({
-              hotspots: data.length === 0 ? { status: 'empty' } : { status: 'success', data },
-            });
-          } catch {
-            const s = useDashboardStore.getState();
-            if (!hasData(s.hotspots)) {
-              useDashboardStore.setState({ hotspots: { status: 'error', message: '추천 정보를 불러오지 못했습니다.' } });
-            }
-          }
-        })(),
-        // threads
-        (async () => {
-          try {
-            let lat = 37.5666;
-            let lng = 126.9784;
-            try {
-              const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
-              );
-              lat = pos.coords.latitude;
-              lng = pos.coords.longitude;
-            } catch {
-              // Use default Seoul coordinates
-            }
-            const res = await getThreads({ page: 0, size: 3, latitude: lat, longitude: lng, radius: 5 });
-            useDashboardStore.setState({
-              threads: res.content.length === 0 ? { status: 'empty' } : { status: 'success', data: res.content },
-            });
-          } catch {
-            const s = useDashboardStore.getState();
-            if (!hasData(s.threads)) {
-              useDashboardStore.setState({ threads: { status: 'error', message: '동네 소식을 불러오지 못했습니다.' } });
-            }
-          }
-        })(),
-        // myPets
-        (async () => {
-          try {
-            const pets = await getMyPets();
-            useDashboardStore.getState().setMyPets(pets);
-          } catch {
-            const s = useDashboardStore.getState();
-            if (s.myPets.length === 0) s.setMyPets([]);
-          }
-        })(),
-        // recentFriends
-        (async () => {
-          try {
-            const roomsRes = await getRooms({ page: 0, size: 5 });
-            const roomSummaries = roomsRes.content.slice(0, 5);
-            const detailResults = await Promise.allSettled(
-              roomSummaries.map((r) => getRoom(r.chatRoomId)),
-            );
-            const currentId = Number(useUserStore.getState().profile?.id) || 0;
-            const seenMembers = new Set<number>();
-            const friends: { id: string; roomId: string; name: string; img: string; score: number }[] = [];
-            for (const res of detailResults) {
-              if (res.status !== 'fulfilled') continue;
-              const detail = res.value;
-              const partner = detail.participants.find((p) => p.memberId !== currentId && !p.left);
-              if (!partner || seenMembers.has(partner.memberId)) continue;
-              seenMembers.add(partner.memberId);
-              const petNames = partner.pets?.map((p) => p.name).join(', ');
-              friends.push({
-                id: String(partner.memberId),
-                roomId: String(detail.chatRoomId),
-                name: petNames || partner.nickname || '산책 친구',
-                img: partner.profileImageUrl || '/AINIINU_ROGO_B.png',
-                score: 7.0,
-              });
-            }
-            useDashboardStore.getState().setRecentFriends(friends);
-          } catch {
-            const s = useDashboardStore.getState();
-            if (s.recentFriends.length === 0) s.setRecentFriends([]);
-          }
-        })(),
-        // pendingReviews
-        (async () => {
-          try {
-            const roomsRes = await getRooms({ page: 0, size: 20, origin: 'WALK' });
-            const rooms = roomsRes.content;
-            if (rooms.length === 0) {
-              setPendingReviews([]);
-              return;
-            }
-            const [detailResults, reviewResults] = await Promise.all([
-              Promise.allSettled(rooms.map((r) => getRoom(r.chatRoomId))),
-              Promise.allSettled(rooms.map((r) => getMyReview(r.chatRoomId))),
-            ]);
-            const currentId = Number(useUserStore.getState().profile?.id) || 0;
-            const pending: PendingReview[] = [];
-            rooms.forEach((room, i) => {
-              const reviewResult = reviewResults[i];
-              if (reviewResult.status !== 'fulfilled' || reviewResult.value.exists) return;
-              const detailResult = detailResults[i];
-              if (detailResult.status !== 'fulfilled') return;
-              const detail = detailResult.value;
-              if (!detail.walkConfirmed) return;
-              const partner = detail.participants.find((p) => p.memberId !== currentId && !p.left);
-              if (!partner) return;
-              pending.push({
-                chatRoomId: detail.chatRoomId,
-                displayName: room.displayName,
-                partnerId: partner.memberId,
-                partnerNickname: partner.nickname || `Member ${partner.memberId}`,
-                profileImageUrl: partner.profileImageUrl,
-              });
-            });
-            setPendingReviews(pending);
-          } catch {
-            setPendingReviews([]);
-          }
-        })(),
-      ]);
+      const { latitude, longitude } = await getDashboardCoordinates();
+      const summary = await getDashboardSummary({
+        latitude,
+        longitude,
+        radius: DEFAULT_RADIUS_KM,
+      });
 
-      useDashboardStore.getState().markFetched();
+      startTransition(() => {
+        useDashboardStore.getState().hydrateSummary(summary);
+        setPendingReviews(
+          summary.pendingReviews.map((review) => ({
+            chatRoomId: review.chatRoomId,
+            displayName: review.displayName,
+            partnerId: review.partnerId,
+            partnerNickname: review.partnerNickname,
+            profileImageUrl: review.profileImageUrl,
+          })),
+        );
+      });
+    } catch {
+      await fetchAllDataLegacy();
     } finally {
       fetchingRef.current = false;
     }
-  }, []);
+  }, [fetchAllDataLegacy]);
 
   // --- Retry handlers (stable refs) ---
 
@@ -273,15 +309,8 @@ export default function DashboardPage() {
   const retryThreads = useCallback(async () => {
     useDashboardStore.setState({ threads: { status: 'loading' } });
     try {
-      let lat = 37.5666, lng = 126.9784;
-      try {
-        const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
-        );
-        lat = pos.coords.latitude;
-        lng = pos.coords.longitude;
-      } catch { /* default coords */ }
-      const res = await getThreads({ page: 0, size: 3, latitude: lat, longitude: lng, radius: 5 });
+      const { latitude, longitude } = await getDashboardCoordinates();
+      const res = await getThreads({ page: 0, size: 3, latitude, longitude, radius: DEFAULT_RADIUS_KM });
       useDashboardStore.setState({
         threads: res.content.length === 0 ? { status: 'empty' } : { status: 'success', data: res.content },
       });
@@ -293,10 +322,10 @@ export default function DashboardPage() {
   // --- Main data fetch ---
 
   useEffect(() => {
-    if (!userProfile) return;
+    if (!hasUserProfile) return;
     if (!useDashboardStore.getState().shouldFetch()) return;
     fetchAllData();
-  }, [!!userProfile, fetchAllData]);
+  }, [hasUserProfile, fetchAllData]);
 
   if (!userProfile) {
     return (

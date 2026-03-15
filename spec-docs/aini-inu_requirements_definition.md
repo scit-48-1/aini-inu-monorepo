@@ -1,14 +1,14 @@
 # AINI-INU 통합 요구사항 정의서
 
 - 작성일: 2026-03-12
-- 작성 기준: 저장소 현행 코드, 프로젝트 문서, OpenAPI 스냅샷, 배포/인프라 설정
+- 작성 기준: 저장소 현행 코드, 프로젝트 문서, 런타임 OpenAPI, 배포/인프라 설정
 - 목적: 현재 저장소에 존재하는 문서 요구사항과 실제 구현 요구사항을 하나의 기준 문서로 통합
 
 ## 1. 문서 범위와 해석 원칙
 
 ### 1.1 분석 범위
 - 루트 문서: `.planning/REQUIREMENTS.md`, `.planning/PROJECT.md`, `common-docs/PROJECT_PRD.md`, `common-docs/LOSTPET_AI_FLOW.md`
-- 공통 계약: `common-docs/openapi/openapi.v1.json`, `aini-inu-backend/docs/openapi/ERROR_CODE_MATRIX.md`
+- 공통 계약: 백엔드 런타임 OpenAPI(`/v3/api-docs`), Swagger UI(`/swagger-ui/index.html`)
 - 프론트엔드 구현: `aini-inu-frontend/src/app`, `src/components`, `src/hooks`, `src/api`, `src/providers`
 - 백엔드 구현: `aini-inu-backend/src/main/java/.../controller`, `dto/request`, 보안/알림/타임라인/산책 세션 관련 모듈
 - 운영 설정: `docker-compose.yml`, `nginx/nginx.conf`, `GCP_DEPLOYMENT_GUIDE.md`, `.github/workflows/deploy.yml`
@@ -22,7 +22,7 @@
 1. 실제 런타임 코드의 동작
 2. 공식 PRD 및 planning 문서
 3. 프론트엔드 UX 구현
-4. 공유 OpenAPI 스냅샷
+4. 런타임 OpenAPI 문서
 
 ### 1.4 해석 원칙
 - 문서와 코드가 충돌하면 실제 코드 동작을 우선 기록한다.
@@ -525,38 +525,17 @@ AINI-INU는 반려견 보호자 중심의 지역 기반 소셜 서비스이며, 
 
 ## 9. 계약 및 문서 불일치 사항
 
-### 9.1 공유 OpenAPI 스냅샷 누락
-- 다음 런타임 엔드포인트가 `common-docs/openapi/openapi.v1.json`에 반영되지 않았거나 불완전하다.
-  - `/api/v1/members/me/reviews`
-  - `/api/v1/members/{memberId}/reviews`
-  - `/api/v1/members/me/stats/activity`
-  - `/api/v1/members/{memberId}/stats/activity`
-  - `/api/v1/threads/my/active`
-  - `/api/v1/threads/my/joined`
-  - `/api/v1/walk-diaries/available-threads`
-  - `/api/v1/walking-sessions/start`
-  - `/api/v1/walking-sessions/heartbeat`
-  - `/api/v1/walking-sessions/stop`
-  - `/api/v1/walking-sessions/active`
-  - `/api/v1/walking-sessions/my`
-  - `/api/v1/notifications`
-  - `/api/v1/notifications/unread-count`
-  - `/api/v1/notifications/{id}/read`
-  - `/api/v1/notifications/read-all`
-  - `/api/v1/members/{memberId}/timeline`
-  - `/api/v1/members/me/timeline/settings`
+### 9.1 런타임 OpenAPI 운영 원칙
+- 별도 OpenAPI 스냅샷 파일은 제거하고 `/v3/api-docs`를 단일 계약 원본으로 사용한다.
+- Swagger UI와 OpenAPI 계약 테스트는 런타임 문서를 기준으로 유지한다.
 
-### 9.2 경로 명세 불일치
-- OpenAPI 스냅샷은 `stats/walk`를 포함하지만 실제 구현은 `stats/activity`를 사용한다.
-- 팔로우 상태 조회 GET 메서드는 런타임에 존재하지만 스냅샷 반영이 불완전하다.
-
-### 9.3 프론트/백엔드 정책 불일치
+### 9.2 프론트/백엔드 정책 불일치
 - 회원가입 UI는 `PET_OWNER`만 선택하도록 사실상 고정되어 있다.
 - 게시글 생성은 백엔드상 텍스트만으로 가능하지만 프론트는 이미지 1장 이상을 강제한다.
 - 설정의 push/2FA는 UI는 있으나 서버 저장 계약이 없다.
 - 타인 프로필의 `FEED`, `HISTORY`는 화면만 존재하고 실제 기능은 미완성이다.
 
-### 9.4 운영 문서 불일치
+### 9.3 운영 문서 불일치
 - `GCP_DEPLOYMENT_GUIDE.md`는 GCP VM + Docker Compose 배포를 설명한다.
 - `.github/workflows/deploy.yml`은 `main` 브랜치 push 시 EC2에 백엔드 JAR를 배포한다.
 - 즉, 현재 저장소의 문서상 운영 방식은 단일 경로로 정합화되어 있지 않다.
@@ -570,10 +549,10 @@ AINI-INU는 반려견 보호자 중심의 지역 기반 소셜 서비스이며, 
 - 타인 프로필 `FEED`, `HISTORY`를 실제 범위에 포함할지
 
 ### 10.2 계약 정비 측면
-- 공유 OpenAPI를 현행 백엔드 기준으로 재생성할지
+- 런타임 OpenAPI를 기준으로 운영 문서를 어디까지 동기화할지
 - 활동 통계 경로를 `stats/activity`로 통일할지
 - 알림/타임라인/산책 세션을 공식 PRD 범위로 승격할지
 
 ## 11. 결론
 
-현재 저장소는 공식 PRD 범위를 대부분 구현하고 있으며, 그 위에 산책 세션, 알림, 타임라인 같은 런타임 확장 기능이 추가된 상태다. 따라서 앞으로의 요구사항 기준 문서는 "공식 범위"와 "실제 구현 범위"를 분리 관리해야 하며, 특히 공유 OpenAPI 스냅샷과 운영 문서의 최신화가 우선 과제다.
+현재 저장소는 공식 PRD 범위를 대부분 구현하고 있으며, 그 위에 산책 세션, 알림, 타임라인 같은 런타임 확장 기능이 추가된 상태다. 따라서 앞으로의 요구사항 기준 문서는 "공식 범위"와 "실제 구현 범위"를 분리 관리해야 하며, 특히 런타임 OpenAPI와 운영 문서의 최신화가 우선 과제다.

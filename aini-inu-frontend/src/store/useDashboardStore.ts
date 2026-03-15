@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { ActivityStatsResponse } from '@/api/members';
 import type { ThreadHotspotResponse, ThreadSummaryResponse } from '@/api/threads';
 import type { PetResponse } from '@/api/pets';
+import type { DashboardSummaryResponse } from '@/api/dashboard';
 
 export type SectionStatus = 'idle' | 'loading' | 'refreshing' | 'success' | 'empty' | 'error';
 
@@ -37,6 +38,7 @@ interface DashboardState {
   setThreads: (state: SectionState<ThreadSummaryResponse[]>) => void;
   setMyPets: (pets: PetResponse[]) => void;
   setRecentFriends: (friends: RecentFriend[]) => void;
+  hydrateSummary: (summary: DashboardSummaryResponse) => void;
   markFetched: () => void;
   shouldFetch: () => boolean;
   clear: () => void;
@@ -63,6 +65,22 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   setThreads: (state) => set({ threads: state }),
   setMyPets: (pets) => set({ myPets: pets, myPetsLoaded: true }),
   setRecentFriends: (friends) => set({ recentFriends: friends, recentFriendsLoaded: true }),
+  hydrateSummary: (summary) => set({
+    activityStats: { status: 'success', data: summary.activityStats },
+    hotspots: summary.hotspots.length === 0 ? { status: 'empty' } : { status: 'success', data: summary.hotspots },
+    threads: summary.threads.length === 0 ? { status: 'empty' } : { status: 'success', data: summary.threads },
+    myPets: summary.myPets,
+    myPetsLoaded: true,
+    recentFriends: summary.recentFriends.map((friend) => ({
+      id: String(friend.memberId),
+      roomId: String(friend.chatRoomId),
+      name: friend.displayName,
+      img: friend.profileImageUrl || '/AINIINU_ROGO_B.png',
+      score: friend.score,
+    })),
+    recentFriendsLoaded: true,
+    lastFetchedAt: Date.now(),
+  }),
 
   markFetched: () => set({ lastFetchedAt: Date.now() }),
 

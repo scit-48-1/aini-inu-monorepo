@@ -3,6 +3,7 @@ package scit.ainiinu.chat.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import scit.ainiinu.chat.dto.request.ChatRoomDirectCreateRequest;
@@ -24,9 +25,12 @@ import scit.ainiinu.chat.exception.ChatErrorCode;
 import scit.ainiinu.chat.exception.ChatException;
 import scit.ainiinu.chat.repository.ChatParticipantPetRepository;
 import scit.ainiinu.chat.repository.ChatParticipantRepository;
+import scit.ainiinu.chat.repository.ChatReviewRepository;
 import scit.ainiinu.chat.repository.ChatRoomRepository;
 import scit.ainiinu.chat.repository.MessageRepository;
 import scit.ainiinu.common.response.SliceResponse;
+import scit.ainiinu.dashboard.dto.response.DashboardPendingReviewResponse;
+import scit.ainiinu.dashboard.dto.response.DashboardRecentFriendResponse;
 import scit.ainiinu.member.repository.MemberRepository;
 import scit.ainiinu.pet.entity.Pet;
 import scit.ainiinu.pet.repository.PetRepository;
@@ -35,9 +39,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import scit.ainiinu.member.entity.Member;
@@ -53,6 +59,7 @@ public class ChatRoomService {
     private final MessageRepository messageRepository;
     private final MemberRepository memberRepository;
     private final PetRepository petRepository;
+    private final ChatReviewRepository chatReviewRepository;
 
     public SliceResponse<ChatRoomSummaryResponse> getRooms(Long memberId, String status, String origin, Pageable pageable) {
         ChatRoomStatus parsedStatus = parseStatus(status);
@@ -147,6 +154,96 @@ public class ChatRoomService {
         return toDetailResponse(room);
     }
 
+    public List<DashboardRecentFriendResponse> getDashboardRecentFriends(Long memberId, int limit) {
+        int safeLimit = Math.max(limit, 1);
+        List<ChatRoom> rooms = chatRoomRepository.findAccessibleRoomsByMemberId(
+                memberId,
+                null,
+                null,
+                PageRequest.of(0, safeLimit)
+        ).getContent();
+        if (rooms.isEmpty()) {
+            return List.of();
+        }
+
+        DashboardRoomContext context = buildDashboardRoomContext(rooms);
+        Set<Long> seenMembers = new HashSet<>();
+        List<DashboardRecentFriendResponse> friends = new ArrayList<>();
+
+        for (ChatRoom room : rooms) {
+            ChatParticipant partner = findActivePartner(memberId, context.participantsByRoom.getOrDefault(room.getId(), List.of()));
+            if (partner == null || !seenMembers.add(partner.getMemberId())) {
+                continue;
+            }
+
+            Member member = context.membersById.get(partner.getMemberId());
+            List<String> petNames = context.petNamesByParticipantId.getOrDefault(partner.getId(), List.of());
+            String displayName = !petNames.isEmpty()
+                    ? String.join(", ", petNames)
+                    : resolveNickname(member, partner.getMemberId());
+
+            friends.add(DashboardRecentFriendResponse.builder()
+                    .memberId(partner.getMemberId())
+                    .chatRoomId(room.getId())
+                    .displayName(displayName)
+                    .profileImageUrl(member != null ? member.getProfileImageUrl() : null)
+                    .score(7.0)
+                    .build());
+        }
+
+        return friends;
+    }
+
+    public List<DashboardPendingReviewResponse> getDashboardPendingReviews(Long memberId, int limit) {
+        int safeLimit = Math.max(limit, 1);
+        List<ChatRoom> rooms = chatRoomRepository.findAccessibleRoomsByMemberId(
+                memberId,
+                null,
+                ChatRoomOrigin.WALK,
+                PageRequest.of(0, safeLimit)
+        ).getContent();
+        if (rooms.isEmpty()) {
+            return List.of();
+        }
+
+        List<ChatRoom> walkConfirmedRooms = rooms.stream()
+                .filter(room -> Boolean.TRUE.equals(room.getWalkConfirmed()))
+                .toList();
+        if (walkConfirmedRooms.isEmpty()) {
+            return List.of();
+        }
+
+        DashboardRoomContext context = buildDashboardRoomContext(walkConfirmedRooms);
+        List<Long> roomIds = walkConfirmedRooms.stream().map(ChatRoom::getId).toList();
+        Set<Long> reviewedRoomIds = chatReviewRepository.findByReviewerIdAndChatRoomIdIn(memberId, roomIds).stream()
+                .map(review -> review.getChatRoomId())
+                .collect(Collectors.toSet());
+        List<DashboardPendingReviewResponse> pendingReviews = new ArrayList<>();
+
+        for (ChatRoom room : walkConfirmedRooms) {
+            if (reviewedRoomIds.contains(room.getId())) {
+                continue;
+            }
+
+            List<ChatParticipant> participants = context.participantsByRoom.getOrDefault(room.getId(), List.of());
+            ChatParticipant partner = findActivePartner(memberId, participants);
+            if (partner == null) {
+                continue;
+            }
+
+            Member member = context.membersById.get(partner.getMemberId());
+            pendingReviews.add(DashboardPendingReviewResponse.builder()
+                    .chatRoomId(room.getId())
+                    .displayName(computeDisplayName(memberId, participants, context.nicknamesByMemberId))
+                    .partnerId(partner.getMemberId())
+                    .partnerNickname(resolveNickname(member, partner.getMemberId()))
+                    .profileImageUrl(member != null ? member.getProfileImageUrl() : null)
+                    .build());
+        }
+
+        return pendingReviews;
+    }
+
     @Transactional
     public LeaveRoomResponse leaveRoom(Long memberId, Long chatRoomId) {
         ChatRoom room = chatRoomRepository.findByIdForUpdate(chatRoomId)
@@ -197,6 +294,75 @@ public class ChatRoomService {
         }
     }
 
+    private DashboardRoomContext buildDashboardRoomContext(List<ChatRoom> rooms) {
+        List<Long> roomIds = rooms.stream().map(ChatRoom::getId).toList();
+        List<ChatParticipant> allParticipants = roomIds.isEmpty()
+                ? Collections.emptyList()
+                : chatParticipantRepository.findAllByChatRoomIdIn(roomIds);
+
+        List<Long> memberIds = allParticipants.stream()
+                .map(ChatParticipant::getMemberId)
+                .distinct()
+                .toList();
+        Map<Long, Member> membersById = memberIds.isEmpty()
+                ? Collections.emptyMap()
+                : memberRepository.findAllById(memberIds).stream()
+                        .collect(Collectors.toMap(Member::getId, member -> member));
+        Map<Long, String> nicknamesByMemberId = membersById.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getNickname()));
+        Map<Long, List<ChatParticipant>> participantsByRoom = allParticipants.stream()
+                .collect(Collectors.groupingBy(ChatParticipant::getChatRoomId));
+
+        List<Long> participantIds = allParticipants.stream().map(ChatParticipant::getId).toList();
+        List<ChatParticipantPet> participantPets = participantIds.isEmpty()
+                ? Collections.emptyList()
+                : chatParticipantPetRepository.findAllByChatParticipantIdIn(participantIds);
+        List<Long> petIds = participantPets.stream()
+                .map(ChatParticipantPet::getPetId)
+                .distinct()
+                .toList();
+        Map<Long, Pet> petsById = petIds.isEmpty()
+                ? Collections.emptyMap()
+                : petRepository.findAllById(petIds).stream()
+                        .collect(Collectors.toMap(Pet::getId, pet -> pet));
+
+        Map<Long, List<String>> petNamesByParticipantId = new HashMap<>();
+        for (ChatParticipantPet participantPet : participantPets) {
+            Pet pet = petsById.get(participantPet.getPetId());
+            if (pet == null) {
+                continue;
+            }
+            petNamesByParticipantId
+                    .computeIfAbsent(participantPet.getChatParticipantId(), key -> new ArrayList<>())
+                    .add(pet.getName());
+        }
+
+        return new DashboardRoomContext(
+                participantsByRoom,
+                membersById,
+                nicknamesByMemberId,
+                petNamesByParticipantId
+        );
+    }
+
+    private ChatParticipant findActivePartner(Long memberId, List<ChatParticipant> participants) {
+        List<ChatParticipant> sortedParticipants = new ArrayList<>(participants);
+        sortedParticipants.sort(Comparator.comparing(ChatParticipant::getId));
+        for (ChatParticipant participant : sortedParticipants) {
+            if (!participant.getMemberId().equals(memberId) && !participant.isLeft()) {
+                return participant;
+            }
+        }
+        return null;
+    }
+
+    private String resolveNickname(Member member, Long memberId) {
+        if (member != null && member.getNickname() != null && !member.getNickname().isBlank()) {
+            return member.getNickname();
+        }
+        return "Member " + memberId;
+    }
+
     private String computeDisplayName(Long memberId, List<ChatParticipant> participants, Map<Long, String> nicknamesByMemberId) {
         List<String> otherNames = participants.stream()
                 .filter(p -> !p.getMemberId().equals(memberId) && !p.isLeft())
@@ -233,12 +399,11 @@ public class ChatRoomService {
         List<ChatParticipant> participants = new ArrayList<>(chatParticipantRepository.findAllByChatRoomId(room.getId()));
         participants.sort(Comparator.comparing(ChatParticipant::getId));
 
-        // Batch-fetch members
         List<Long> memberIds = participants.stream().map(ChatParticipant::getMemberId).distinct().toList();
         Map<Long, Member> membersById = memberIds.isEmpty()
                 ? Collections.emptyMap()
                 : memberRepository.findAllById(memberIds).stream()
-                        .collect(Collectors.toMap(Member::getId, m -> m));
+                        .collect(Collectors.toMap(Member::getId, member -> member));
 
         List<Long> participantIds = participants.stream().map(ChatParticipant::getId).toList();
         List<ChatParticipantPet> participantPets = participantIds.isEmpty()
@@ -246,12 +411,10 @@ public class ChatRoomService {
                 : chatParticipantPetRepository.findAllByChatParticipantIdIn(participantIds);
 
         List<Long> petIds = participantPets.stream().map(ChatParticipantPet::getPetId).distinct().toList();
-        Map<Long, Pet> petsById = new HashMap<>();
-        if (!petIds.isEmpty()) {
-            for (Pet pet : petRepository.findAllById(petIds)) {
-                petsById.put(pet.getId(), pet);
-            }
-        }
+        Map<Long, Pet> petsById = petIds.isEmpty()
+                ? Collections.emptyMap()
+                : petRepository.findAllById(petIds).stream()
+                        .collect(Collectors.toMap(Pet::getId, pet -> pet));
 
         Map<Long, List<ChatParticipantPetResponse>> petResponseByParticipant = new HashMap<>();
         for (ChatParticipantPet participantPet : participantPets) {
@@ -329,5 +492,13 @@ public class ChatRoomService {
         } catch (IllegalArgumentException exception) {
             throw new ChatException(ChatErrorCode.INVALID_REQUEST);
         }
+    }
+
+    private record DashboardRoomContext(
+            Map<Long, List<ChatParticipant>> participantsByRoom,
+            Map<Long, Member> membersById,
+            Map<Long, String> nicknamesByMemberId,
+            Map<Long, List<String>> petNamesByParticipantId
+    ) {
     }
 }
