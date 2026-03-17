@@ -105,6 +105,10 @@ public class Member extends BaseTimeEntity {
         this.mannerScoreCount = 0;
     }
 
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
     public void addMannerScore(int score) {
         if (score < 1 || score > 10) {
             throw new BusinessException(CommonErrorCode.INVALID_INPUT);

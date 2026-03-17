@@ -1,6 +1,7 @@
 package scit.ainiinu.member.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import scit.ainiinu.common.security.jwt.JwtTokenProvider;
@@ -32,6 +33,7 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * 토큰 갱신 (Refresh Token Rotation 적용)
@@ -66,15 +68,29 @@ public class AuthService {
 
     /**
      * 이메일/비밀번호 로그인 처리
-     * 임시 정책으로 평문 비밀번호를 비교해 인증을 처리합니다.
+     * BCrypt 해싱된 비밀번호와 평문 비밀번호를 모두 지원합니다.
+     * 평문 비밀번호로 로그인 성공 시, BCrypt로 자동 마이그레이션합니다.
      */
     @Transactional
     public LoginResponse loginWithEmail(AuthLoginRequest request) {
         Member member = memberRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.INVALID_CREDENTIALS));
 
-        if (member.getPassword() == null || !member.getPassword().equals(request.getPassword())) {
+        if (member.getPassword() == null) {
             throw new MemberException(MemberErrorCode.INVALID_CREDENTIALS);
+        }
+
+        if (isEncodedPassword(member.getPassword())) {
+            // BCrypt 해싱된 비밀번호 검증
+            if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+                throw new MemberException(MemberErrorCode.INVALID_CREDENTIALS);
+            }
+        } else {
+            // 평문 비밀번호 검증 후 BCrypt로 마이그레이션
+            if (!member.getPassword().equals(request.getPassword())) {
+                throw new MemberException(MemberErrorCode.INVALID_CREDENTIALS);
+            }
+            member.updatePassword(passwordEncoder.encode(request.getPassword()));
         }
 
         if (member.getStatus() == MemberStatus.BANNED) {
@@ -82,6 +98,13 @@ public class AuthService {
         }
 
         return createLoginResponse(member, false);
+    }
+
+    /**
+     * BCrypt 해싱 여부 판별 ($2a$, $2b$, $2y$ 접두사)
+     */
+    boolean isEncodedPassword(String password) {
+        return password != null && password.startsWith("$2");
     }
 
     /**
@@ -99,7 +122,7 @@ public class AuthService {
 
         Member newMember = Member.builder()
                 .email(request.getEmail())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .nickname(request.getNickname())
                 .memberType(request.getMemberType())
                 .build();
